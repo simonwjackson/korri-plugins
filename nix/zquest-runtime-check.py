@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the packaged player through Core on an isolated Xvfb display."""
 
+import atexit
 import hashlib
 import importlib.machinery
 import importlib.util
@@ -53,6 +54,45 @@ subprocess.run([executable, "-version"], check=True, timeout=20)
 root = Path(tempfile.mkdtemp(prefix="zquest-runtime-")).resolve()
 print(f"ZQuest runtime evidence: {root}", flush=True)
 
+# Exercise real audio initialization without hardware or a kernel sequencer.
+# A private PulseAudio sink belongs only to this off-device check.
+pulse_socket = root / "pulse.sock"
+pulse_log = (root / "pulse.log").open("w")
+pulse = subprocess.Popen(
+    [
+        "pulseaudio",
+        "-n",
+        "--daemonize=no",
+        "--exit-idle-time=-1",
+        "--use-pid-file=no",
+        "--load=module-null-sink sink_name=zquest_test",
+        f"--load=module-native-protocol-unix socket={pulse_socket} auth-anonymous=1",
+    ],
+    stdout=pulse_log,
+    stderr=subprocess.STDOUT,
+)
+
+
+def stop_pulse():
+    if pulse.poll() is None:
+        pulse.terminate()
+        try:
+            pulse.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            pulse.kill()
+            pulse.wait()
+    pulse_log.close()
+
+
+atexit.register(stop_pulse)
+for _ in range(100):
+    if pulse_socket.exists():
+        break
+    assert pulse.poll() is None, (root / "pulse.log").read_text()
+    time.sleep(0.1)
+assert pulse_socket.exists(), (root / "pulse.log").read_text()
+os.environ["PULSE_SERVER"] = f"unix:{pulse_socket}"
+
 
 def digest(path):
     with path.open("rb") as source:
@@ -73,10 +113,10 @@ def command(quest, account):
 def account(name):
     directory = root / name / "zquest-classic"
     directory.mkdir(parents=True)
-    # Native test-only settings. Production retains upstream sound defaults and
-    # replay-upload consent. No audio hardware or network is used in this check.
+    # Native test-only upload settings. Audio initialization stays enabled to
+    # catch the missing-ALSA-sequencer crash seen on the Mini V2.
     (directory / "zc.cfg").write_text(
-        "[zeldadx]\nnosound = 1\nfullscreen = 0\n"
+        "[zeldadx]\nnosound = 0\nfullscreen = 0\n"
         "replay_upload = 0\nreplay_upload_prompt = 1\n"
         "[korri_test]\nsentinel = keep-me\n"
     )
@@ -154,6 +194,7 @@ def play(quest, owner, *, save=False, concurrent=False):
                 child,
                 "selected quest loaded",
             )
+            assert "Initializing sound driver... OK" in native_log.read_text()
             wait_for(
                 lambda: save_file.exists() and save_file.stat().st_size > 100,
                 child,

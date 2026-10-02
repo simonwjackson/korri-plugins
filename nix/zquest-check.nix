@@ -37,6 +37,7 @@ pkgs.runCommand "korri-zquest-classic-plugin-check"
       (pkgs.python3.withPackages (python: [ python.pillow ]))
       pkgs.xvfb-run
       pkgs.xdotool
+      pkgs.pulseaudio
     ];
     LIBGL_ALWAYS_SOFTWARE = "1";
     GALLIUM_DRIVER = "llvmpipe";
