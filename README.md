@@ -8,7 +8,7 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 
 | Output | Plugin or contents | Platforms |
 |---|---|---|
-| `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 Linux only |
+| `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 and aarch64 Linux |
 | `korri-plugin-nocturne` | `@simonwjackson:nocturne` | x86_64 and aarch64 Linux |
 | `nocturne` | NocturneRecomp native launcher for owned XBLA assets | x86_64 and aarch64 Linux |
 | `korri-plugin-opengoal` | `@simonwjackson:opengoal`, Jak trilogy including Renegade | x86_64 Linux only |
@@ -27,27 +27,32 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 ## Skate 3
 
 [Skate 3](plugins/skate-3/README.md) adds a launcher to an existing library
-game when its recorded whole-file hash matches an accepted disc. It reuses
-the pinned prebuilt native launcher. The repository contains integration
-source, tests, documentation and hashes, not an ISO, XEX, title update,
-compiled recompilation or NAR archive.
+game when its recorded whole-file hash matches an accepted disc. It uses
+the pinned prebuilt launcher on x86_64 and a native source build on aarch64.
+The ARM64 build needs two owned XEX files in the builder's Nix store; see
+the [build instructions](plugins/skate-3/README.md#build-and-verify).
+The repository contains integration source, tests, documentation and hashes,
+not an ISO, XEX, title update, compiled recompilation or NAR archive.
 
 The native release is unfree. Do not publish its binary closure without a
 separate rights review and approval. This repository has no binary-cache
 publication workflow. Device installation and gameplay remain outside the
 package-only scope. Signature and permission checks must stay enabled.
 
-Run on an x86_64 build machine, not a target device:
+Run on a build machine of the matching architecture, not a target device:
 
 ```sh
 nix run .#help
 nix build --no-link .#korri-plugin-skate-3
 nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin
+nix build --no-link .#checks.aarch64-linux.korri-skate3-plugin
 ```
 
 The gate checks the actual packaged source, generated manifest, personal
 publisher identity, strict launch-contract types, host admission, and
 production sandboxed launch preparation with literal file paths.
+ARM64 package support does not fix the observed Mini V2 intro-movie freeze
+or establish gameplay acceptance.
 
 ## NocturneRecomp
 
