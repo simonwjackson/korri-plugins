@@ -7,8 +7,10 @@ library game. It does not add a duplicate game tile or use a CPU emulator.
 
 The plugin builds [The Simpsons Game Recompiled v0.0.6.2](https://github.com/YesterMester/TheSimpsonsGameRecomp/tree/f63f57bcba29d3e7016fd867fad05adc85822bcb)
 at commit `f63f57bcba29d3e7016fd867fad05adc85822bcb`. The upstream repository
-contains generated game code and a vendored ReXGlue SDK. Compilation happens
-on a build host, not on the handheld. The plugin still ships TypeScript source
+contains generated game code and a vendored ReXGlue SDK. The ARM recipe applies
+ReXGlue's [FFmpeg visibility fix](https://github.com/rexglue/rexglue-sdk/commit/d82ec280809f3505001ef7396477612cfde16864)
+so its NEON constants can link into the shared runtime. That patch does not change
+the x86 recipe. Compilation happens on a build host, not on the handheld. The plugin still ships TypeScript source
 for Korri's runtime interpreter.
 
 | Build target | Requirement and limitation |
@@ -129,6 +131,27 @@ window:
 ```sh
 nix run .#verify-simpsons -- /path/to/owned/simpsons-ntscu-cs.iso
 ```
+
+### Verified results on 2026-10-02
+
+The x86_64 package and check passed on zao. The aarch64 package and check passed
+on fuji after the FFmpeg link fix. Both checks read the native engine and extractor
+ELF headers, rather than trusting platform metadata.
+The owned-ISO check passed first installation and cached reuse through the
+packaged Core callback and launcher.
+
+A separate native run used Xvfb, lavapipe Vulkan and an ALSA null sink. It rendered
+the title and menus, accepted keyboard input with upstream's `mnk_mode` enabled,
+and played the opening cutscene. It created a 114800-byte native save plus a
+328-byte header beneath the selected account directory. After restart, the game
+listed that slot as "The Land of Chocolate", accepted loading it, and showed
+"Continue Game". Native config, logs and shader cache remained under that account.
+
+This verifies early startup and save reload, not full-game completion or playable
+handheld performance. Audible sound and physical controllers remain untested.
+Intel Vulkan initialized in Xvfb but could not present without DRI3; lavapipe
+rendered the same game. No production code change was made for that virtual-display
+limitation. ARM rendering and physical-device acceptance are still pending.
 
 Device acceptance still needs an approved private prebuilt delivery route,
 a bound publisher key, exact-package approval and a selected compatible device.

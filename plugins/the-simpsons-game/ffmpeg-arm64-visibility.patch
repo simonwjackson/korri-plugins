@@ -1,0 +1,16 @@
+Adapted from rexglue/rexglue-sdk commit d82ec280809f3505001ef7396477612cfde16864.
+FFmpeg's AArch64 NEON assembly requires locally bound ff_cos_* constants when
+linked into librexruntime.so. Apply only on ARM; keep the tested x86 build intact.
+
+--- a/tools/rexglue-sdk/thirdparty/CMakeLists.txt
++++ b/tools/rexglue-sdk/thirdparty/CMakeLists.txt
+@@ -704,2 +704,7 @@
+-# IDE folder organization
+-set_target_properties(libavutil libavcodec PROPERTIES FOLDER "FFmpeg")
++# Hidden visibility is required on aarch64. The NEON .S files use ADRP/ADD
++# PC-relative addressing for symbols like ff_cos_*, which must bind locally
++# when linked into a shared object.
++set_target_properties(libavutil libavcodec PROPERTIES
++    C_VISIBILITY_PRESET hidden
++    VISIBILITY_INLINES_HIDDEN ON
++    FOLDER "FFmpeg")

@@ -12,7 +12,10 @@ pkgs.llvmPackages_20.stdenv.mkDerivation {
   };
 
   # Preserve native filenames, but put config and logs under user_data_root.
-  patches = [ ./account-storage.patch ];
+  patches = [
+    ./account-storage.patch
+  ]
+  ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isAarch64 [ ./ffmpeg-arm64-visibility.patch ];
 
   nativeBuildInputs = with pkgs; [
     cmake
