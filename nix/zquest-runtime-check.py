@@ -104,6 +104,34 @@ def key(name):
     time.sleep(0.8)
 
 
+def snapshot_when_ready(directory, child):
+    previous = set(directory.rglob("zc_screen*.png"))
+    previous_frame = None
+
+    def ready():
+        nonlocal previous, previous_frame
+        key("F12")
+        current = set(directory.rglob("zc_screen*.png"))
+        new = current - previous
+        previous = current
+        for snapshot in new:
+            with Image.open(snapshot) as image:
+                assert image.width >= 256 and image.height >= 168
+                rgb = image.convert("RGB")
+                colors = rgb.getcolors(image.width * image.height)
+                frame = hashlib.sha256(rgb.tobytes()).digest()
+                stable = frame == previous_frame
+                previous_frame = frame
+                if colors is not None and len(colors) > 8 and stable:
+                    return True
+        return False
+
+    # Loading consumes input; its opening wipe can still accept F12. This known
+    # default quest is static while idle, so two equal rendered frames establish
+    # the end of that transition without assuming an architecture-specific delay.
+    wait_for(ready, child, "native screenshot responds with a stable game frame")
+
+
 def play(quest, owner, *, save=False, concurrent=False):
     directory = owner / "zquest-classic"
     native_log = directory / "allegro.log"
@@ -146,24 +174,7 @@ def play(quest, owner, *, save=False, concurrent=False):
                 assert rejected.returncode != 0, rejected.stdout
                 assert "already running" in rejected.stderr, rejected.stderr
                 assert digest(save_file) == before
-            previous_snapshots = set(directory.rglob("zc_screen*.png"))
-            key("F12")
-            wait_for(
-                lambda: bool(
-                    set(directory.rglob("zc_screen*.png")) - previous_snapshots
-                ),
-                child,
-                "native screenshot responds to keyboard input",
-            )
-            snapshot = next(
-                iter(set(directory.rglob("zc_screen*.png")) - previous_snapshots)
-            )
-            with Image.open(snapshot) as image:
-                assert image.width >= 256 and image.height >= 168
-                colors = image.convert("RGB").getcolors(image.width * image.height)
-                assert colors is not None and len(colors) > 8, (
-                    "blank or failed rendering"
-                )
+            snapshot_when_ready(directory, child)
             if save:
                 before = digest(save_file)
                 for action in ["F6", "Return", "Down", "Return"]:
@@ -174,6 +185,15 @@ def play(quest, owner, *, save=False, concurrent=False):
                     "in-game save changed persisted native state",
                 )
                 assert (directory / "saves/backup").is_dir()
+                wait_for(
+                    lambda: (
+                        native_log.read_text(errors="replace").count("[QUEST METADATA]")
+                        >= 2
+                    ),
+                    child,
+                    "quest reloaded after in-game save",
+                )
+                snapshot_when_ready(directory, child)
             key("F10")
             key("Return")
             assert child.wait(timeout=20) == 0

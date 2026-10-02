@@ -93,6 +93,7 @@ script replay against the pinned interpreter. Its Git LFS files are fetched
 by hash for tests only and are absent from the plugin closure.
 Audio is disabled only in the tests. These checks do not establish audible
 output, physical-controller support, all-quest compatibility, or device acceptance.
+Both checks passed on native x86_64 and aarch64 build machines on 2026-10-02.
 The check-only GitHub workflow runs both architectures and publishes nothing.
 
 For an interactive run with separate test state:
