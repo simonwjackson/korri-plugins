@@ -11,6 +11,9 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 Linux only |
 | `korri-plugin-nocturne` | `@simonwjackson:nocturne` | x86_64 and aarch64 Linux |
 | `nocturne` | NocturneRecomp native launcher for owned XBLA assets | x86_64 and aarch64 Linux |
+| `korri-plugin-opengoal` | `@simonwjackson:opengoal`, Jak trilogy including Renegade | x86_64 Linux only |
+| `opengoal` | Native runtime without game assets or compiler | x86_64 Linux only |
+| `opengoal-tools` | Off-device disc preparation and GOAL compiler | x86_64 Linux build machine only |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
 | `zelda3` | Standalone native engine and owned-ROM launcher | x86_64 and aarch64 Linux |
@@ -63,6 +66,22 @@ Run these on build machines. The opt-in test uses owned assets and private
 software video/audio services. Startup checks do not establish full gameplay,
 save/load, or clean shutdown. The native binary contains translated retail code;
 public binary-cache publication needs separate rights review and approval.
+
+## Jak and Daxter trilogy
+
+[OpenGOAL](plugins/opengoal/README.md) runs prepared Jak 1, Jak II, Jak II: Renegade,
+and Jak 3 data. The x86_64 plugin includes the prebuilt runtime, not game assets
+or a compiler. Disc validation and GOAL compilation run explicitly on a build
+machine. Transfer the complete upstream data tree to the target afterwards.
+The runner matches measured `out/<game>/iso/GAME.CGO` files in registered library
+releases. It does not claim ISO files or create library entries. Linux ARM is
+deferred. Signed publication and live installation remain separate steps.
+
+```sh
+nix build --no-link .#korri-plugin-opengoal
+nix build --no-link .#checks.x86_64-linux.korri-opengoal-plugin
+nix run .#prepare-opengoal -- --game jak2 --iso /path/to/owned.iso --output /path/to/new-data
+```
 
 ## Super Mario World
 
