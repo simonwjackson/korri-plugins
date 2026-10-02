@@ -10,6 +10,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 |---|---|---|
 | `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 and aarch64 Linux |
 | `korri-plugin-nocturne` | `@simonwjackson:nocturne` | x86_64 and aarch64 Linux |
+| `korri-plugin-melee-pc` | `@simonwjackson:melee-pc`, beta | x86_64 and aarch64 Linux |
+| `melee-pc` | Native Melee PC runtime and owned-disc launcher | x86_64 and aarch64 Linux |
 | `nocturne` | NocturneRecomp native launcher for owned XBLA assets | x86_64 and aarch64 Linux |
 | `korri-plugin-opengoal` | `@simonwjackson:opengoal`, Jak trilogy including Renegade | x86_64 Linux only |
 | `opengoal` | Native runtime without game assets or compiler | x86_64 Linux only |
@@ -72,6 +74,28 @@ publisher identity, strict launch-contract types, host admission, and
 production sandboxed launch preparation with literal file paths.
 ARM64 package support does not fix the observed Mini V2 intro-movie freeze
 or establish gameplay acceptance.
+
+## Melee PC
+
+[Melee PC](plugins/melee-pc/README.md) adds a native beta runner for the measured
+USA 1.02 ISO on both Linux architectures. It attaches to a registered release;
+no general GameCube scanner is added. The launcher isolates native settings,
+cache and cards per account. Upstream's updater cannot replace the managed binary.
+Vulkan 1.1 is required. Game binaries remain private pending rights review.
+
+```sh
+nix build --no-link .#korri-plugin-melee-pc
+nix build --no-link .#checks.x86_64-linux.korri-melee-plugin
+nix build --no-link .#checks.aarch64-linux.korri-melee-plugin
+nix run .#verify-melee -- /path/to/owned/USA-1.02.iso
+```
+
+Run on build machines. The opt-in owned-disc test requires a hardware Vulkan GPU.
+Both architecture package checks passed. The x86_64 owned-disc test also passed
+menu navigation, native card reopening, preference persistence and clean exit.
+Full gameplay, ARM64 graphics, physical controls/audio and handheld performance
+remain unverified. Public binary publication and device
+installation are not approved.
 
 ## NocturneRecomp
 
