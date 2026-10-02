@@ -374,17 +374,17 @@
         "nixpkgs": "nixpkgs_5"
       },
       "locked": {
-        "lastModified": 1790956807,
-        "narHash": "sha256-2KO5uN1Lx385J56rhoJ1Kx4Hst5LH7FA9XY8Tc6SzdU=",
+        "lastModified": 1790974745,
+        "narHash": "sha256-9quG2ycZzerCvJjOWMqFcedVHFPpXKbjdfbU0dy72K8=",
         "owner": "simonwjackson",
         "repo": "skate-3-flake",
-        "rev": "0d98437232e56c172357850db17e8503b5a81d66",
+        "rev": "4e58e784407326d4da9dab5ab2b44fd32eb03c22",
         "type": "github"
       },
       "original": {
         "owner": "simonwjackson",
         "repo": "skate-3-flake",
-        "rev": "0d98437232e56c172357850db17e8503b5a81d66",
+        "rev": "4e58e784407326d4da9dab5ab2b44fd32eb03c22",
         "type": "github"
       }
     },
