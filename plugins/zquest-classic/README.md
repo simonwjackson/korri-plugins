@@ -28,8 +28,15 @@ Build machines compile the native player. Devices receive prebuilt outputs.
 Both architectures use the ZScript interpreter, following the legacy package.
 The ARM patch selects upstream's scalar tile renderer instead of x86 SIMD.
 This costs performance for script-heavy quests. The package disables the
-updater, WebSocket scripting, and native file-dialog dependency. It preserves
-upstream audio defaults, unlike legacy's muted MIDI configuration.
+updater, WebSocket scripting, and native file-dialog dependency.
+
+The native `allegro.cfg` selects Allegro's built-in DIGMID software synthesizer.
+Its patch index is generated from FreePats' existing `crude.cfg` mappings.
+This avoids upstream's ALSA MIDI autodetection crash when `/dev/snd/seq` is
+absent, as on the Mini V2. It keeps sound effects and music enabled without
+a new device service or kernel change. FreePats adds about 33 MiB and uses
+substitute or omitted instruments where its tone bank is incomplete. The original
+FreePats license and mapping remain in the closure.
 
 ## Saves and configuration
 
@@ -91,8 +98,9 @@ separate accounts, changed-release isolation, concurrent-session refusal, and
 preservation of local files. They also assert upstream's `auto_scopes.zplay`
 script replay against the pinned interpreter. Its Git LFS files are fetched
 by hash for tests only and are absent from the plugin closure.
-Audio is disabled only in the tests. These checks do not establish audible
-output, physical-controller support, all-quest compatibility, or device acceptance.
+A private PulseAudio null sink exercises real sound initialization without
+hardware or an ALSA sequencer. These checks do not establish audible output,
+physical-controller support, all-quest compatibility, or device acceptance.
 Both checks passed on native x86_64 and aarch64 build machines on 2026-10-02.
 The check-only GitHub workflow runs both architectures and publishes nothing.
 

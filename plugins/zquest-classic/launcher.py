@@ -64,6 +64,9 @@ def launch(quest: Path, directory: Path) -> None:
         os.chdir(directory)
         # The native binary normally switches cwd into its read-only package.
         os.environ["ZC_DISABLE_CHDIR"] = "1"
+        # Allegro's native config selects software MIDI. Autodetection crashes
+        # upstream when a device has no ALSA sequencer, such as the Mini V2.
+        os.environ["ALLEGRO"] = "@audio@"
         os.set_inheritable(lock, True)
         os.execv(ENGINE, [ENGINE, "-standalone", str(quest), save_name])
     finally:
