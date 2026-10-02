@@ -113,8 +113,18 @@ def check_payload(payload, originals):
     )
 
 
-def check_plugin(plugin, payload):
+def check_plugin(plugin, payload, fake08_plugin):
     manifest = json.loads((plugin / "manifest.json").read_text())
+    require(manifest.get("requires") == [str(fake08_plugin)], "missing exact FAKE-08 plugin dependency")
+    dependency = json.loads((fake08_plugin / "manifest.json").read_text())
+    require(dependency["publisher"] == {"namespace": "@korri"}, "wrong FAKE-08 publisher claim")
+    require('export const name = "fake08"' in (fake08_plugin / "plugin.ts").read_text(), "wrong required plugin identity")
+    require({"retroarch", "fake08"} <= set(dependency["packages"]), "required plugin lacks frontend or core")
+    for key in ["retroarch", "fake08"]:
+        program = Path(dependency["files"][key])
+        require(program.is_file(), "missing required native artifact")
+        with program.open("rb") as stream:
+            require(stream.read(4) == b"\x7fELF", "required native artifact is not ELF")
     require(
         manifest["publisher"] == {"namespace": "@simonwjackson"},
         "wrong personal publisher",
@@ -184,6 +194,23 @@ def negative_checks(payload, originals):
         expect_failure(lambda: check_payload(damaged, originals), "expected credits")
 
 
+def negative_dependency_checks(plugin, payload, fake08_plugin):
+    with tempfile.TemporaryDirectory() as directory:
+        damaged = Path(directory) / "plugin"
+        shutil.copytree(plugin, damaged)
+        manifest_path = damaged / "manifest.json"
+        manifest_path.chmod(0o644)
+        manifest = json.loads(manifest_path.read_text())
+        manifest["requires"] = []
+        manifest_path.write_text(json.dumps(manifest))
+        expect_failure(lambda: check_plugin(damaged, payload, fake08_plugin), "missing exact FAKE-08 plugin dependency")
+        # A raw core package or file is not a dependency on its Korri plugin.
+        native = json.loads((fake08_plugin / "manifest.json").read_text())["files"]["fake08"]
+        manifest["requires"] = [native]
+        manifest_path.write_text(json.dumps(manifest))
+        expect_failure(lambda: check_plugin(damaged, payload, fake08_plugin), "missing exact FAKE-08 plugin dependency")
+
+
 def expect_failure(action, fragment):
     try:
         action()
@@ -194,15 +221,16 @@ def expect_failure(action, fragment):
 
 
 def main():
-    if len(sys.argv) != 4:
-        raise SystemExit("usage: check-pack.py PAYLOAD ORIGINAL_FETCHURL_PINS PLUGIN")
-    payload, pins, plugin = map(Path, sys.argv[1:])
+    if len(sys.argv) != 5:
+        raise SystemExit("usage: check-pack.py PAYLOAD ORIGINAL_FETCHURL_PINS PLUGIN FAKE08_PLUGIN")
+    payload, pins, plugin, fake08_plugin = map(Path, sys.argv[1:])
     originals = json.loads(pins.read_text())
     check_payload(payload, originals)
-    check_plugin(plugin, payload)
+    check_plugin(plugin, payload, fake08_plugin)
     negative_checks(payload, originals)
+    negative_dependency_checks(plugin, payload, fake08_plugin)
     print(
-        "Verified 25 original cartridge hashes, structure, 24 credit entries, notice presence, native manifest and four rejection cases."
+        "Verified 25 original cartridge hashes, 24 credit entries, exact FAKE-08 plugin dependency, native artifacts and six rejection cases."
     )
 
 

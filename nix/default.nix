@@ -3,6 +3,7 @@
   nixpkgs,
   flake-utils,
   skate3,
+  plugin-publisher,
 }:
 flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   system:
@@ -24,10 +25,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     source = ../plugins/pico8-starter-pack;
     cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
+    fake08Plugin = plugin-publisher.packages.${system}.korri-plugin-fake08;
     plugin = mkPlugin {
       inherit source;
       publisher.namespace = "@simonwjackson";
-      plugin = source + /plugin.nix;
+      plugin = _: import (source + /plugin.nix) { inherit pkgs fake08Plugin; };
     };
     originals = import (source + /cartridges.nix) { inherit pkgs; };
     # Test inputs come from fetchurl's real attributes, not a second manifest.
@@ -37,7 +39,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     python = pkgs.python3.withPackages (packages: [ packages.pillow ]);
     check = pkgs.runCommand "pico8-starter-pack-check" { } ''
       ${python}/bin/python ${./check-pack.py} \
-        ${cartridges}/share/pico8-starter-pack ${pins} ${plugin}
+        ${cartridges}/share/pico8-starter-pack ${pins} ${plugin} ${fake08Plugin}
       ${pkgs.typescript}/bin/tsc --noEmit --strict --target es2022 ${source}/plugin.ts
       touch "$out"
     '';
