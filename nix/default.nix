@@ -28,6 +28,12 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/super-mario-world;
       plugin = _: import ../plugins/super-mario-world/plugin.nix { inherit pkgs; };
     };
+    zelda3Package = import ../plugins/zelda3/package.nix { inherit pkgs; };
+    zelda3Plugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/zelda3;
+      plugin = _: import ../plugins/zelda3/plugin.nix { inherit zelda3Package; };
+    };
     source = ../plugins/pico8-starter-pack;
     cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
     fake08Plugin = plugin-publisher.packages.${system}.korri-plugin-fake08;
@@ -69,6 +75,10 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-super-mario-world-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-super-mario-world-plugin' \
           '  nix run .#verify-smw -- /path/to/owned/USA-ROM.smc  # optional, temporary assets only' \
+          'Zelda3 supports x86_64-linux and aarch64-linux:' \
+          '  nix build --no-link .#korri-plugin-zelda3' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-zelda3-plugin' \
           'Skate 3 is x86_64 only:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
@@ -82,12 +92,21 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       pico8-starter-pack-cartridges = cartridges;
       korri-plugin-pico8-starter-pack = plugin;
       korri-plugin-super-mario-world = smwPlugin;
+      korri-plugin-zelda3 = zelda3Plugin;
+      zelda3 = zelda3Package;
     };
     checks = {
       pico8-starter-pack = check;
       korri-super-mario-world-plugin = import ./smw-check.nix {
         inherit pkgs;
         package = smwPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
+      korri-zelda3-plugin = import ./zelda3-check.nix {
+        inherit pkgs;
+        package = zelda3Plugin;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
