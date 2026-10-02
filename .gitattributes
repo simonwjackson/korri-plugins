@@ -1,5 +1,3 @@
-# Keep Creative Commons' original license bytes, including its final blank line.
-plugins/pico8-starter-pack/CC-BY-NC-SA-4.0.txt whitespace=-blank-at-eof
 # Unified-diff context markers retain a space on blank source lines.
 plugins/the-simpsons-game/account-storage.patch whitespace=-blank-at-eol
 # Unified-diff context for a blank source line is a single space.
