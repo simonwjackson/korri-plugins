@@ -31,5 +31,7 @@ jobs:
           install_url: https://releases.nixos.org/nix/nix-2.34.1/install
       - name: Check the real pack and generated manifest
         run: nix build --no-link .#checks.${{ matrix.system }}.pico8-starter-pack --print-build-logs
+      - name: Check Fallout packages, native architecture, admission and sandboxed launch without retail assets
+        run: nix build --no-link .#checks.${{ matrix.system }}.korri-fallout1-ce-plugin .#checks.${{ matrix.system }}.korri-fallout2-ce-plugin --print-build-logs
       - name: Check SMW package, admission and sandboxed launch without retail assets
         run: nix build --no-link .#checks.${{ matrix.system }}.korri-super-mario-world-plugin --print-build-logs

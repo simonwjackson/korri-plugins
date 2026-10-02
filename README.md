@@ -12,6 +12,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
 | `zelda3` | Standalone native engine and owned-ROM launcher | x86_64 and aarch64 Linux |
+| `korri-plugin-fallout1-ce` | `@simonwjackson:fallout1-ce` | x86_64 and aarch64 Linux |
+| `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-pico8-starter-pack` | `@simonwjackson:pico8-starter-pack` | x86_64 and aarch64 Linux |
 | `pico8-starter-pack-cartridges` | Standalone cartridge pack without the plugin manifest | x86_64 and aarch64 Linux |
 
@@ -78,6 +80,30 @@ arguments, and invalid-ROM rejection. The opt-in `verify-zelda3` test uses an
 owned ROM to test extraction, cached launch, and snapshot save/reload through
 Core's launch executor. It does not establish physical-device gameplay.
 Its separate check-only workflow does not publish or install it.
+
+## Fallout 1 and 2 Community Edition
+
+[Fallout 1 CE](plugins/fallout1-ce/README.md) and
+[Fallout 2 CE](plugins/fallout2-ce/README.md) provide separate native runners.
+They match the measured `MASTER.DAT` hashes from the owner's installations.
+They launch from the writable installation folder and preserve native config and
+save behavior. There is no archive extraction, automatic library registration,
+per-account save isolation, or `.dat` extension claim.
+
+Both architectures have package checks for native ELF, license notices, manifest,
+strict launch types, real host admission and the production callback executor.
+The owned-data test reached gameplay, wrote saves and reloaded them on x86_64.
+Both ARM64 engines also loaded and rewrote native saves on the ARM build machine.
+These were headless tests, not physical-device, audio or controller verification.
+CI requires no retail data. The engines use the Sustainable Use License, not an
+unrestricted open-source license. Signed publication and device approval remain
+separate from building these packages.
+
+```sh
+nix build --no-link .#korri-plugin-fallout1-ce .#korri-plugin-fallout2-ce
+nix build --no-link .#checks.x86_64-linux.korri-fallout1-ce-plugin .#checks.x86_64-linux.korri-fallout2-ce-plugin
+nix build --no-link .#checks.aarch64-linux.korri-fallout1-ce-plugin .#checks.aarch64-linux.korri-fallout2-ce-plugin
+```
 
 ## PICO-8 starter pack
 
