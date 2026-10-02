@@ -38,6 +38,9 @@ pkgs.stdenv.mkDerivation {
   };
   patches = [
     ./standalone-quest-path.patch
+    # Match the initialized 100 ms waits in the other Allegro Legacy workers.
+    # An indeterminate timespec can starve the audio event queue on ARM.
+    ./sound-thread-timeout.patch
   ]
   ++ lib.optional pkgs.stdenv.hostPlatform.isAarch64 ./aarch64-disable-x86-tile-simd.patch;
   patchFlags = [ "-p0" ];

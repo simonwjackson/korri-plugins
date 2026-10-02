@@ -38,6 +38,7 @@ pkgs.runCommand "korri-zquest-classic-plugin-check"
       pkgs.xvfb-run
       pkgs.xdotool
       pkgs.pulseaudio
+      pkgs.imagemagick
     ];
     LIBGL_ALWAYS_SOFTWARE = "1";
     GALLIUM_DRIVER = "llvmpipe";
