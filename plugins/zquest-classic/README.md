@@ -38,6 +38,11 @@ a new device service or kernel change. FreePats adds about 33 MiB and uses
 substitute or omitted instruments where its tone bank is incomplete. The original
 FreePats license and mapping remain in the closure.
 
+`sound-thread-timeout.patch` initializes the legacy audio worker's timeout
+before each wait, matching its keyboard, mouse, timer, and joystick workers.
+The original worker passed an uninitialized timeout. Sound-enabled ARM checks
+exposed stalls that the original muted checks did not cover.
+
 ## Saves and configuration
 
 The owner selected account-owned storage and content-hash save identity on

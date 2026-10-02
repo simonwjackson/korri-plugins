@@ -2,7 +2,9 @@
 """Exercise the packaged player through Core on an isolated Xvfb display."""
 
 import atexit
+import base64
 import hashlib
+import io
 import importlib.machinery
 import importlib.util
 import json
@@ -136,12 +138,39 @@ def wait_for(test, child, explanation, timeout=45):
     raise AssertionError(f"Timed out: {explanation}; logs in {root}")
 
 
+def capture_screen():
+    return subprocess.check_output(["import", "-window", "root", "png:-"], timeout=10)
+
+
+def screen_pixels():
+    with Image.open(io.BytesIO(capture_screen())) as image:
+        return image.convert("RGB").tobytes()
+
+
 def key(name):
-    subprocess.run(["xdotool", "keydown", name], check=True)
-    # The native game samples input per frame. Very short XTest events can vanish.
-    time.sleep(0.2)
-    subprocess.run(["xdotool", "keyup", name], check=True)
-    time.sleep(0.8)
+    if name == "F12":
+        subprocess.run(["xdotool", "keydown", name], check=True, timeout=5)
+        time.sleep(0.2)
+        subprocess.run(["xdotool", "keyup", name], check=True, timeout=5)
+        time.sleep(0.8)
+        return
+    # Menu input is acknowledged by the actual window, not a fixed sleep.
+    # Hold until the window reacts, then release before the next action.
+    before = screen_pixels()
+    deadline = time.monotonic() + 15
+    while time.monotonic() < deadline:
+        subprocess.run(["xdotool", "keydown", name], check=True, timeout=5)
+        try:
+            hold_until = time.monotonic() + 2
+            while time.monotonic() < hold_until and screen_pixels() == before:
+                time.sleep(0.1)
+        finally:
+            subprocess.run(["xdotool", "keyup", name], check=True, timeout=5)
+        time.sleep(0.3)
+        if screen_pixels() != before:
+            time.sleep(0.5)
+            return
+    raise AssertionError(f"No visible response to {name}")
 
 
 def snapshot_when_ready(directory, child):
@@ -241,6 +270,12 @@ def play(quest, owner, *, save=False, concurrent=False):
             assert "sentinel = keep-me" in (directory / "zc.cfg").read_text()
             return save_file
         except Exception:
+            screenshot = capture_screen()
+            (directory / "failure.png").write_bytes(screenshot)
+            print(
+                "ZQUEST_FAILURE_SCREEN=" + base64.b64encode(screenshot).decode(),
+                flush=True,
+            )
             if native_log.exists():
                 print(native_log.read_text(errors="replace"), flush=True)
             print(
