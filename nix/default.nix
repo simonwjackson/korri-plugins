@@ -10,7 +10,12 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   let
     pkgs = import nixpkgs {
       inherit system;
-      config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "nocturnerecomp";
+      config.allowUnfreePredicate =
+        pkg:
+        builtins.elem (nixpkgs.lib.getName pkg) [
+          "nocturnerecomp"
+          "2ship2harkinian"
+        ];
     };
     mkPlugin = korri.lib.${system}.mkPlugin { inherit pkgs; };
     opengoalPackages = import ../plugins/opengoal/package.nix { inherit pkgs; };
@@ -141,6 +146,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           engine = simpsonsEngine;
         };
     };
+    twoShipPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/2ship;
+      plugin = _: import ../plugins/2ship/plugin.nix { inherit pkgs; };
+    };
     source = ../plugins/pico8-starter-pack;
     cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
     fake08Plugin = plugin-publisher.packages.${system}.korri-plugin-fake08;
@@ -205,6 +215,22 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           ${simpsonsPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
+    verifyTwoShip = pkgs.writeShellApplication {
+      name = "verify-2ship";
+      runtimeInputs = [
+        pkgs.xorg.xorgserver
+        pkgs.xorg.xauth
+        pkgs.xdotool
+      ];
+      text = ''
+        export LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri
+        export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.mesa ]}
+        export __GLX_VENDOR_LIBRARY_NAME=mesa
+        export SDL_VIDEODRIVER=x11
+        exec ${pkgs.python3}/bin/python3 ${./2ship-runtime-check.py} \
+          ${twoShipPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
     help = pkgs.writeShellApplication {
       name = "korri-plugins-help";
       text = ''
@@ -249,6 +275,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-opengoal-plugin' \
           '  nix run .#prepare-opengoal -- --game jak2 --iso /path/to/owned.iso --output /path/to/new-data' \
           'OpenGOAL requires registered out/<game>/iso/GAME.CGO releases and their complete prepared directories.' \
+          '2 Ship 2 Harkinian supports x86_64 and aarch64 Linux:' \
+          '  nix build --no-link .#korri-plugin-2ship' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-2ship-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-2ship-plugin' \
+          '  nix run .#verify-2ship -- /path/to/owned/USA-ROM.n64  # temporary game assets only' \
           'Skate 3 supports x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
@@ -291,6 +322,8 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       actraiser = actraiserPackage;
       korri-plugin-actraiser = actraiserPlugin;
       korri-plugin-the-simpsons-game = simpsonsPlugin;
+      korri-plugin-2ship = twoShipPlugin;
+      verify-2ship = verifyTwoShip;
     };
     checks = {
       korri-actraiser-plugin = import ./actraiser-check.nix {
@@ -301,6 +334,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         korridPackage = korri.packages.${system}.korrid;
       };
       pico8-starter-pack = check;
+      korri-2ship-plugin = import ./2ship-check.nix {
+        inherit pkgs;
+        package = twoShipPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
       korri-solarus-plugin = import ./solarus-check.nix {
         inherit pkgs solarusPackage;
         package = solarusPlugin;
@@ -370,6 +410,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         type = "app";
         program = "${verifyActraiser}/bin/verify-actraiser";
         meta.description = "Privately verify native ActRaiser boot, frames and settings with an owned ROM.";
+      };
+      verify-2ship = {
+        type = "app";
+        program = "${verifyTwoShip}/bin/verify-2ship";
+        meta.description = "Test 2 Ship extraction, startup, saves and shutdown with an owned ROM on a build machine.";
       };
       verify-nocturne = {
         type = "app";

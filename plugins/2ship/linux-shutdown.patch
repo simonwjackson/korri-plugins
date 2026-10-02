@@ -1,0 +1,86 @@
+From: Korri plugin packaging
+Subject: [PATCH] Stop the Linux main loop before destroying audio synchronization
+
+libultraship's SIGINT/SIGTERM ShutdownHandler calls exit(1). With the
+2 Ship audio worker still waiting, the main thread blocks in
+pthread_cond_destroy during static destruction. Install flag-only handlers
+before audio initialization and request a normal main-loop exit instead.
+main.c then reaches DeinitOTR and OTRAudio_Exit joins the worker. No logging,
+allocation, SDL calls or teardown run in the signal handler.
+
+Also return an explicit successful status from the native entry point.
+Upstream maps void SDL_main to void main on Linux; normal cleanup produced
+exit status 32 on aarch64 despite completing successfully.
+
+--- a/mm/src/code/main.c
++++ b/mm/src/code/main.c
+@@ -52,7 +52,7 @@
+ #define SDL_main main
+ #endif
+ 
+-void SDL_main(int argc, char** argv /* void* arg*/) {
++int SDL_main(int argc, char** argv /* void* arg*/) {
+     intptr_t fb;
+     intptr_t sysHeap;
+     s32 exit;
+@@ -149,4 +149,5 @@
+     FreeConsole();
+ #endif
+     Heaps_Free();
++    return 0;
+ }
+--- a/mm/src/code/graph.c
++++ b/mm/src/code/graph.c
+@@ -7,6 +7,7 @@
+ #include <libultraship/bridge/consolevariablebridge.h>
+ #include <libultraship/bridge/windowbridge.h>
+ #include <string.h>
++#include <signal.h>
+ 
+ // Variables are put before most headers as a hacky way to bypass bss reordering
+ FaultAddrConvClient sGraphFaultAddrConvClient;
+@@ -439,8 +440,24 @@
+     Graph_Destroy(&runFrameContext.gfxCtx);
+ }
+ 
++static volatile sig_atomic_t sShutdownRequested = 0;
++
++static void Graph_RequestShutdown(int signalNumber) {
++    sShutdownRequested = 1;
++}
++
++void Graph_InstallShutdownHandlers(void) {
++    struct sigaction shutdownAction = { 0 };
++    shutdownAction.sa_handler = Graph_RequestShutdown;
++    sigemptyset(&shutdownAction.sa_mask);
++    sigaction(SIGINT, &shutdownAction, NULL);
++    sigaction(SIGTERM, &shutdownAction, NULL);
++}
++
+ void Graph_ThreadEntry(void* arg0) {
+-    while (WindowIsRunning()) {
++    // The caller owns teardown, including joining the audio worker. Do not
++    // call exit from a signal handler while its condition variable is in use.
++    while (!sShutdownRequested && WindowIsRunning()) {
+         RunFrame();
+     }
+ }
+--- a/mm/2s2h/BenPort.cpp
++++ b/mm/2s2h/BenPort.cpp
+@@ -114,6 +114,7 @@
+ GameInteractor* GameInteractor::Instance;
+ AudioCollection* AudioCollection::Instance;
+ 
++extern "C" void Graph_InstallShutdownHandlers(void);
+ extern "C" char** cameraStrings;
+ bool prevAltAssets = false;
+ std::vector<std::shared_ptr<std::string>> cameraStdStrings;
+@@ -187,6 +188,8 @@
+     context->InitControlDeck(controlDeck);
+ 
+     context->InitCrashHandler();
++    // Override immediate-exit shutdown handlers before any audio worker starts.
++    Graph_InstallShutdownHandlers();
+     context->InitConsole();
+ 
+     auto benInputEditorWindow = std::make_shared<BenInputEditorWindow>("gWindows.BenInputEditor", "2S2H Input Editor");
