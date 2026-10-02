@@ -28,7 +28,8 @@ The launcher checks the hash again on every launch, even when assets exist.
 `package.nix` builds only upstream's `zelda3` Make target on a build machine.
 It does not run the default target, which also extracts game data. Devices
 receive the native executable, Python with Pillow/PyYAML, extraction scripts,
-the extractor's annotation font and palette-usage table, and upstream's INI.
+the extractor's annotation font and palette-usage table, and upstream's INI
+with desktop fullscreen enabled.
 No compiler or game-data download runs at launch.
 
 `plugin.ts` returns the approved executable and two literal arguments: the
@@ -44,7 +45,7 @@ The layout inside that root comes directly from upstream:
 | Path beneath the account's `zelda3/` directory | Purpose |
 |---|---|
 | `zelda3_assets.dat` | Cached extraction from the validated ROM. |
-| `zelda3.ini` | Upstream defaults, copied once and then left editable. |
+| `zelda3.ini` | Packaged defaults with desktop fullscreen, copied once and then left editable. |
 | `saves/` | Upstream SRAM and snapshot files. |
 
 The launcher locks that directory for the whole session. A second launch
@@ -61,11 +62,20 @@ would enable upstream's optional emulation comparison mode.
 
 ## Configuration and limits
 
-Edit the native `zelda3.ini` while the game is stopped. Upstream defaults
-remain unchanged, including windowed mode and 4:3 rendering. The file
-documents fullscreen, widescreen, SDL/OpenGL output, audio, keyboard and
-controller settings. Optional MSU music, shaders, and sprite replacements
-must be supplied separately. Korri launch overrides are rejected rather
+Edit the native `zelda3.ini` while the game is stopped. New configurations use
+`[Graphics] Fullscreen = 1`, upstream's desktop-fullscreen mode. A windowed game
+can remain hidden behind Korri's fullscreen portal. Other upstream defaults,
+including 4:3 rendering and the `Alt+Return` fullscreen toggle, remain unchanged.
+The cost is fullscreen startup on desktop Linux too; set `Fullscreen = 0` if
+windowed startup is wanted. The file documents widescreen, SDL/OpenGL output,
+audio, keyboard and controller settings.
+
+The launcher preserves existing configurations. An update does not silently
+rewrite a player's choice. For a profile created by the earlier package, stop
+the game and explicitly change its native `[Graphics] Fullscreen` value to `1`.
+The Mini V2's existing profile received that one-off correction separately.
+
+Optional MSU music, shaders, and sprite replacements must be supplied separately. Korri launch overrides are rejected rather
 than silently ignored. No RetroArch session controls are declared.
 
 The first launch has Python extraction overhead and needs writable space
@@ -91,8 +101,8 @@ actual ELF architecture, linked executable startup, packaged dependencies,
 generated manifest, strict launch types, effect-free host admission, and
 production sandboxed callback execution. They test literal paths containing
 spaces and shell syntax, unsupported overrides, invalid ROM rejection,
-cache revalidation, and preservation of existing configuration and saves
-on rejection. They contain no retail ROM or game assets.
+cache revalidation, the packaged fullscreen default and toggle, and preservation
+of existing configuration and saves on rejection. They contain no retail ROM or game assets.
 
 The ROM-free checks do not exercise successful extraction or gameplay.
 The check-only GitHub workflow runs on both architectures. It neither
@@ -115,9 +125,10 @@ On 2026-10-02, the supported ROM from the owner's `myoko` Downloads archive
 passed headless tests on x86_64 and aarch64 build machines. Both extracted
 683888 bytes with SHA-256
 `0fe2e4bd75d70f06fb9a74cd3a9cb336c838149b831b56e8792114a89292c793`.
-The tests checked cold extraction, copied default configuration, refusal of
-a concurrent session, cached launch without asset replacement, native
-snapshot save/reload, preserved edited configuration, and an unchanged ROM.
+The tests check cold extraction, a freshly seeded fullscreen configuration,
+refusal of a concurrent session, cached launch without asset replacement,
+native snapshot save/reload, preserved edited configuration including an
+explicit windowed choice, and an unchanged ROM.
 
 Headless tests do not verify visible rendering, audible output, physical
 controllers, in-game SRAM saves, full-game completion, or device installation.

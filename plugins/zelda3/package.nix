@@ -14,6 +14,11 @@ pkgs.stdenv.mkDerivation {
     rev = "fbbb3f967a51fafe642e6140d0753979e73b4090";
     hash = "sha256-oMSjTLPOWacOyQg5kZUPMZm3ciJGfteqbhNxFJD+2Xg=";
   };
+  # A windowed game can remain hidden behind the fullscreen portal. Keep the
+  # setting in upstream's native INI; the launcher copies it only for new users.
+  postPatch = ''
+    substituteInPlace zelda3.ini --replace-fail 'Fullscreen = 0' 'Fullscreen = 1'
+  '';
   buildInputs = [ pkgs.SDL2 ];
   enableParallelBuilding = true;
   # Upstream's default target also extracts copyrighted assets. Build only C.

@@ -3,6 +3,7 @@
 """Opt-in headless test on a build machine. Never include a ROM in Nix inputs."""
 
 import argparse
+import configparser
 import hashlib
 import json
 import os
@@ -105,10 +106,15 @@ assert assets.stat().st_size > 0
 cache = (assets.stat().st_mtime_ns, hashlib.sha256(assets.read_bytes()).hexdigest())
 config = state / "zelda3.ini"
 assert config.read_bytes() == (native / "share/zelda3/zelda3.ini").read_bytes()
+seeded_config = configparser.ConfigParser(interpolation=None)
+seeded_config.read(config)
+assert seeded_config.getint("Graphics", "Fullscreen") == 1
 # Test upstream's snapshot writer and reader without changing package defaults
 # or using the player's existing saves.
 text = config.read_text().replace("Autosave = 0", "Autosave = 1")
 text = text.replace("OutputMethod = SDL\n", "OutputMethod = SDL-Software\n")
+# Existing user choices must survive subsequent launches, including windowed mode.
+text = text.replace("Fullscreen = 1\n", "Fullscreen = 0\n")
 config.write_text(text)
 session("warm-save")
 snapshot = state / "saves/save0.sav"
