@@ -77,6 +77,63 @@ device screenshot showed the game's name-entry scene. The subsequent owner
 report confirmed physical sound and controls. Fullscreen alone does not imply
 that the game viewport expands to the display ratio.
 
+## Screen ratio Auto update
+
+The owner then chose Screen ratio Auto for flat and Diorama action stages.
+Source `aa844704e1858ef4d44b3519263b45ec23200d9a` landed on main. Its research
+record, `docs/research/actraiser-auto-viewport.md`, holds the build-machine
+results on x86_64 and aarch64.
+
+| Artifact | Exact value |
+|---|---|
+| ARM64 plugin | `/nix/store/gcjq95ryl6wdn26pjrsfnrhsb3sn4l8z-korri-plugin` |
+| ARM64 engine | `/nix/store/5fz1vfc9aswlqwv530pliarxgnz807pn-actraiser-0-unstable-cdd7608` |
+| Exact-package approval | `ec26f3b17c27aeea7d1a3c219fa684aa83cb8eab827224417c34c2170c4632f4` |
+| Retained previous package | `/nix/store/gkjl28k6gnlal1msya200imbsb7mv9gg-korri-plugin` |
+
+`fuji` built the landed revision. Its closure is identical to the closure that
+passed aarch64 acceptance, except the top-level plugin path: that path changed
+only because the plugin README in its source input changed. The existing
+personal key signed the closure locally. The device ran `korri-plugin update`
+while no ActRaiser process was running. The update kept the previous approved
+package as `previous` for rollback. Recursive signature verification passed.
+ActRaiser settings and saves, other plugin selections, publisher bindings and
+the system generation stayed unchanged. No session was stopped or started.
+
+Installing the update does not select Auto. The player's Screen ratio stays as
+saved until the player chooses Auto in the game's settings menu.
+
+### Auto on the device panel
+
+After korrid had reported no session for 120 seconds, a check ran three
+isolated temporary accounts through production `korrid plugin-launch`. Each
+used the installed package, a fullscreen Wayland window, Turnip Adreno 650
+(Mesa 25.3.2), Auto saved in that account, and upstream's Aitos replay. The
+checked frames are the classic screen (gf 1200, map 00/09), Aitos 04/04
+(gf 1600) and the smaller room 04/05 (gf 2600). The same parser as the build
+machine test evaluated the captures.
+
+| Case | Drawable | Budget L/R/T/B | Final viewport | Result |
+|---|---|---|---|---|
+| Classic screen, all cases | 1240x1080 | 0/0/0/0 | unchanged native frame | Passed |
+| Flat, CRT pixels | 1240x1080 | 0/0/18/18 | 0/0/1240/1079 | Scenery below the original view in 04/05; rendered rows below it in 04/04 |
+| Diorama, CRT pixels | 1240x1080 | 0/0/18/18 | 0/0/1240/1079 | Scenery below the original view in 04/05 |
+| Flat, square pixels | 1240x1080 | 1/1/0/0 | 0/2/1240/1076 | Scenery left and right of the original view in 04/04 |
+
+With CRT pixels, the 256x224 view alone fits this panel at 1240x930, as the
+classic screen's viewport shows, leaving 75-pixel bars above and below. In
+the action stages Auto fills 1240x1079 instead.
+All three runs exited 0. The system generation, publisher bindings and the
+player's ActRaiser data tree had the same hashes before and after. No
+ActRaiser process remained.
+
+The panel runs at its real refresh rate, so each run reported about 2950
+tick presents and 51 to 56 re-presents for 3000 game ticks. The build machine
+tests are the exact-cadence evidence. The device check covers only the panel
+shape; resizing is covered by the build machine tests. With the default
+Diorama camera, the tilted planes still leave a thin background edge at the
+top and bottom of the panel. Auto does not change the player's camera.
+
 ## Limits and retained evidence
 
 Campaign save/reload, full campaign completion, and reboot persistence were
@@ -87,6 +144,10 @@ Two pre-existing failures were recorded and left unchanged:
 `korri-plugin-host.service` failed restoring Sunshine, and
 `korri-sunshine-input-setup.service` was not found. They did not prevent the
 verified ActRaiser launch, but boot-wide plugin restoration remains unverified.
+After the device's clean reboots at 22:27 and 22:58 UTC, before the Auto
+update, the failed-unit list was empty. After the first of those reboots,
+korrid briefly reported `HostRecoveryBlocked` for session status; after the
+second it reported no active session. Neither was changed by this work.
 
 Initial device receipts and logs are in
 `/var/tmp/actraiser-miniv2-deploy-gf_riq51/` on the device. The corresponding
