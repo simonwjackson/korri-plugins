@@ -17,6 +17,7 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-actraiser` | `@simonwjackson:actraiser`, private owned-ROM build | x86_64 and aarch64 Linux |
 | `actraiser` | Private native executable and owned-ROM launcher | x86_64 and aarch64 Linux |
 | `korri-plugin-the-simpsons-game` | `@simonwjackson:the-simpsons-game` | x86_64 with AVX2 and aarch64 Linux build targets |
+| `korri-plugin-2ship` | `@simonwjackson:2ship` | x86_64 and aarch64 Linux |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-solarus` | `@simonwjackson:solarus` | x86_64 and aarch64 Linux |
 | `solarus` | Standalone Solarus 2.1.4 runtime | x86_64 and aarch64 Linux |
@@ -118,6 +119,24 @@ Unlike SMW and Zelda3, this build needs the ROM and produces copyrighted
 ROM-derived code. Keep its inputs, helper, and output closures out of public
 caches and release assets. Read the plugin instructions before building.
 No publication or installation workflow is added.
+
+## 2 Ship 2 Harkinian
+
+[2 Ship 2 Harkinian](plugins/2ship/README.md) adds a native Majora's Mask runner
+for the measured NTSC-U 1.0 ROM. The plugin packages engine 3.0.1 without retail
+data, extracts owned assets at launch, and preserves native configuration and saves.
+Its Linux shutdown fix is covered by the opt-in owned-ROM test.
+
+```sh
+nix build --no-link .#korri-plugin-2ship
+nix build --no-link .#checks.x86_64-linux.korri-2ship-plugin
+nix build --no-link .#checks.aarch64-linux.korri-2ship-plugin
+nix run .#verify-2ship -- /path/to/owned/USA-ROM.n64
+```
+
+Run these on build machines. CI uses no retail data. The optional runtime test
+uses temporary assets and software rendering, not a physical handheld.
+Signed publication and device installation require separate approval.
 
 ## Super Mario World
 
@@ -279,7 +298,7 @@ A completed pack needs no download to obtain its cartridge files.
 
 ## Publication boundary
 
-The check-only GitHub workflow checks the PICO-8 pack and SMW plugin on both Linux architectures.
+The check-only GitHub workflows build plugin packages without retail game data.
 It does not build the unrelated Skate 3 closure or upload release assets.
 It does not sign packages, configure cache keys or install anything on a device.
 Source commits and package construction are separate from signed-cache publication and device approval.
