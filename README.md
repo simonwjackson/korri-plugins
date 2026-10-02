@@ -70,11 +70,14 @@ engine; devices receive it prebuilt. Python asset extraction is not compilation.
 nix build --no-link .#korri-plugin-zelda3
 nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin
 nix build --no-link .#checks.aarch64-linux.korri-zelda3-plugin
+nix run .#verify-zelda3 -- '/path/to/owned/USA-ROM.sfc'
 ```
 
-The checks cover packaging, native startup, host admission, launch arguments,
-and invalid-ROM rejection. They do not establish gameplay or physical-device
-acceptance. Its separate check-only workflow does not publish or install it.
+The ROM-free checks cover packaging, native startup, host admission, launch
+arguments, and invalid-ROM rejection. The opt-in `verify-zelda3` test uses an
+owned ROM to test extraction, cached launch, and snapshot save/reload through
+Core's launch executor. It does not establish physical-device gameplay.
+Its separate check-only workflow does not publish or install it.
 
 ## PICO-8 starter pack
 
