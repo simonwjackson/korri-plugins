@@ -1,0 +1,4 @@
+.worktree/
+result
+result-*
+__pycache__/
