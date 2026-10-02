@@ -47,8 +47,25 @@ The existing Skate 3 plugin uses Core's `RunnerRecord.releases`, immutable nativ
 
 Neither inspected game checkout has a root redistribution license. That observation does not resolve every source or dependency license. Public source access and upstream binary downloads do not by themselves authorize public cache publication. Keep commercial inputs and generated outputs private pending review.
 
-Recommendation, not an approved decision: attempt a bounded, clean-checkout x86_64 build and gameplay check of Oery's Linux project before writing a new Linux port. The cost is an experimental baseline with narrower compatibility evidence. Success would not establish full-game completion or ARM handheld performance.
+Approved decision on 2026-10-02: validate Oery's Linux project first. Attempt a bounded, clean-checkout x86_64 build and gameplay check before writing a new Linux port. The cost is an experimental baseline with narrower compatibility evidence. Success would not establish full-game completion or ARM handheld performance.
 
 The alternative is to port himdo's release to Linux/Vulkan first. It has stronger completion reports, but brings Windows-specific code, writable-path changes, renderer validation, and ongoing fork maintenance. Neither route is a package-only task.
 
-Before implementation, choose the native baseline and locate a matching owned game dump. Then reproduce the build, verify rendering/input/audio/save-load, test aarch64, and only expose working plugin outputs. Keep compilation on build machines and preserve signature and permission checks during any later installation.
+Before a game build, locate a matching owned game dump. Then reproduce the build, verify rendering/input/audio/save-load, test aarch64, and only expose working plugin outputs. Keep compilation on build machines and preserve signature and permission checks during any later installation.
+
+## First validation attempt
+
+The upstream checkout at `f3ae1ad1fcb9d94bfa200ef2d3b018dec917c092` remains clean. No game executable was generated or built.
+
+A bounded read-only inventory found no Fable-named input in the checked locations. On `zao`, these included Downloads, local Korri data, and the Towada gaming/downloads trees. On `aka`, these included Downloads, build directories, local Korri data, and `/srv/games`. The scan stopped at five directory levels and did not follow symlinks. This is not proof that the owner has no copy. A host and path are needed before continuing.
+
+The public reproduction also needs patch repair. This command against the unchanged upstream checkout fails with exit 128:
+
+```sh
+git apply --stat docs/re/patches/sdk-tessellation-cbuffer-set.patch
+# error: No valid patches in input (allow with "--allow-empty")
+```
+
+The file contains a rendered side-by-side diff, not a machine-applicable patch. Its intended change moves the Vulkan tessellation uniform block from descriptor set 0 to set 1. The other two SDK patch files also contain side-by-side text on inspection; they were not applied. Reconstruct only needed changes against the pinned SDK, then verify them with real builds and runtime behavior. Do not treat the displayed patch text as an already reproducible dependency.
+
+The immediate blocker is the owned input. Oery's codegen hash gate expects French GOTY `default.xex` with SHA-256 `0e1ea96ded3407874cbbb3a9587d79f1340a57a9d1ba2feebcfdbc9ed1e4b6e5`. A different dump requires compatibility investigation, not bypassing that gate. Do not download replacement game files or invent a substitute fixture to claim gameplay acceptance.
