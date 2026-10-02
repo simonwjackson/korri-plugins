@@ -1,0 +1,18 @@
+diff --git a/src/ui/rex_app.cpp b/src/ui/rex_app.cpp
+index b94fe9e..9bc1d95 100644
+--- a/src/ui/rex_app.cpp
++++ b/src/ui/rex_app.cpp
+@@ -471,10 +471,9 @@ void ReXApp::LaunchModule() {
+     module_thread_ = std::thread([this, main_thread = std::move(main_thread)]() mutable {
+       main_thread->Wait(0, 0, 0, nullptr);
+       OnGuestThreadExit(main_thread.get());
+-      REXLOG_INFO("Execution complete");
+-      if (!shutting_down_.load(std::memory_order_acquire)) {
+-        app_context().CallInUIThread([this]() { app_context().QuitFromUIThread(); });
+-      }
++      // Fable II's worker threads continue booting after the entry thread returns.
++      // Keep the application open until the user closes the window.
++      REXLOG_INFO("Guest main thread exited; keeping application open.");
+     });
+   });
+ }

@@ -2,7 +2,7 @@
 
 Checked on 2026-10-02 for a Fable 2 plugin in `simonwjackson/korri-plugins`, targeting x86_64 and aarch64 Linux.
 
-No plugin or native package was implemented. No game build, launch, or device test ran. Source inspection establishes the blockers below, not runtime compatibility.
+No plugin or deployment package was implemented. Native x86_64 validation now covers menu navigation, character selection, new-game save creation, save reload into Bowerstone Old Town, stick-controlled movement, and nonzero audio output. Full-campaign completion, physical-controller/device acceptance and ARM gameplay remain unverified. The sections below distinguish source findings from subsequent runtime tests.
 
 ## Findings
 
@@ -68,4 +68,62 @@ git apply --stat docs/re/patches/sdk-tessellation-cbuffer-set.patch
 
 The file contains a rendered side-by-side diff, not a machine-applicable patch. Its intended change moves the Vulkan tessellation uniform block from descriptor set 0 to set 1. The other two SDK patch files also contain side-by-side text on inspection; they were not applied. Reconstruct only needed changes against the pinned SDK, then verify them with real builds and runtime behavior. Do not treat the displayed patch text as an already reproducible dependency.
 
-The immediate blocker is the owned input. Oery's codegen hash gate expects French GOTY `default.xex` with SHA-256 `0e1ea96ded3407874cbbb3a9587d79f1340a57a9d1ba2feebcfdbc9ed1e4b6e5`. A different dump requires compatibility investigation, not bypassing that gate. Do not download replacement game files or invent a substitute fixture to claim gameplay acceptance.
+The first attempt stopped for the owned input. Oery's codegen hash gate expects French GOTY `default.xex` with SHA-256 `0e1ea96ded3407874cbbb3a9587d79f1340a57a9d1ba2feebcfdbc9ed1e4b6e5`. A different dump requires compatibility investigation, not bypassing that gate. Do not download replacement game files or invent a substitute fixture to claim gameplay acceptance.
+
+## Supplied input and SDK build
+
+The user supplied `simon@myoko:~/Downloads/`. The ISO there is named `Fable 2 PLT.iso`. Its contents identify USA/Europe GOTY, not Oery's French GOTY input.
+
+| Measurement | Verified value |
+|---|---|
+| ISO bytes | `7838695424` |
+| ISO SHA-256, original and local copy | `2cdaafead95680e2c6fe8886a89f1ae3d5e41549857c7fc125a12aab1cb99ad9` |
+| Extracted `default.xex` bytes | `21217280` |
+| Extracted XEX SHA-256 | `88c4ef2e18e65409444d1b068eff921d1f7e180a5ae64edc64ba6b0872372662` |
+| XEX payload offset | `0x4000` |
+| XEX payload SHA-256 | `84651650d00ccd62021847a39fad6e63da0f7c49ef587a733e215e5ec5a23a4a` |
+| Title, media and version | `4D5307F1`, `716F0A0D`, `0.0.0.26` |
+| Entry point and image base | `82CBB970`, `82000000` |
+| Extracted regular files and total bytes | `451`, `6997047778` |
+
+The remote ISO's size and modification time stayed unchanged across hashing. The local copy has the same whole-file hash. Extraction used [XboxDev/extract-xiso](https://github.com/XboxDev/extract-xiso/tree/3f5b62cfe68f000b0e3c8a30104973f3a297948e), compiled on `zao`, in extract-only mode. A private checksum manifest records every extracted file. Originals and generated code stay outside the plugin repository and public caches.
+
+The XEX hash matches himdo's recorded USA/Europe GOTY image. Its payload hash also matches the USA/Europe payload in `docs/GERMAN_GOTY_SUPPORT.md`. The title ID, entry point and image base match Oery's record. These checks identify the input; they do not establish compatibility with every Oery hook. The private validation checkout pins this measured XEX hash in `docs/re/entry-xex.sha256` and generates code from that same file. It does not substitute a French executable or remove hash validation.
+
+The SDK at `c94f5ebdcb3c9d1a460ca48e04f9758448f8d518` built on `zao` with its exact 22 top-level submodule pins. The only source changes reconstruct the published [keep-open](fable2-patches/sdk-keep-open.patch) and [tessellation descriptor-set](fable2-patches/sdk-tessellation.patch) fixes as valid unified diffs. The temporary fault diagnostic patch is excluded. Both diffs pass forward and reverse applicability checks against the pinned source.
+
+Clang 20.1.8, CMake 4.3.4 and Ninja 1.13.2 built the native x86_64 CLI, runtime and Vulkan plugin in RelWithDebInfo mode. Running `rexgluerd --version` reports `0.10.0.2-dev.gc94f5eb`. This verifies the SDK build, not Fable gameplay. The artifacts contain absolute Nix dependencies and are not deployment packages. No device build or installation ran.
+
+Game code generation and the native game build use an active supervisor that polls exit status and log progress every 30 seconds. Each stage has a timeout and retains its full log. ARM work and plugin publication remain gated on native validation.
+
+## Native x86_64 results
+
+Normal code generation passed in 128 seconds and wrote 589 files. The known large-function notice for `0x82242ED0` remained informational. No forced code generation or generated-source edit was used.
+
+The source-backed game build completed all 1,111 steps in 1,077 seconds with three build jobs. The output is a native x86-64 ELF, not Wine, CPU translation or an emulator process. It remains a private development build, not a reproducible Nix deployment output.
+
+The first launch stopped before the game with `SDL_InitSubSystem(SDL_INIT_VIDEO) failed: wayland not available`. CMake requested Wayland, but SDL's configure summary showed it disabled. `WAYLAND_SCANNER` was missing. Adding `wayland-scanner` to the private Oery devshell enabled `SDL_VIDEO_DRIVER_WAYLAND`; the rebuild took 29 seconds. This is a build-tool fix, not a game-code change.
+
+A later run reached the Fable II title screen and attract video on an NVIDIA GeForce RTX 3060 Laptop GPU, driver 580.142. Screenshots were inspected directly. The game logged a six-channel, 48 kHz audio endpoint. The test used a private headless Sway display and a private PulseAudio null sink. This establishes startup and visible output, not sound quality or physical-controller acceptance. Startup time varies, and several runs remained white for minutes before advancing.
+
+The first keyboard-based automation was inconclusive. A Wayland event viewer confirmed input delivery. A debugger launched as the game's parent confirmed `mnk_mode=true`, an attached SDK window, focus, and Space events reaching the SDK's MnK driver. Do not treat these early harness results as proof of a game input defect.
+
+The successful test uses SDL's documented process-local virtual-gamepad API. The first version attached before ReXGlue installed its device-event watch, so ReXGlue never discovered the controller. Deferring attachment until after SDK startup fixed the harness. ReXGlue then logged the controller at connection order 0. The test creates no kernel input device, changes no system input permissions, and does not alter game code.
+
+With that controller, the game accepted A and D-pad input, opened New Game, selected a character, and created `Hero000/mainsave.bin` with 130,483 bytes. This was a real bulk save, not just the 328-byte header. A new process using the same private `user_data_root` offered Continue, loaded Bowerstone Old Town, and showed the child hero with the opening objective. Left-stick input then moved the hero along the street. Screenshots were inspected before and after movement.
+
+A ten-second capture from the isolated game-audio monitor contained 2,881,536 signed 16-bit samples across six channels at 48 kHz. Of those, 2,833,153 were nonzero; peak magnitude was 1,977 and RMS was 166.222. This verifies delivery of game audio data, not listening quality.
+
+The test runtime loaded `librexruntimerd.so` and `libTracyClientrd.so` from the private pinned SDK output, verified through its process mappings. A link audit also found an inherited Korri `outputs/out/lib` entry in RUNPATH. The development artifacts therefore remain unsuitable for deployment; final Nix packaging must remove ambient build-environment paths.
+
+An experiment removed Oery's direct UI/ImGui linkage from the executable. It linked successfully and removed duplicate cvar warnings, but did not establish an input improvement. The experiment was reverted. No such patch is part of the retained source changes.
+
+## ARM build status
+
+A supervised build started on the existing `fuji` aarch64 build machine. Its private workspace is `/tmp/fable2-arm-20261002-4fb26a712c8d`. Source commits, all SDK gitlinks, both patches, and the owned XEX hash passed staging checks. Compilation and final ARM ELF/link checks were still pending when this note was updated.
+
+The build resolves ISA flags and compiler names from the pinned SDK's `linux-arm64` preset. Only private build setup changes select `aarch64-linux`, add `wayland-scanner`, choose ARM output paths, and pin the measured USA/Europe XEX. Oery's game hooks and original UI linkage remain unchanged. Sources and owned/generated game code stay out of public caches. The isolated devshell passed to Nix contains only its flake and lock.
+
+The supervisor polls every 30 seconds and propagates phase failures. Build limits are three compiler jobs, two hours for each SDK build stage, four hours for the game stage, and eight hours for aggregate native validation. These are limits, not time estimates. No ARM GUI or handheld acceptance follows from a successful build.
+
+The intended output paths are `oery/build/native/fable_ii` and `sdk/out/linux-arm64/` under that private workspace. Verify the actual final gate logs before using or describing those outputs as built.

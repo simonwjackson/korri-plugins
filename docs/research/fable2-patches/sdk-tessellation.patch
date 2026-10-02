@@ -1,0 +1,14 @@
+diff --git a/src/graphics/vulkan/pipeline_cache.cpp b/src/graphics/vulkan/pipeline_cache.cpp
+index 91ac08f..aa99e37 100644
+--- a/src/graphics/vulkan/pipeline_cache.cpp
++++ b/src/graphics/vulkan/pipeline_cache.cpp
+@@ -92,6 +92,8 @@ constexpr bool IsPatchIndexedHostVertexShaderType(
+ std::string GetTessellationSystemConstantsBlockGlsl() {
+   std::string source;
+-  source += "layout(set = 0, binding = 0, std140) uniform XeSystemConstants {\n";
++  // Set 1 = kDescriptorSetConstants, binding 0 = kConstantBufferSystem.
++  // Set 0 contains shared-memory storage buffers, not uniform buffers.
++  source += "layout(set = 1, binding = 0, std140) uniform XeSystemConstants {\n";
+   source += fmt::format("  layout(offset = {}) uint xe_vertex_index_endian;\n",
+                         offsetof(SpirvShaderTranslator::SystemConstants, vertex_index_endian));
+   source += fmt::format("  layout(offset = {}) int xe_vertex_base_index;\n",
