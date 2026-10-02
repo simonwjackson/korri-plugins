@@ -20,30 +20,33 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         exec ${pkgs.python3}/bin/python3 ${../plugins/opengoal/prepare.py} ${opengoalPackages.tools} "$@"
       '';
     };
-    # Namespace matches the personal repository's existing PICO-8 producer.
-    # The native flake provides a prebuilt release only for x86_64 Linux.
-    packages = pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-      opengoal = opengoalPackages.runtime;
-      opengoal-tools = opengoalPackages.tools;
-      korri-plugin-opengoal = mkPlugin {
-        publisher.namespace = "@simonwjackson";
-        source = ../plugins/opengoal;
-        plugin =
-          _:
-          import ../plugins/opengoal/plugin.nix {
-            opengoalRuntime = opengoalPackages.runtime;
-          };
+    packages =
+      pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+        opengoal = opengoalPackages.runtime;
+        opengoal-tools = opengoalPackages.tools;
+        korri-plugin-opengoal = mkPlugin {
+          publisher.namespace = "@simonwjackson";
+          source = ../plugins/opengoal;
+          plugin =
+            _:
+            import ../plugins/opengoal/plugin.nix {
+              opengoalRuntime = opengoalPackages.runtime;
+            };
+        };
+      }
+      // {
+        # The native flake's default is the prebuilt release on x86_64 and the
+        # source build on aarch64. Native builds run on builders, never devices.
+        korri-plugin-skate-3 = mkPlugin {
+          publisher.namespace = "@simonwjackson";
+          source = ../plugins/skate-3;
+          plugin =
+            _:
+            import ../plugins/skate-3/plugin.nix {
+              skate3Package = skate3.packages.${system}.default;
+            };
+        };
       };
-      korri-plugin-skate-3 = mkPlugin {
-        publisher.namespace = "@simonwjackson";
-        source = ../plugins/skate-3;
-        plugin =
-          _:
-          import ../plugins/skate-3/plugin.nix {
-            skate3Package = skate3.packages.${system}.skate3;
-          };
-      };
-    };
     smwPlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
       source = ../plugins/super-mario-world;
@@ -190,9 +193,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-opengoal-plugin' \
           '  nix run .#prepare-opengoal -- --game jak2 --iso /path/to/owned.iso --output /path/to/new-data' \
           'OpenGOAL requires registered out/<game>/iso/GAME.CGO releases and their complete prepared directories.' \
-          'Skate 3 is x86_64 only:' \
+          'Skate 3 supports x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-skate3-plugin' \
+          'Skate 3 ARM64 builds need two owned XEX files in the builder store; see plugins/skate-3/README.md.' \
           'Builds do not extract game data. The verify apps explicitly use owned game files.' \
           'No signing, binary publication or device installation runs here.'
       '';
@@ -245,19 +250,19 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
       };
+      korri-skate3-plugin = import ./skate3-check.nix {
+        inherit pkgs;
+        package = packages.korri-plugin-skate-3;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
     }
     // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
       korri-opengoal-plugin = import ./opengoal-check.nix {
         inherit pkgs;
         package = packages.korri-plugin-opengoal;
         tools = opengoalPackages.tools;
-        contract = korri.lib.${system}.pluginContract;
-        hostPackage = korri.packages.${system}.korri-plugin-host;
-        korridPackage = korri.packages.${system}.korrid;
-      };
-      korri-skate3-plugin = import ./skate3-check.nix {
-        inherit pkgs;
-        package = packages.korri-plugin-skate-3;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
