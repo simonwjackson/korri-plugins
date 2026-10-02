@@ -78,7 +78,10 @@ installation or a complete game walkthrough.
 
 The engine's [Sustainable Use License](https://github.com/alexbatalov/fallout2-ce/blob/v1.3.0/LICENSE.md)
 permits distribution only free of charge for non-commercial purposes under its
-terms. The package includes that license and a modification notice. The repository
-has no Fallout signed-cache publication or live device deployment yet.
+terms. The package includes that license and a modification notice.
+The owner-approved Mini V2 installation used the existing signed private cache
+on 2026-10-02. Native launch and the visible main menu passed.
+[Deployment evidence and limits](../../docs/deployments/2026-10-02-fallout-miniv2.md)
+record the exact installed output. No public binary publication has been performed.
 After the [shared inspection and approval steps](../fallout1-ce/README.md#license-and-deployment-boundary),
 activate this exact plugin with `sudo korri-plugin enable @simonwjackson:fallout2-ce`.
