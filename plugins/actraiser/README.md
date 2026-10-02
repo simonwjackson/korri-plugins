@@ -78,6 +78,37 @@ Add `--video` to `verify-actraiser` only when a working X11/Wayland display and
 SDL GPU driver are available. That test requires a final-composite capture;
 it does not silently accept a CPU framebuffer instead.
 
+## Screen ratio Auto
+
+`auto-viewport.patch` adds `Auto` to the game's native Screen ratio setting
+(`extended_aspect`). It contains only hand-written upstream source and tests,
+against the pinned revision. Auto sizes the view from the actual drawable:
+a wider window shows more columns, a taller window shows more rows. It applies
+to flat and Diorama action stages. The 256x224 view, the selected pixel aspect,
+the gameplay camera, and per-layer room bounds do not change. Towns, Mode 7
+and other non-action screens keep their native frame. The limits stay at
+120 columns and 64 rows per side; past them, or past a room edge, the frame
+keeps borders instead of stretching. Auto is not a default. Existing manual
+ratios and the manual Diorama vertical extension keep their behaviour.
+
+The engine build runs the patch's 21 targeted native tests. The private GPU
+acceptance needs an X11 display you own, `xdotool`, and a Vulkan driver:
+
+```sh
+NIXPKGS_ALLOW_UNFREE=1 nix run --impure \
+  --option builders '' --option post-build-hook '' \
+  .#verify-actraiser-auto -- /absolute/private/path/ar.sfc \
+  --artifacts /new/private/evidence/directory
+```
+
+It persists Auto through the native settings path, replays upstream's Aitos
+fixture in four isolated accounts (flat/Diorama, square/CRT pixels), resizes
+the game's own window through square, Mini V2 (1240x1080), wide, tall and
+capped shapes, and checks native capture diagnostics against the real
+final composite. The relocated HUD and the projected native Diorama planes
+are excluded before extra rows or columns count as scene content. The
+artifacts directory holds owned game captures; keep it private.
+
 ## Runtime data
 
 The raw game's native `AR_USER_DATA_DIR` selects its writable root. The plugin

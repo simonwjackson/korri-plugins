@@ -144,6 +144,10 @@ ROM-derived code. Keep its inputs, helper, and output closures out of public
 caches and release assets. Read the plugin instructions before building.
 No publication or installation workflow is added.
 
+The private build adds `Auto` to the game's native Screen ratio setting. It
+fits flat and Diorama action stages to the window shape. The plugin README
+describes its limits and the private GPU acceptance test.
+
 ## 2 Ship 2 Harkinian
 
 [2 Ship 2 Harkinian](plugins/2ship/README.md) adds a native Majora's Mask runner

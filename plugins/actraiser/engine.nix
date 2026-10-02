@@ -20,10 +20,12 @@ pkgs.stdenv.mkDerivation {
   pname = "actraiser";
   version = "0-unstable-cdd7608";
   inherit src;
+  patches = [ ./auto-viewport.patch ];
   nativeBuildInputs = [
     pkgs.cmake
     pkgs.ninja
     pkgs.pkg-config
+    pkgs.python3
   ];
   buildInputs = [
     sdl.sdl3
@@ -35,7 +37,7 @@ pkgs.stdenv.mkDerivation {
   '';
   cmakeFlags = [
     "-DCMAKE_BUILD_TYPE=Release"
-    "-DBUILD_TESTING=OFF"
+    "-DBUILD_TESTING=ON"
     "-DACTRAISER_ENABLE_RUN_DIR_BY_DEFAULT=OFF"
     "-DSNESRECOMP_ENABLE_TRACE_RECORDER=OFF"
     "-DSNESRECOMP_ENABLE_TRACE=OFF"
@@ -44,6 +46,34 @@ pkgs.stdenv.mkDerivation {
     # invokes Go with a network-dependent module cache inside the C build.
     "-DACTRAISER_GO_EXECUTABLE=ACTRAISER_GO_EXECUTABLE-NOTFOUND"
   ];
+  # Build and run only this patch's native regression targets, not the whole
+  # upstream suite. Their binaries stay in the private build directory.
+  ninjaFlags = [
+    "ActRaiserRecomp"
+    "actraiser_ui_catalog_test"
+    "actraiser_hud_layout_test"
+    "actraiser_action_bg_test"
+    "actraiser_action_effect_render_test"
+    "actraiser_present_hud_test"
+    "actraiser_present_action_effects_test"
+    "actraiser_diorama_camera_test"
+    "actraiser_diorama_projection_test"
+    "actraiser_settings_test"
+    "actraiser_settings_overlay_test"
+    "actraiser_auto_canvas_test"
+    "actraiser_action_sprites_test"
+    "actraiser_host_viewport_trace_test"
+    "actraiser_dev_tools_capture_trace_test"
+    "actraiser_present_frame_order_test"
+    "actraiser_ppu_render_pipeline_test"
+  ];
+  doCheck = true;
+  checkPhase = ''
+    runHook preCheck
+    SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ctest --output-on-failure \
+      -R '^actraiser_(ui_catalog|hud_layout|action_bg|action_effect_render|present_hud|present_action_effects|diorama_camera|diorama_projection|settings|settings_overlay|auto_canvas|action_sprites_(activation|priority|empty)|host_viewport_trace|dev_tools_capture_trace|present_frame_order|ppu_render_pipeline|runner_private_boundary|render_backend_boundary|render_backend_boundary_negative)$'
+    runHook postCheck
+  '';
   installPhase = ''
     runHook preInstall
     install -Dm755 ActRaiserRecomp "$out/libexec/ActRaiserRecomp"
