@@ -132,10 +132,13 @@ nix build .#zelda3 --out-link result-zelda3
 
 ## Device installation
 
-No live installation or signed publication has been performed for this
-slice. A target device and an approved publisher/cache binding have not
-been selected. Local package builds and `seed` checks do not establish
-publisher trust or install approval.
+The owner-approved Mini V2 installation used its existing personal publisher
+binding and signed private cache on 2026-10-02. Native launch and display output
+were verified, and the owner confirmed successful use. The enabled selection
+survived the owner's unrelated reboot. [Deployment evidence and limits](../../docs/deployments/2026-10-02-zelda3-miniv2.md)
+record a separate Sunshine boot-restore failure. No public binary publication
+has been performed. Local package builds and `seed` checks alone do not
+establish publisher trust or install approval.
 
 After publishing the exact architecture-specific output through an approved
 signed cache, use Core's existing raw-cache approval flow on the device:
