@@ -15,6 +15,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         builtins.elem (nixpkgs.lib.getName pkg) [
           "nocturnerecomp"
           "2ship2harkinian"
+          "melee-pc"
         ];
     };
     mkPlugin = korri.lib.${system}.mkPlugin { inherit pkgs; };
@@ -124,6 +125,12 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
       };
+    meleePackage = import ../plugins/melee-pc/package.nix { inherit pkgs; };
+    meleePlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/melee-pc;
+      plugin = _: import ../plugins/melee-pc/plugin.nix { inherit meleePackage; };
+    };
     nocturnePackage = import ../plugins/nocturne/package.nix { inherit pkgs; };
     nocturnePlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
@@ -231,6 +238,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           ${twoShipPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
+    verifyMelee = import ./melee-owned-check.nix {
+      inherit pkgs;
+      package = meleePlugin;
+      korridPackage = korri.packages.${system}.korrid;
+    };
     help = pkgs.writeShellApplication {
       name = "korri-plugins-help";
       text = ''
@@ -265,6 +277,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-fallout1-ce-plugin .#checks.x86_64-linux.korri-fallout2-ce-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-fallout1-ce-plugin .#checks.aarch64-linux.korri-fallout2-ce-plugin' \
           'Fallout runners need registered MASTER.DAT releases and writable installed data folders.' \
+          'Melee PC beta supports x86_64-linux and aarch64-linux:' \
+          '  nix build --no-link .#korri-plugin-melee-pc' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-melee-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-melee-plugin' \
+          '  nix run .#verify-melee -- /path/to/owned/USA-1.02.iso  # requires a hardware Vulkan GPU' \
+          'Melee attaches only to the registered supported USA 1.02 ISO; no general GameCube scanner is added.' \
+          'Keep Melee binaries private; public redistribution is not approved.' \
           'NocturneRecomp supports x86_64-linux and aarch64-linux:' \
           '  nix build --no-link .#korri-plugin-nocturne' \
           '  nix build --no-link .#checks.x86_64-linux.korri-nocturne-plugin' \
@@ -316,6 +335,9 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-zquest-classic = zquestPlugin;
       korri-plugin-fallout1-ce = fallout1Plugin;
       korri-plugin-fallout2-ce = fallout2Plugin;
+      melee-pc = meleePackage;
+      korri-plugin-melee-pc = meleePlugin;
+      verify-melee = verifyMelee;
       nocturne = nocturnePackage;
       korri-plugin-nocturne = nocturnePlugin;
       verify-nocturne = verifyNocturne;
@@ -350,6 +372,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       };
       korri-fallout1-ce-plugin = falloutCheck "fallout1-ce" "fallout-ce" fallout1Plugin;
       korri-fallout2-ce-plugin = falloutCheck "fallout2-ce" "fallout2-ce" fallout2Plugin;
+      korri-melee-plugin = import ./melee-check.nix {
+        inherit pkgs;
+        package = meleePlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
       korri-nocturne-plugin = import ./nocturne-check.nix {
         inherit pkgs;
         package = nocturnePlugin;
@@ -406,6 +435,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     formatter = pkgs.nixfmt;
     apps = {
+      verify-melee = {
+        type = "app";
+        program = "${verifyMelee}/bin/verify-melee";
+        meta.description = "Test Melee native launch and state preservation with an owned ISO on a GPU-equipped build machine.";
+      };
       verify-actraiser = {
         type = "app";
         program = "${verifyActraiser}/bin/verify-actraiser";
