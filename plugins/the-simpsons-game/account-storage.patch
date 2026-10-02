@@ -1,0 +1,20 @@
+--- a/tools/rexglue-sdk/src/ui/rex_app.cpp
++++ b/tools/rexglue-sdk/src/ui/rex_app.cpp
+@@ -167,7 +167,7 @@ bool ReXApp::SetupEnvironment() {
+   }
+ 
+   PathConfig path_config{game_dir, user_dir, update_dir, cache_dir,
+-                         exe_dir / (std::string(GetName()) + ".toml")};
++                         user_dir / (std::string(GetName()) + ".toml")};
+   OnConfigurePaths(path_config);
+   game_data_root_ = path_config.game_data_root;
+   user_data_root_ = path_config.user_data_root;
+@@ -198,7 +198,7 @@ bool ReXApp::SetupEnvironment() {
+                                         log_level_str, category_levels);
+   if (log_file_cvar.empty()) {
+     log_config.app_name = std::string(GetName());
+-    log_config.log_dir = (exe_dir / "logs").string();
++    log_config.log_dir = (user_data_root_ / "logs").string();
+   }
+ 
+   rex::InitLogging(log_config);
