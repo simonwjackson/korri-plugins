@@ -111,9 +111,16 @@ license obligations. Packaging is not approval to redistribute a quest.
 
 ## Installation boundary
 
-No Solarus signed publication or device installation has run. Both require an
-approved delivery route and exact-package approval. After publishing the
-architecture-specific output through the device's existing approved cache:
+The owner-approved Mini V2 installation used its existing signed private cache
+on 2026-10-02. The plugin is enabled, and the installed engine's `-help` runs as
+user `korri`. No quest was launched on the device. The
+[deployment record](../../docs/deployments/2026-10-02-solarus-miniv2.md) identifies
+the exact output, approval, preserved state, and two pre-existing failed units.
+No public binary publication or reboot acceptance is claimed.
+
+Another installation still needs an approved delivery route and exact-package
+approval. After publishing the architecture-specific output through the device's
+existing approved cache:
 
 ```sh
 sudo korri-plugin inspect "$CACHE_URL" "$PACKAGE"

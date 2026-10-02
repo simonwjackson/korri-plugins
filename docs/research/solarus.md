@@ -7,7 +7,9 @@ Existing repository outputs define those platforms as `x86_64-linux` and
 `aarch64-linux`. Work is isolated on `feat/solarus` in `.worktree/solarus`.
 The implementation uses the existing plugin contract and nixpkgs recipe.
 It pins Solarus 2.1.4 without changing the repository-wide flake lock.
-No signed publication or device change has run.
+The subsequent owner-approved Mini V2 installation is recorded in
+[the deployment report](../deployments/2026-10-02-solarus-miniv2.md).
+It used the existing private cache. No public binary publication has run.
 
 ## Checked sources
 
@@ -110,7 +112,8 @@ account-selection claim, now corrected above, and narrowed host validation
 claims to the actual `seed` operation. This does not prove signed-cache import,
 full device admission, or account selection in Core.
 
-Signed publication and device approval are separate from building. Existing
-repository documentation requires approval for signed publication and physical
-device acceptance. Do not bypass signature checks, change publisher trust, or
-build from a target device.
+Signed publication and device approval are separate from building. The owner
+subsequently approved the Mini V2 installation, which passed normal private-cache
+import, approval, activation and native `-help` execution. Device gameplay,
+physical controls and audible sound remain unverified. Signature checks, the
+existing publisher binding and the no-build policy stayed in force.
