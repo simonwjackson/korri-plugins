@@ -8,7 +8,7 @@ in `korri-os/korri` commit `13a074832`.
 
 The output is `korri-plugin-skate-3` on both Linux architectures. It uses
 `packages.<system>.default` from `simonwjackson/skate-3-flake`, pinned at
-`0d98437232e56c172357850db17e8503b5a81d66`.
+`4e58e784407326d4da9dab5ab2b44fd32eb03c22`.
 
 | Architecture | Native package | Build requirements |
 |---|---|---|
@@ -17,7 +17,8 @@ The output is `korri-plugin-skate-3` on both Linux architectures. It uses
 
 The ARM64 source build includes four runtime fixes for FFmpeg linking,
 XEX delta patching, suspended threads, and null Vulkan pipelines. It also
-includes the native flake's guest-memory cleanup fix. These are native
+includes guest-memory cleanup, GTK repaint dispatch, compact Vulkan image
+descriptors for Turnip, and movie-fallback timing fixes. These are native
 package patches, not a different plugin declaration.
 
 `plugin.nix` names that package and its executable. `plugin.ts` declares the
@@ -65,11 +66,14 @@ a different system claiming `.iso` still causes Core's `ClaimConflict`.
 The plugin adds no archive extraction, hash-based discovery, or launch-time
 rehashing. Both architectures use the same hash gate and launch callback.
 
-On the Mini V2, a manual ARM64 trial froze presentation during intro movies
-while audio continued. ARM64 packaging does not fix that renderer bug or
-establish gameplay performance. Controls must use a normal korrid launch;
-a process started outside korrid does not receive the protected Korri seat
-input. Installation alone does not prove that route works.
+On the Mini V2, the pinned native build passed a 227-second intro movie run
+without a new GPU fault. Keep native FMV enabled. Forced emulated movie
+fallback still shows incomplete image strips. This does not establish
+gameplay performance or Odin compatibility.
+
+Controls must use a normal korrid launch. A process started outside korrid
+does not receive the protected Korri seat input. Installation alone does
+not prove that route works.
 
 ## Build and verify
 
