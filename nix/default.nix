@@ -3,7 +3,6 @@
   nixpkgs,
   flake-utils,
   skate3,
-  plugin-publisher,
 }:
 flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   system:
@@ -158,26 +157,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/2ship;
       plugin = _: import ../plugins/2ship/plugin.nix { inherit pkgs; };
     };
-    source = ../plugins/pico8-starter-pack;
-    cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
-    fake08Plugin = plugin-publisher.packages.${system}.korri-plugin-fake08;
-    plugin = mkPlugin {
-      inherit source;
-      publisher.namespace = "@simonwjackson";
-      plugin = _: import (source + /plugin.nix) { inherit pkgs fake08Plugin; };
-    };
-    originals = import (source + /cartridges.nix) { inherit pkgs; };
-    # Test inputs come from fetchurl's real attributes, not a second manifest.
-    pins = pkgs.writeText "pico8-original-fetchurl-pins.json" (
-      builtins.toJSON (map (cart: { inherit (cart) name outputHash url; }) originals)
-    );
-    python = pkgs.python3.withPackages (packages: [ packages.pillow ]);
-    check = pkgs.runCommand "pico8-starter-pack-check" { } ''
-      ${python}/bin/python ${./check-pack.py} \
-        ${cartridges}/share/pico8-starter-pack ${pins} ${plugin} ${fake08Plugin}
-      ${pkgs.typescript}/bin/tsc --noEmit --strict --target es2022 ${source}/plugin.ts
-      touch "$out"
-    '';
     verifyActraiser = pkgs.writeShellApplication {
       name = "verify-actraiser";
       text = ''
@@ -257,10 +236,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       text = ''
         printf '%s\n' \
           'Run on a build machine, not a target device:' \
-          '  nix build .#pico8-starter-pack-cartridges --out-link result-cartridges' \
-          '  nix build .#korri-plugin-pico8-starter-pack --out-link result-plugin' \
-          '  nix build --no-link .#checks.x86_64-linux.pico8-starter-pack' \
-          '  nix build --no-link .#checks.aarch64-linux.pico8-starter-pack' \
           'Super Mario World supports x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-super-mario-world' \
           '  nix build --no-link .#checks.x86_64-linux.korri-super-mario-world-plugin' \
@@ -334,8 +309,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   in
   {
     packages = packages // {
-      pico8-starter-pack-cartridges = cartridges;
-      korri-plugin-pico8-starter-pack = plugin;
       korri-plugin-super-mario-world = smwPlugin;
       korri-plugin-solarus = solarusPlugin;
       solarus = solarusPackage;
@@ -365,7 +338,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
       };
-      pico8-starter-pack = check;
       korri-2ship-plugin = import ./2ship-check.nix {
         inherit pkgs;
         package = twoShipPlugin;
