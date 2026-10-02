@@ -124,6 +124,12 @@ pointers. It does not bundle a selection of community quests. Upstream declares
 GPLv3 for the project. Public redistribution of included game-derived assets
 requires a separate rights review; a successful build is not that review.
 
+## Device installation
+
+[Deployment evidence](../../docs/deployments/2026-10-02-zquest-miniv2.md)
+records verified private signed-cache installation and runtime-user unprivileged
+smoke execution on the Retroid Pocket Mini V2 on 2026-10-02.
+
 Signed publication and device installation require their existing approvals.
 Do not build on a device or bypass publisher trust to install this package.
 After publishing the architecture-specific output through an approved signed
