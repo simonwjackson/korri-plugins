@@ -22,20 +22,50 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           };
       };
     };
+    source = ../plugins/pico8-starter-pack;
+    cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
+    plugin = mkPlugin {
+      inherit source;
+      publisher.namespace = "@simonwjackson";
+      plugin = source + /plugin.nix;
+    };
+    originals = import (source + /cartridges.nix) { inherit pkgs; };
+    # Test inputs come from fetchurl's real attributes, not a second manifest.
+    pins = pkgs.writeText "pico8-original-fetchurl-pins.json" (
+      builtins.toJSON (map (cart: { inherit (cart) name outputHash url; }) originals)
+    );
+    python = pkgs.python3.withPackages (packages: [ packages.pillow ]);
+    check = pkgs.runCommand "pico8-starter-pack-check" { } ''
+      ${python}/bin/python ${./check-pack.py} \
+        ${cartridges}/share/pico8-starter-pack ${pins} ${plugin}
+      ${pkgs.typescript}/bin/tsc --noEmit --strict --target es2022 ${source}/plugin.ts
+      touch "$out"
+    '';
     help = pkgs.writeShellApplication {
       name = "korri-plugins-help";
       text = ''
         printf '%s\n' \
-          'Run on an x86_64 build machine, not a target device:' \
+          'Run on a build machine, not a target device:' \
+          '  nix build .#pico8-starter-pack-cartridges --out-link result-cartridges' \
+          '  nix build .#korri-plugin-pico8-starter-pack --out-link result-plugin' \
+          '  nix build --no-link .#checks.x86_64-linux.pico8-starter-pack' \
+          '  nix build --no-link .#checks.aarch64-linux.pico8-starter-pack' \
+          'Skate 3 is x86_64 only:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
-          'No binary publication, device installation or game extraction runs here.'
+          'No signing, binary publication, device installation or game extraction runs here.'
       '';
     };
   in
   {
-    inherit packages;
-    checks = pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+    packages = packages // {
+      pico8-starter-pack-cartridges = cartridges;
+      korri-plugin-pico8-starter-pack = plugin;
+    };
+    checks = {
+      pico8-starter-pack = check;
+    }
+    // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
       korri-skate3-plugin = import ./skate3-check.nix {
         inherit pkgs;
         package = packages.korri-plugin-skate-3;
@@ -48,6 +78,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     apps.help = {
       type = "app";
       program = "${help}/bin/korri-plugins-help";
+      meta.description = "List build and check commands.";
     };
   }
 )
