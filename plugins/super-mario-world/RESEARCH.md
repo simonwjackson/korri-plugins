@@ -55,14 +55,17 @@ to `sdl2-compat`.
 | Sandboxed launch with literal paths and invalid-input preservation | Passed. | Passed. |
 | Owned-ROM startup, snapshot write/reload, config preservation | Passed. | Passed on `fuji`. |
 | Headered and normalized input, concurrent-launch refusal | Passed. | Passed on `fuji`. |
-| Physical graphics, audio, controllers, complete gameplay | Not tested. | Not tested. |
+| Physical display, audio, controllers | Not tested. | Mini V2 fullscreen capture verified; owner confirmed controls and speaker audio. |
+| Complete gameplay | Not tested. | Not tested. |
 
 The owned-ROM test is `nix/smw-runtime-check.py`, exposed as `nix run .#verify-smw`.
 It exercises the packaged source through Core's actual `plugin-launch` executor.
 Tests used the headered file below, dummy SDL video/audio, and SDL-Software output.
 They removed all temporary retail data and verified the source file stayed unchanged.
 The same test ran on the ARM build machine using its prebuilt package and Core.
-These results do not establish device acceptance or widescreen support.
+Those headless results do not establish device acceptance or widescreen support.
+[MINIV2.md](MINIV2.md) records the subsequent signed device installation and
+physical acceptance, including its scoped fullscreen setting and Sunshine blocker.
 
 ## Integration grounding
 
@@ -94,5 +97,6 @@ The SNES identity and title follow the publisher's existing
 The plugin adds a native route to the existing game. It ships no retail assets,
 performs no target compilation, and adds no configuration schema or service.
 
-Signed binary publication and physical-device installation remain outside the
-verified work. No publisher trust, permission, or signature checks were changed.
+The Mini V2 installation used the existing private publisher cache and signing key.
+No public binary release was created. No publisher trust, permission, or signature
+checks were changed.

@@ -99,4 +99,8 @@ This repository's workflow checks both architectures. It does not publish signed
 binaries, establish publisher trust, or install the plugin on a device. Targets must
 download prebuilt outputs through an approved, signed delivery route. Do not build
 on a target or bypass signature, publisher-binding, or exact-package approval checks.
-Physical-device installation and acceptance require that route and a selected target.
+The [Mini V2 acceptance record](MINIV2.md) documents a signed installation through
+its existing private cache, native fullscreen rendering, snapshot save/reload, and
+owner-confirmed controls and speaker audio. The device uses `Fullscreen = 1` in
+its native configuration; package defaults remain unchanged. Sunshine was disabled
+with owner approval to clear a pre-existing activation blocker.
