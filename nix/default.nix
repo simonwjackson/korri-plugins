@@ -185,6 +185,15 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           ${actraiserPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
+    verifyActraiserAuto = pkgs.writeShellApplication {
+      name = "verify-actraiser-auto";
+      runtimeInputs = [ pkgs.xdotool ];
+      text = ''
+        exec ${python}/bin/python3 ${./actraiser-viewport-check.py} \
+          ${actraiserPlugin} ${korri.packages.${system}.korrid}/bin/korrid \
+          ${import ../plugins/actraiser/source.nix { inherit pkgs; }} "$@"
+      '';
+    };
     verifySmw = pkgs.writeShellApplication {
       name = "verify-smw";
       text = ''
@@ -309,6 +318,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  NIXPKGS_ALLOW_UNFREE=1 nix build --impure --option builders "" --option post-build-hook "" .#korri-plugin-actraiser' \
           '  NIXPKGS_ALLOW_UNFREE=1 nix build --impure --option builders "" --option post-build-hook "" .#checks.${system}.korri-actraiser-plugin' \
           '  NIXPKGS_ALLOW_UNFREE=1 nix run --impure --option builders "" --option post-build-hook "" .#verify-actraiser -- /path/to/ar.sfc' \
+          '  NIXPKGS_ALLOW_UNFREE=1 nix run --impure --option builders "" --option post-build-hook "" .#verify-actraiser-auto -- /path/to/ar.sfc  # requires X11 and a Vulkan GPU driver' \
           'ActRaiser requires an owned USA ar.sfc in the private build machine store. See plugins/actraiser/README.md.' \
           'Never publish ActRaiser outputs or its ROM input to public caches or releases.' \
           'The Simpsons Game has native x86_64 and aarch64 build targets:' \
@@ -444,6 +454,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         type = "app";
         program = "${verifyActraiser}/bin/verify-actraiser";
         meta.description = "Privately verify native ActRaiser boot, frames and settings with an owned ROM.";
+      };
+      verify-actraiser-auto = {
+        type = "app";
+        program = "${verifyActraiserAuto}/bin/verify-actraiser-auto";
+        meta.description = "Privately verify Auto viewport expansion and resize using a real GPU and owned ROM.";
       };
       verify-2ship = {
         type = "app";
