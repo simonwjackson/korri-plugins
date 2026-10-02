@@ -34,6 +34,40 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/zelda3;
       plugin = _: import ../plugins/zelda3/plugin.nix { inherit zelda3Package; };
     };
+    # The engines use the Sustainable Use License. Keep permission scoped to
+    # these two packages instead of enabling every unfree dependency.
+    falloutPkgs = import nixpkgs {
+      inherit system;
+      config.allowUnfreePredicate =
+        pkg:
+        builtins.elem (pkgs.lib.getName pkg) [
+          "fallout-ce"
+          "fallout2-ce"
+        ];
+    };
+    fallout1Plugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/fallout1-ce;
+      plugin = _: import ../plugins/fallout1-ce/plugin.nix { pkgs = falloutPkgs; };
+    };
+    fallout2Plugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/fallout2-ce;
+      plugin = _: import ../plugins/fallout2-ce/plugin.nix { pkgs = falloutPkgs; };
+    };
+    falloutCheck =
+      name: program: package:
+      import ./fallout-check.nix {
+        inherit
+          pkgs
+          package
+          name
+          program
+          ;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
     source = ../plugins/pico8-starter-pack;
     cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
     fake08Plugin = plugin-publisher.packages.${system}.korri-plugin-fake08;
@@ -87,6 +121,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-zelda3-plugin' \
           '  nix run .#verify-zelda3 -- /path/to/owned/USA-ROM.sfc' \
+          'Fallout CE engines support x86_64 and aarch64 Linux:' \
+          '  nix build --no-link .#korri-plugin-fallout1-ce .#korri-plugin-fallout2-ce' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-fallout1-ce-plugin .#checks.x86_64-linux.korri-fallout2-ce-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-fallout1-ce-plugin .#checks.aarch64-linux.korri-fallout2-ce-plugin' \
+          'Fallout runners need registered MASTER.DAT releases and writable installed data folders.' \
           'Skate 3 is x86_64 only:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
@@ -102,9 +141,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-super-mario-world = smwPlugin;
       korri-plugin-zelda3 = zelda3Plugin;
       zelda3 = zelda3Package;
+      korri-plugin-fallout1-ce = fallout1Plugin;
+      korri-plugin-fallout2-ce = fallout2Plugin;
     };
     checks = {
       pico8-starter-pack = check;
+      korri-fallout1-ce-plugin = falloutCheck "fallout1-ce" "fallout-ce" fallout1Plugin;
+      korri-fallout2-ce-plugin = falloutCheck "fallout2-ce" "fallout2-ce" fallout2Plugin;
       korri-super-mario-world-plugin = import ./smw-check.nix {
         inherit pkgs;
         package = smwPlugin;
