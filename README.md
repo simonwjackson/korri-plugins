@@ -20,6 +20,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-solarus` | `@simonwjackson:solarus` | x86_64 and aarch64 Linux |
 | `solarus` | Standalone Solarus 2.1.4 runtime | x86_64 and aarch64 Linux |
 | `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
+| `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
+| `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
 | `zelda3` | Standalone native engine and owned-ROM launcher | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout1-ce` | `@simonwjackson:fallout1-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
@@ -161,6 +163,28 @@ arguments, and invalid-ROM rejection. The opt-in `verify-zelda3` test uses an
 owned ROM to test extraction, cached launch, and snapshot save/reload through
 Core's launch executor. It does not establish physical-device gameplay.
 Its separate check-only workflow does not publish or install it.
+
+## ZQuest Classic
+
+[ZQuest Classic](plugins/zquest-classic/README.md) runs unpacked `.qst` files
+through the native player. It preserves legacy's `zelda-classic` system and
+standalone launch mode. Each account has separate native configuration and
+saves. Saves use the quest's content hash, so renaming retains a save while
+changed quest contents get a separate save. The editor and quest downloads
+are outside this plugin's scope.
+
+```sh
+nix build --no-link .#korri-plugin-zquest-classic
+nix build --no-link .#checks.x86_64-linux.korri-zquest-classic-plugin
+nix build --no-link .#checks.aarch64-linux.korri-zquest-classic-plugin
+nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state
+```
+
+Build only on build machines. Checks use the real player, Core launch executor,
+and Xvfb to exercise input, screenshots, save writes, and reload. They do not
+establish physical-device, controller, or audio acceptance. The package retains
+the legacy development snapshot and interpreter backend, not the latest stable
+release. Signed publication and device installation require separate approval.
 
 ## Fallout 1 and 2 Community Edition
 

@@ -69,6 +69,16 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/solarus;
       plugin = _: import ../plugins/solarus/plugin.nix { inherit solarusPackage; };
     };
+    zquestEngine = import ../plugins/zquest-classic/package.nix { inherit pkgs; };
+    zquestLauncher = import ../plugins/zquest-classic/launcher.nix {
+      inherit pkgs;
+      engine = zquestEngine;
+    };
+    zquestPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/zquest-classic;
+      plugin = _: import ../plugins/zquest-classic/plugin.nix { launcher = zquestLauncher; };
+    };
     zelda3Package = import ../plugins/zelda3/package.nix { inherit pkgs; };
     zelda3Plugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
@@ -196,6 +206,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-zelda3-plugin' \
           '  nix run .#verify-zelda3 -- /path/to/owned/USA-ROM.sfc' \
+          'ZQuest Classic supports x86_64 and aarch64 Linux:' \
+          '  nix build --no-link .#korri-plugin-zquest-classic' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-zquest-classic-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-zquest-classic-plugin' \
+          '  nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state' \
           'Fallout CE engines support x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-fallout1-ce .#korri-plugin-fallout2-ce' \
           '  nix build --no-link .#checks.x86_64-linux.korri-fallout1-ce-plugin .#checks.x86_64-linux.korri-fallout2-ce-plugin' \
@@ -236,6 +251,8 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       solarus = solarusPackage;
       korri-plugin-zelda3 = zelda3Plugin;
       zelda3 = zelda3Package;
+      zquest-classic = zquestLauncher;
+      korri-plugin-zquest-classic = zquestPlugin;
       korri-plugin-fallout1-ce = fallout1Plugin;
       korri-plugin-fallout2-ce = fallout2Plugin;
       nocturne = nocturnePackage;
@@ -272,6 +289,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-super-mario-world-plugin = import ./smw-check.nix {
         inherit pkgs;
         package = smwPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
+      korri-zquest-classic-plugin = import ./zquest-check.nix {
+        inherit pkgs;
+        package = zquestPlugin;
+        engine = zquestEngine;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
