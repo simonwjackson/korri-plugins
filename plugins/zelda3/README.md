@@ -94,13 +94,35 @@ spaces and shell syntax, unsupported overrides, invalid ROM rejection,
 cache revalidation, and preservation of existing configuration and saves
 on rejection. They contain no retail ROM or game assets.
 
-These checks do not prove successful extraction from a valid ROM, gameplay,
-controller behavior, audio output, or in-game save persistence. Those tests
-need an owned supported ROM and a runtime target. The check-only GitHub
-workflow runs on both architectures. It neither publishes binaries nor
-installs a plugin.
+The ROM-free checks do not exercise successful extraction or gameplay.
+The check-only GitHub workflow runs on both architectures. It neither
+publishes binaries nor installs a plugin.
 
-For a manual test on a build machine, build `.#zelda3`, then run its
+### Owned-ROM runtime check
+
+The opt-in test uses an owned ROM at runtime, outside Nix build inputs:
+
+```sh
+nix run .#verify-zelda3 -- "$ROM"
+```
+
+It runs the real production `korrid plugin-launch` callback and launcher
+with dummy video/audio drivers. It retains a private temporary directory
+with test assets, snapshots, and logs for diagnosis. The original ROM and
+existing account saves remain unchanged. No retail data goes to CI.
+
+On 2026-10-02, the supported ROM from the owner's `myoko` Downloads archive
+passed headless tests on x86_64 and aarch64 build machines. Both extracted
+683888 bytes with SHA-256
+`0fe2e4bd75d70f06fb9a74cd3a9cb336c838149b831b56e8792114a89292c793`.
+The tests checked cold extraction, copied default configuration, refusal of
+a concurrent session, cached launch without asset replacement, native
+snapshot save/reload, preserved edited configuration, and an unchanged ROM.
+
+Headless tests do not verify visible rendering, audible output, physical
+controllers, in-game SRAM saves, full-game completion, or device installation.
+
+For an interactive test on a build machine, build `.#zelda3`, then run its
 `bin/zelda3` with the supported ROM and a separate writable test directory:
 
 ```sh

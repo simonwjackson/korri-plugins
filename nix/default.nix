@@ -61,6 +61,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           ${smwPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
+    verifyZelda3 = pkgs.writeShellApplication {
+      name = "verify-zelda3";
+      text = ''
+        exec ${pkgs.python3}/bin/python3 ${./zelda3-owned-rom-check.py} \
+          ${zelda3Plugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
     help = pkgs.writeShellApplication {
       name = "korri-plugins-help";
       text = ''
@@ -79,10 +86,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#korri-plugin-zelda3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-zelda3-plugin' \
+          '  nix run .#verify-zelda3 -- /path/to/owned/USA-ROM.sfc' \
           'Skate 3 is x86_64 only:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
-          'Builds do not extract game data. verify-smw explicitly uses an owned ROM.' \
+          'Builds do not extract game data. verify-smw and verify-zelda3 explicitly use owned ROMs.' \
           'No signing, binary publication or device installation runs here.'
       '';
     };
@@ -126,6 +134,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       type = "app";
       program = "${verifySmw}/bin/verify-smw";
       meta.description = "Test SMW startup and snapshot reload with an owned ROM on a build machine.";
+    };
+    apps.verify-zelda3 = {
+      type = "app";
+      program = "${verifyZelda3}/bin/verify-zelda3";
+      meta.description = "Test Zelda3 extraction, native startup and snapshot reload with an owned ROM on a build machine.";
     };
     apps.help = {
       type = "app";
