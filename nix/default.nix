@@ -47,6 +47,17 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
             };
         };
       };
+    actraiserPackage = import ../plugins/actraiser/package.nix { inherit pkgs; };
+    actraiserPlugin =
+      (mkPlugin {
+        publisher.namespace = "@simonwjackson";
+        source = ../plugins/actraiser;
+        plugin = _: import ../plugins/actraiser/plugin.nix { inherit actraiserPackage; };
+      }).overrideAttrs
+        {
+          allowSubstitutes = false;
+          preferLocalBuild = true;
+        };
     smwPlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
       source = ../plugins/super-mario-world;
@@ -124,6 +135,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       ${pkgs.typescript}/bin/tsc --noEmit --strict --target es2022 ${source}/plugin.ts
       touch "$out"
     '';
+    verifyActraiser = pkgs.writeShellApplication {
+      name = "verify-actraiser";
+      text = ''
+        exec ${pkgs.python3}/bin/python3 ${./actraiser-runtime-check.py} \
+          ${actraiserPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
     verifySmw = pkgs.writeShellApplication {
       name = "verify-smw";
       text = ''
@@ -198,7 +216,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-skate3-plugin' \
           'Skate 3 ARM64 builds need two owned XEX files in the builder store; see plugins/skate-3/README.md.' \
-          'Builds do not extract game data. The verify apps explicitly use owned game files.' \
+          'SMW/Zelda3 builds need no ROM. Their verify apps explicitly use owned ROMs.' \
+          'ActRaiser private builds support x86_64-linux and aarch64-linux:' \
+          '  NIXPKGS_ALLOW_UNFREE=1 nix build --impure --option builders "" --option post-build-hook "" .#korri-plugin-actraiser' \
+          '  NIXPKGS_ALLOW_UNFREE=1 nix build --impure --option builders "" --option post-build-hook "" .#checks.${system}.korri-actraiser-plugin' \
+          '  NIXPKGS_ALLOW_UNFREE=1 nix run --impure --option builders "" --option post-build-hook "" .#verify-actraiser -- /path/to/ar.sfc' \
+          'ActRaiser requires an owned USA ar.sfc in the private build machine store. See plugins/actraiser/README.md.' \
+          'Never publish ActRaiser outputs or its ROM input to public caches or releases.' \
           'No signing, binary publication or device installation runs here.'
       '';
     };
@@ -217,8 +241,17 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       nocturne = nocturnePackage;
       korri-plugin-nocturne = nocturnePlugin;
       verify-nocturne = verifyNocturne;
+      actraiser = actraiserPackage;
+      korri-plugin-actraiser = actraiserPlugin;
     };
     checks = {
+      korri-actraiser-plugin = import ./actraiser-check.nix {
+        inherit pkgs;
+        package = actraiserPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
       pico8-starter-pack = check;
       korri-solarus-plugin = import ./solarus-check.nix {
         inherit pkgs solarusPackage;
@@ -270,6 +303,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     formatter = pkgs.nixfmt;
     apps = {
+      verify-actraiser = {
+        type = "app";
+        program = "${verifyActraiser}/bin/verify-actraiser";
+        meta.description = "Privately verify native ActRaiser boot, frames and settings with an owned ROM.";
+      };
       verify-nocturne = {
         type = "app";
         program = "${verifyNocturne}/bin/verify-nocturne";

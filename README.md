@@ -14,6 +14,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-opengoal` | `@simonwjackson:opengoal`, Jak trilogy including Renegade | x86_64 Linux only |
 | `opengoal` | Native runtime without game assets or compiler | x86_64 Linux only |
 | `opengoal-tools` | Off-device disc preparation and GOAL compiler | x86_64 Linux build machine only |
+| `korri-plugin-actraiser` | `@simonwjackson:actraiser`, private owned-ROM build | x86_64 and aarch64 Linux |
+| `actraiser` | Private native executable and owned-ROM launcher | x86_64 and aarch64 Linux |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-solarus` | `@simonwjackson:solarus` | x86_64 and aarch64 Linux |
 | `solarus` | Standalone Solarus 2.1.4 runtime | x86_64 and aarch64 Linux |
@@ -89,6 +91,17 @@ nix build --no-link .#korri-plugin-opengoal
 nix build --no-link .#checks.x86_64-linux.korri-opengoal-plugin
 nix run .#prepare-opengoal -- --game jak2 --iso /path/to/owned.iso --output /path/to/new-data
 ```
+
+## ActRaiser
+
+[ActRaiser Recomp](plugins/actraiser/README.md) builds native code from the
+supported owned USA cartridge on a private build machine. Devices receive
+prebuilt packages. The Arcade/Nintendo Super System dump is not supported.
+
+Unlike SMW and Zelda3, this build needs the ROM and produces copyrighted
+ROM-derived code. Keep its inputs, helper, and output closures out of public
+caches and release assets. Read the plugin instructions before building.
+No publication or installation workflow is added.
 
 ## Super Mario World
 
