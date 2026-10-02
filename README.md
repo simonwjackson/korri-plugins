@@ -9,6 +9,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | Output | Plugin or contents | Platforms |
 |---|---|---|
 | `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 Linux only |
+| `korri-plugin-nocturne` | `@simonwjackson:nocturne` | x86_64 and aarch64 Linux |
+| `nocturne` | NocturneRecomp native launcher for owned XBLA assets | x86_64 and aarch64 Linux |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
 | `zelda3` | Standalone native engine and owned-ROM launcher | x86_64 and aarch64 Linux |
@@ -41,6 +43,26 @@ nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin
 The gate checks the actual packaged source, generated manifest, personal
 publisher identity, strict launch-contract types, host admission, and
 production sandboxed launch preparation with literal file paths.
+
+## NocturneRecomp
+
+[NocturneRecomp](plugins/nocturne/README.md) launches the XBLA version of
+Castlevania: Symphony of the Night from its supported `default.xex` and complete
+extracted assets. Both Linux architectures use pinned upstream v1.4.5 binaries.
+The launcher keeps a private asset copy and native state per Korri account.
+Builds contain no separate retail asset files and perform no game extraction.
+
+```sh
+nix build --no-link .#korri-plugin-nocturne
+nix build --no-link .#checks.x86_64-linux.korri-nocturne-plugin
+nix build --no-link .#checks.aarch64-linux.korri-nocturne-plugin
+nix run .#verify-nocturne -- /path/to/extracted/default.xex
+```
+
+Run these on build machines. The opt-in test uses owned assets and private
+software video/audio services. Startup checks do not establish full gameplay,
+save/load, or clean shutdown. The native binary contains translated retail code;
+public binary-cache publication needs separate rights review and approval.
 
 ## Super Mario World
 

@@ -8,7 +8,10 @@
 flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   system:
   let
-    pkgs = import nixpkgs { inherit system; };
+    pkgs = import nixpkgs {
+      inherit system;
+      config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "nocturnerecomp";
+    };
     mkPlugin = korri.lib.${system}.mkPlugin { inherit pkgs; };
     # Namespace matches the personal repository's existing PICO-8 producer.
     # The native flake provides a prebuilt release only for x86_64 Linux.
@@ -68,6 +71,12 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
       };
+    nocturnePackage = import ../plugins/nocturne/package.nix { inherit pkgs; };
+    nocturnePlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/nocturne;
+      plugin = _: import ../plugins/nocturne/plugin.nix { inherit nocturnePackage; };
+    };
     source = ../plugins/pico8-starter-pack;
     cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
     fake08Plugin = plugin-publisher.packages.${system}.korri-plugin-fake08;
@@ -102,6 +111,22 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           ${zelda3Plugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
+    verifyNocturne = pkgs.writeShellApplication {
+      name = "verify-nocturne";
+      runtimeInputs = [
+        pkgs.xorg.xorgserver
+        pkgs.xorg.xauth
+        pkgs.xdotool
+        pkgs.imagemagick
+        pkgs.pulseaudio
+        pkgs.dbus
+      ];
+      text = ''
+        export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json
+        exec dbus-run-session -- ${pkgs.python3}/bin/python3 ${./nocturne-owned-check.py} \
+          ${nocturnePlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
     help = pkgs.writeShellApplication {
       name = "korri-plugins-help";
       text = ''
@@ -126,10 +151,15 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-fallout1-ce-plugin .#checks.x86_64-linux.korri-fallout2-ce-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-fallout1-ce-plugin .#checks.aarch64-linux.korri-fallout2-ce-plugin' \
           'Fallout runners need registered MASTER.DAT releases and writable installed data folders.' \
+          'NocturneRecomp supports x86_64-linux and aarch64-linux:' \
+          '  nix build --no-link .#korri-plugin-nocturne' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-nocturne-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-nocturne-plugin' \
+          '  nix run .#verify-nocturne -- /path/to/extracted/default.xex' \
           'Skate 3 is x86_64 only:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
-          'Builds do not extract game data. verify-smw and verify-zelda3 explicitly use owned ROMs.' \
+          'Builds do not extract game data. The verify apps explicitly use owned game files.' \
           'No signing, binary publication or device installation runs here.'
       '';
     };
@@ -143,11 +173,21 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       zelda3 = zelda3Package;
       korri-plugin-fallout1-ce = fallout1Plugin;
       korri-plugin-fallout2-ce = fallout2Plugin;
+      nocturne = nocturnePackage;
+      korri-plugin-nocturne = nocturnePlugin;
+      verify-nocturne = verifyNocturne;
     };
     checks = {
       pico8-starter-pack = check;
       korri-fallout1-ce-plugin = falloutCheck "fallout1-ce" "fallout-ce" fallout1Plugin;
       korri-fallout2-ce-plugin = falloutCheck "fallout2-ce" "fallout2-ce" fallout2Plugin;
+      korri-nocturne-plugin = import ./nocturne-check.nix {
+        inherit pkgs;
+        package = nocturnePlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
       korri-super-mario-world-plugin = import ./smw-check.nix {
         inherit pkgs;
         package = smwPlugin;
@@ -182,6 +222,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       type = "app";
       program = "${verifyZelda3}/bin/verify-zelda3";
       meta.description = "Test Zelda3 extraction, native startup and snapshot reload with an owned ROM on a build machine.";
+    };
+    apps.verify-nocturne = {
+      type = "app";
+      program = "${verifyNocturne}/bin/verify-nocturne";
+      meta.description = "Test native Nocturne launch using owned extracted XBLA assets on a build machine.";
     };
     apps.help = {
       type = "app";
