@@ -13,9 +13,27 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "nocturnerecomp";
     };
     mkPlugin = korri.lib.${system}.mkPlugin { inherit pkgs; };
+    opengoalPackages = import ../plugins/opengoal/package.nix { inherit pkgs; };
+    prepareOpengoal = pkgs.writeShellApplication {
+      name = "prepare-opengoal";
+      text = ''
+        exec ${pkgs.python3}/bin/python3 ${../plugins/opengoal/prepare.py} ${opengoalPackages.tools} "$@"
+      '';
+    };
     # Namespace matches the personal repository's existing PICO-8 producer.
     # The native flake provides a prebuilt release only for x86_64 Linux.
     packages = pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+      opengoal = opengoalPackages.runtime;
+      opengoal-tools = opengoalPackages.tools;
+      korri-plugin-opengoal = mkPlugin {
+        publisher.namespace = "@simonwjackson";
+        source = ../plugins/opengoal;
+        plugin =
+          _:
+          import ../plugins/opengoal/plugin.nix {
+            opengoalRuntime = opengoalPackages.runtime;
+          };
+      };
       korri-plugin-skate-3 = mkPlugin {
         publisher.namespace = "@simonwjackson";
         source = ../plugins/skate-3;
@@ -156,6 +174,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-nocturne-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-nocturne-plugin' \
           '  nix run .#verify-nocturne -- /path/to/extracted/default.xex' \
+          'OpenGOAL trilogy supports x86_64 Linux; game preparation runs off-device:' \
+          '  nix build --no-link .#korri-plugin-opengoal' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-opengoal-plugin' \
+          '  nix run .#prepare-opengoal -- --game jak2 --iso /path/to/owned.iso --output /path/to/new-data' \
+          'OpenGOAL requires registered out/<game>/iso/GAME.CGO releases and their complete prepared directories.' \
           'Skate 3 is x86_64 only:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
@@ -204,6 +227,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       };
     }
     // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+      korri-opengoal-plugin = import ./opengoal-check.nix {
+        inherit pkgs;
+        package = packages.korri-plugin-opengoal;
+        tools = opengoalPackages.tools;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
       korri-skate3-plugin = import ./skate3-check.nix {
         inherit pkgs;
         package = packages.korri-plugin-skate-3;
@@ -213,25 +244,34 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       };
     };
     formatter = pkgs.nixfmt;
-    apps.verify-smw = {
-      type = "app";
-      program = "${verifySmw}/bin/verify-smw";
-      meta.description = "Test SMW startup and snapshot reload with an owned ROM on a build machine.";
-    };
-    apps.verify-zelda3 = {
-      type = "app";
-      program = "${verifyZelda3}/bin/verify-zelda3";
-      meta.description = "Test Zelda3 extraction, native startup and snapshot reload with an owned ROM on a build machine.";
-    };
-    apps.verify-nocturne = {
-      type = "app";
-      program = "${verifyNocturne}/bin/verify-nocturne";
-      meta.description = "Test native Nocturne launch using owned extracted XBLA assets on a build machine.";
-    };
-    apps.help = {
-      type = "app";
-      program = "${help}/bin/korri-plugins-help";
-      meta.description = "List build and check commands.";
+    apps = {
+      verify-nocturne = {
+        type = "app";
+        program = "${verifyNocturne}/bin/verify-nocturne";
+        meta.description = "Test native Nocturne launch using owned extracted XBLA assets on a build machine.";
+      };
+      verify-smw = {
+        type = "app";
+        program = "${verifySmw}/bin/verify-smw";
+        meta.description = "Test SMW startup and snapshot reload with an owned ROM on a build machine.";
+      };
+      verify-zelda3 = {
+        type = "app";
+        program = "${verifyZelda3}/bin/verify-zelda3";
+        meta.description = "Test Zelda3 extraction, native startup and snapshot reload with an owned ROM on a build machine.";
+      };
+      help = {
+        type = "app";
+        program = "${help}/bin/korri-plugins-help";
+        meta.description = "List build and check commands.";
+      };
+    }
+    // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+      prepare-opengoal = {
+        type = "app";
+        program = "${prepareOpengoal}/bin/prepare-opengoal";
+        meta.description = "Prepare owned PS2 game data on an x86_64 build machine, never on a target device.";
+      };
     };
   }
 )

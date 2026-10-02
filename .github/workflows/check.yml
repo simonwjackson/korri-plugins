@@ -35,3 +35,6 @@ jobs:
         run: nix build --no-link .#checks.${{ matrix.system }}.korri-fallout1-ce-plugin .#checks.${{ matrix.system }}.korri-fallout2-ce-plugin --print-build-logs
       - name: Check SMW package, admission and sandboxed launch without retail assets
         run: nix build --no-link .#checks.${{ matrix.system }}.korri-super-mario-world-plugin --print-build-logs
+      - name: Check OpenGOAL runtime, preparation failures and sandboxed launch without retail assets
+        if: matrix.system == 'x86_64-linux'
+        run: nix build --no-link .#checks.x86_64-linux.korri-opengoal-plugin --print-build-logs
