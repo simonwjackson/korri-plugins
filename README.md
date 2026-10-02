@@ -10,6 +10,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 |---|---|---|
 | `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 Linux only |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
+| `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
+| `zelda3` | Standalone native engine and owned-ROM launcher | x86_64 and aarch64 Linux |
 | `korri-plugin-pico8-starter-pack` | `@simonwjackson:pico8-starter-pack` | x86_64 and aarch64 Linux |
 | `pico8-starter-pack-cartridges` | Standalone cartridge pack without the plugin manifest | x86_64 and aarch64 Linux |
 
@@ -55,6 +57,24 @@ nix run .#verify-smw -- '/path/to/Super Mario World (U) [!].smc'
 Run these on a build machine. The opt-in `verify-smw` test uses an owned ROM in
 temporary storage. Builds and CI checks need no retail data. Package checks do not
 establish physical-device gameplay, signed publication, or installation approval.
+
+## Zelda3
+
+[Zelda3](plugins/zelda3/README.md) launches the supported US A Link to the Past
+ROM through a native engine on both Linux architectures. First launch extracts
+assets locally. Configuration and saves remain in account-owned storage.
+The package contains no ROM or extracted game data. Build machines compile the
+engine; devices receive it prebuilt. Python asset extraction is not compilation.
+
+```sh
+nix build --no-link .#korri-plugin-zelda3
+nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin
+nix build --no-link .#checks.aarch64-linux.korri-zelda3-plugin
+```
+
+The checks cover packaging, native startup, host admission, launch arguments,
+and invalid-ROM rejection. They do not establish gameplay or physical-device
+acceptance. Its separate check-only workflow does not publish or install it.
 
 ## PICO-8 starter pack
 
