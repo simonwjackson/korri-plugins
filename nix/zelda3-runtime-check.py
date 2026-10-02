@@ -2,6 +2,7 @@
 #!nix-shell -i python3 -p python3
 """ROM-free checks of the actual packaged launcher and native executable."""
 
+import configparser
 import json
 from pathlib import Path
 import struct
@@ -17,6 +18,14 @@ native = Path(manifest["packages"]["zelda3"])
 launcher = Path(manifest["files"]["zelda3"])
 engine = native / "libexec/zelda3"
 resources = native / "share/zelda3"
+
+# This is the native configuration consumed by the real engine, not a TS setting.
+config = configparser.ConfigParser(interpolation=None)
+config.read(resources / "zelda3.ini")
+assert config.getint("Graphics", "Fullscreen") == 1, (
+    "Fresh installs must request desktop fullscreen"
+)
+assert config.get("KeyMap", "Fullscreen") == "Alt+Return"
 
 # Inspect the actual ELF, then execute it on the architecture's build machine.
 elf = engine.read_bytes()
