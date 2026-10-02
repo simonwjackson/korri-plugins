@@ -118,9 +118,13 @@ It does not enable unrelated unfree packages.
 This repository's workflow checks packages; it does not publish or sign them.
 Deployment requires a signed package for the device architecture, the separately
 bound `@simonwjackson` publisher key/cache, exact-package approval, and a registered
-release. Never enable device builds or bypass signature checks. The supplied
-asset host `myoko` had no active `korrid.service` when checked on 2026-10-02.
-No live installation is claimed.
+release. Never enable device builds or bypass signature checks.
+
+Both plugins were installed through the owner's existing signed private cache
+on the Mini V2 on 2026-10-02. Native library launch and rendering passed.
+[Deployment evidence and limits](../../docs/deployments/2026-10-02-fallout-miniv2.md)
+record the exact outputs, authored library entries and remaining device checks.
+No public binary publication has been performed.
 
 After signed publication and target configuration, use Core's existing commands.
 `CACHE_URL` must be the bound publisher cache. `PACKAGE` must be the exact output
