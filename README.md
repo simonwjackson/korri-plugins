@@ -16,6 +16,7 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `opengoal-tools` | Off-device disc preparation and GOAL compiler | x86_64 Linux build machine only |
 | `korri-plugin-actraiser` | `@simonwjackson:actraiser`, private owned-ROM build | x86_64 and aarch64 Linux |
 | `actraiser` | Private native executable and owned-ROM launcher | x86_64 and aarch64 Linux |
+| `korri-plugin-the-simpsons-game` | `@simonwjackson:the-simpsons-game` | x86_64 with AVX2 and aarch64 Linux build targets |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-solarus` | `@simonwjackson:solarus` | x86_64 and aarch64 Linux |
 | `solarus` | Standalone Solarus 2.1.4 runtime | x86_64 and aarch64 Linux |
@@ -27,6 +28,19 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-pico8-starter-pack` | `@simonwjackson:pico8-starter-pack` | x86_64 and aarch64 Linux |
 | `pico8-starter-pack-cartridges` | Standalone cartridge pack without the plugin manifest | x86_64 and aarch64 Linux |
+
+## The Simpsons Game
+
+[The Simpsons Game](plugins/the-simpsons-game/README.md) matches the owner's
+measured USA Xbox 360 ISO and builds the native recompilation for both Linux
+architectures. Each Korri account gets separate installed assets, settings and
+saves. It needs about 4.39 GB of extracted data per account, plus shader cache.
+The original archive is not a discovery input; add its bare ISO to the library.
+
+The native output contains translated retail code and must stay private.
+No public binary publication or device trust change is approved. Package checks
+and the opt-in `verify-simpsons` task are documented in the plugin README;
+loader and extraction tests do not establish playable handheld performance.
 
 ## Skate 3
 

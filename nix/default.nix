@@ -125,6 +125,22 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/nocturne;
       plugin = _: import ../plugins/nocturne/plugin.nix { inherit nocturnePackage; };
     };
+    simpsonsPkgs = import nixpkgs {
+      inherit system;
+      # Only this private recompilation needs unfree-code admission.
+      config.allowUnfreePredicate = package: pkgs.lib.getName package == "simpsons-recomp";
+    };
+    simpsonsEngine = import ../plugins/the-simpsons-game/engine.nix { pkgs = simpsonsPkgs; };
+    simpsonsPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/the-simpsons-game;
+      plugin =
+        _:
+        import ../plugins/the-simpsons-game/plugin.nix {
+          inherit pkgs;
+          engine = simpsonsEngine;
+        };
+    };
     source = ../plugins/pico8-starter-pack;
     cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
     fake08Plugin = plugin-publisher.packages.${system}.korri-plugin-fake08;
@@ -180,6 +196,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json
         exec dbus-run-session -- ${pkgs.python3}/bin/python3 ${./nocturne-owned-check.py} \
           ${nocturnePlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
+    verifySimpsons = pkgs.writeShellApplication {
+      name = "verify-simpsons";
+      text = ''
+        exec ${pkgs.python3}/bin/python3 -I ${./simpsons-runtime-check.py} \
+          ${simpsonsPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
     help = pkgs.writeShellApplication {
@@ -238,6 +261,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  NIXPKGS_ALLOW_UNFREE=1 nix run --impure --option builders "" --option post-build-hook "" .#verify-actraiser -- /path/to/ar.sfc' \
           'ActRaiser requires an owned USA ar.sfc in the private build machine store. See plugins/actraiser/README.md.' \
           'Never publish ActRaiser outputs or its ROM input to public caches or releases.' \
+          'The Simpsons Game has native x86_64 and aarch64 build targets:' \
+          '  nix build --no-link .#korri-plugin-the-simpsons-game' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-the-simpsons-game-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-the-simpsons-game-plugin' \
+          '  nix run .#verify-simpsons -- /path/to/owned/USA-disc.iso  # needs about 5 GB temporary space' \
+          '  Keep Simpsons native binaries private; no publication is approved.' \
+          'Simpsons builds do not extract game data; verify-simpsons explicitly uses owned media.' \
           'No signing, binary publication or device installation runs here.'
       '';
     };
@@ -260,6 +290,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       verify-nocturne = verifyNocturne;
       actraiser = actraiserPackage;
       korri-plugin-actraiser = actraiserPlugin;
+      korri-plugin-the-simpsons-game = simpsonsPlugin;
     };
     checks = {
       korri-actraiser-plugin = import ./actraiser-check.nix {
@@ -282,6 +313,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-nocturne-plugin = import ./nocturne-check.nix {
         inherit pkgs;
         package = nocturnePlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
+      korri-the-simpsons-game-plugin = import ./simpsons-check.nix {
+        inherit pkgs;
+        package = simpsonsPlugin;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
@@ -347,6 +385,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         type = "app";
         program = "${verifyZelda3}/bin/verify-zelda3";
         meta.description = "Test Zelda3 extraction, native startup and snapshot reload with an owned ROM on a build machine.";
+      };
+      verify-simpsons = {
+        type = "app";
+        program = "${verifySimpsons}/bin/verify-simpsons";
+        meta.description = "Test Simpsons ISO installation and native loading without a display.";
       };
       help = {
         type = "app";
