@@ -49,6 +49,12 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/super-mario-world;
       plugin = _: import ../plugins/super-mario-world/plugin.nix { inherit pkgs; };
     };
+    solarusPackage = import ../plugins/solarus/package.nix { inherit pkgs; };
+    solarusPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/solarus;
+      plugin = _: import ../plugins/solarus/plugin.nix { inherit solarusPackage; };
+    };
     zelda3Package = import ../plugins/zelda3/package.nix { inherit pkgs; };
     zelda3Plugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
@@ -159,6 +165,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-super-mario-world-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-super-mario-world-plugin' \
           '  nix run .#verify-smw -- /path/to/owned/USA-ROM.smc  # optional, temporary assets only' \
+          'Solarus supports x86_64-linux and aarch64-linux:' \
+          '  nix build --no-link .#korri-plugin-solarus' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-solarus-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-solarus-plugin' \
+          'Solarus discovers .solarus quests and keeps saves in the account root supplied by Korri.' \
           'Zelda3 supports x86_64-linux and aarch64-linux:' \
           '  nix build --no-link .#korri-plugin-zelda3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin' \
@@ -192,6 +203,8 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       pico8-starter-pack-cartridges = cartridges;
       korri-plugin-pico8-starter-pack = plugin;
       korri-plugin-super-mario-world = smwPlugin;
+      korri-plugin-solarus = solarusPlugin;
+      solarus = solarusPackage;
       korri-plugin-zelda3 = zelda3Plugin;
       zelda3 = zelda3Package;
       korri-plugin-fallout1-ce = fallout1Plugin;
@@ -202,6 +215,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     checks = {
       pico8-starter-pack = check;
+      korri-solarus-plugin = import ./solarus-check.nix {
+        inherit pkgs solarusPackage;
+        package = solarusPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
       korri-fallout1-ce-plugin = falloutCheck "fallout1-ce" "fallout-ce" fallout1Plugin;
       korri-fallout2-ce-plugin = falloutCheck "fallout2-ce" "fallout2-ce" fallout2Plugin;
       korri-nocturne-plugin = import ./nocturne-check.nix {
