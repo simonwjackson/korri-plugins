@@ -23,6 +23,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           };
       };
     };
+    smwPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/super-mario-world;
+      plugin = _: import ../plugins/super-mario-world/plugin.nix { inherit pkgs; };
+    };
     source = ../plugins/pico8-starter-pack;
     cartridges = import (source + /cartridges-package.nix) { inherit pkgs; };
     fake08Plugin = plugin-publisher.packages.${system}.korri-plugin-fake08;
@@ -43,6 +48,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       ${pkgs.typescript}/bin/tsc --noEmit --strict --target es2022 ${source}/plugin.ts
       touch "$out"
     '';
+    verifySmw = pkgs.writeShellApplication {
+      name = "verify-smw";
+      text = ''
+        exec ${pkgs.python3}/bin/python3 ${./smw-runtime-check.py} \
+          ${smwPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
     help = pkgs.writeShellApplication {
       name = "korri-plugins-help";
       text = ''
@@ -52,10 +64,16 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build .#korri-plugin-pico8-starter-pack --out-link result-plugin' \
           '  nix build --no-link .#checks.x86_64-linux.pico8-starter-pack' \
           '  nix build --no-link .#checks.aarch64-linux.pico8-starter-pack' \
+          'Super Mario World supports x86_64 and aarch64 Linux:' \
+          '  nix build --no-link .#korri-plugin-super-mario-world' \
+          '  nix build --no-link .#checks.x86_64-linux.korri-super-mario-world-plugin' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-super-mario-world-plugin' \
+          '  nix run .#verify-smw -- /path/to/owned/USA-ROM.smc  # optional, temporary assets only' \
           'Skate 3 is x86_64 only:' \
           '  nix build --no-link .#korri-plugin-skate-3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
-          'No signing, binary publication, device installation or game extraction runs here.'
+          'Builds do not extract game data. verify-smw explicitly uses an owned ROM.' \
+          'No signing, binary publication or device installation runs here.'
       '';
     };
   in
@@ -63,9 +81,17 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     packages = packages // {
       pico8-starter-pack-cartridges = cartridges;
       korri-plugin-pico8-starter-pack = plugin;
+      korri-plugin-super-mario-world = smwPlugin;
     };
     checks = {
       pico8-starter-pack = check;
+      korri-super-mario-world-plugin = import ./smw-check.nix {
+        inherit pkgs;
+        package = smwPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
     }
     // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
       korri-skate3-plugin = import ./skate3-check.nix {
@@ -77,6 +103,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       };
     };
     formatter = pkgs.nixfmt;
+    apps.verify-smw = {
+      type = "app";
+      program = "${verifySmw}/bin/verify-smw";
+      meta.description = "Test SMW startup and snapshot reload with an owned ROM on a build machine.";
+    };
     apps.help = {
       type = "app";
       program = "${help}/bin/korri-plugins-help";

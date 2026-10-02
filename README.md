@@ -9,6 +9,7 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | Output | Plugin or contents | Platforms |
 |---|---|---|
 | `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 Linux only |
+| `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-pico8-starter-pack` | `@simonwjackson:pico8-starter-pack` | x86_64 and aarch64 Linux |
 | `pico8-starter-pack-cartridges` | Standalone cartridge pack without the plugin manifest | x86_64 and aarch64 Linux |
 
@@ -36,6 +37,24 @@ nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin
 The gate checks the actual packaged source, generated manifest, personal
 publisher identity, strict launch-contract types, host admission, and
 production sandboxed launch preparation with literal file paths.
+
+## Super Mario World
+
+[Super Mario World](plugins/super-mario-world/README.md) adds a native runner for
+the measured USA ROM, with or without its copier header. It ships the pinned
+`snesrev/smw` engine without retail data. Launch extracts owned assets into
+separate Korri account storage and preserves the original ROM and existing saves.
+
+```sh
+nix build --no-link .#korri-plugin-super-mario-world
+nix build --no-link .#checks.x86_64-linux.korri-super-mario-world-plugin
+nix build --no-link .#checks.aarch64-linux.korri-super-mario-world-plugin
+nix run .#verify-smw -- '/path/to/Super Mario World (U) [!].smc'
+```
+
+Run these on a build machine. The opt-in `verify-smw` test uses an owned ROM in
+temporary storage. Builds and CI checks need no retail data. Package checks do not
+establish physical-device gameplay, signed publication, or installation approval.
 
 ## PICO-8 starter pack
 
@@ -92,7 +111,7 @@ A completed pack needs no download to obtain its cartridge files.
 
 ## Publication boundary
 
-The check-only GitHub workflow builds the PICO-8 pack on both Linux architectures.
+The check-only GitHub workflow checks the PICO-8 pack and SMW plugin on both Linux architectures.
 It does not build the unrelated Skate 3 closure or upload release assets.
 It does not sign packages, configure cache keys or install anything on a device.
 Source commits and package construction are separate from signed-cache publication and device approval.

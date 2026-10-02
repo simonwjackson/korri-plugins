@@ -1,4 +1,4 @@
-name: Check cartridge pack
+name: Check portable plugins
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
           - runner: ubuntu-24.04-arm
             system: aarch64-linux
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -31,3 +31,5 @@ jobs:
           install_url: https://releases.nixos.org/nix/nix-2.34.1/install
       - name: Check the real pack and generated manifest
         run: nix build --no-link .#checks.${{ matrix.system }}.pico8-starter-pack --print-build-logs
+      - name: Check SMW package, admission and sandboxed launch without retail assets
+        run: nix build --no-link .#checks.${{ matrix.system }}.korri-super-mario-world-plugin --print-build-logs
