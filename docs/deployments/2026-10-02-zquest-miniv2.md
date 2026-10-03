@@ -7,6 +7,17 @@ and enabled. Native execution, software-MIDI initialization, and fullscreen
 rendering were verified under the unprivileged runtime-user sandbox. No community
 quest was added to the permanent game library.
 
+Corrections, added later the same day:
+
+- Save reload was verified only by the build-machine checks. The device smoke
+  loaded the quest and wrote a save. It did not reload one.
+- The diagnostic smoke unit did not exit on SIGTERM. It was stopped with
+  `systemctl kill -s KILL`.
+- Upstream's default quest is its blank template module, not a playable quest.
+
+A later update added a library quest and the kiosk launcher. See
+[Kiosk launcher update](#kiosk-launcher-update).
+
 ## Exact installed artifacts
 
 | Item | Verified value |
@@ -105,7 +116,8 @@ Sway's IPC tree confirmed a visible, focused, fullscreen window:
 A screenshot captured through `grim` verified rendered game content on the
 device display: Link, life hearts, magic meter, item boxes, and minimap in full
 1240x1080 fullscreen orientation. After verification, the diagnostic unit was
-stopped and its temporary directory was removed. No game unit remained active.
+stopped with SIGKILL and its temporary directory was removed. No game unit
+remained active.
 
 ## What is and is not verified
 
@@ -116,7 +128,7 @@ stopped and its temporary directory was removed. No game unit remained active.
 | Native unprivileged sandbox execution | Passed; UID 1000, zero effective capabilities, `NoNewPrivileges=yes`. |
 | Audio driver initialization | Passed; native log confirmed `Initializing sound driver... OK` with software MIDI. |
 | Fullscreen display rendering | Passed; Sway confirmed 1240x1080 fullscreen window and `grim` captured gameplay pixels. |
-| Quest loading and save/reload | Passed in tests on native x86_64 and ARM64 build machines and in device smoke. |
+| Quest loading and save/reload | Passed in build-machine checks on x86_64 and ARM64. On the device, the quest loaded and a save was written; no save was reloaded. |
 | Physical gamepad input and audible speaker sound | Not tested. No physical buttons were pressed; no human listened to device speakers. |
 | Permanent library registration | Not performed. No quest file was added to `/var/lib/korri/roms`. |
 
@@ -127,3 +139,72 @@ Installation did not create permanent library records or user saves. The
 packaged player is a development snapshot from June 2026, using the ZScript
 interpreter and FreePats software MIDI. Later engine features or hardware MIDI
 remain unsupported.
+
+## Kiosk launcher update
+
+### Library quest
+
+The owner asked for any available quest. *The Deep* ships with upstream at the
+pinned revision as `resources/quests/the_deep.qst`. The build machine fetched
+its Git LFS object and checked SHA-256
+`e37f20e41b90586575097214e01b96aa68c4b5c6b7eadfde781157311a640074` and size
+5754150 bytes. It is at `/var/lib/korri/roms/zelda-classic/The Deep.qst`.
+`korrid catalog import /var/lib/korri` added it as game
+`01M3ZF1J9C008DSRE4Q5DPFD15`, with the ZQuest runner selected for the game.
+The import kept the existing games, releases and storage locations. Backups
+are in `/var/tmp/zquest-library-backup/`.
+
+### Controller fault
+
+A Core launch opened `Korri Seat P1` to `P4`, but the gamepad did nothing.
+Allegro numbers joysticks in unsorted `/dev/input` order. The device lists
+`event12` first, then `event11` (`P4`) down to `event8` (`P1`). The player's
+joystick 0 was therefore `P4`, while Korri routes the device's controls to
+`P1`. An injected B-East press on `P1` did not change the screen. The same
+press on `P4` opened the quest's difficulty menu. Setting `joystick_index=3` by
+hand fixed it, and the owner confirmed that the controls worked.
+
+### Installed artifacts
+
+| Item | Verified value |
+|---|---|
+| Source revision | `f21eb779516b2c6a09f3651aef90fe63a394ef6c` |
+| Plugin output | `/nix/store/c58xydd7x02m23s2q9hlc4fsjchvjvi6-korri-plugin` |
+| Native launcher | `/nix/store/fihhi3hzs0na4fkdd3x4mlxccj62wn0i-zquest-classic-launcher-unstable-2026-06-18/bin/zplayer` |
+| Native engine | Unchanged: `6w26ck31vxmbhysvjxznzd8g7ykbx9yq` |
+| Approval digest | `a40bc10138f025ed672ba9a91c0fbc5310379595551aba4463b172a6ad97c391` |
+| Previous output | `/nix/store/qrs0bab7yg35xkxcx32820p521bjp944-korri-plugin` |
+
+The update used the same preflight, signed private cache, inspection, exact
+approval, `update` and `enable` steps as above. The declaration is unchanged:
+no services, ports, native units or requirements. Korrid's PID, the publisher
+binding and all 33 other plugin selections stayed unchanged.
+
+The cache's `cache/` and `cache/nar/` directories were owned by UID 1000
+(`korri`). Ten entries, including both directories, had that owner. They date
+from 02:56 UTC on 2026-10-03, probably from another session's deployment. The
+parent directory is still root-owned with mode 700, so other users cannot
+reach the cache. Signatures stay required. The
+inspection script now checks the parent instead of the cache directory's
+owner. Ownership was not changed.
+
+### Verification through Core
+
+`app.local-games.launch.selected` started unit
+`korri-game-8a05ba32205b1254cd44e481bd847789.service` from the new launcher.
+
+| Check | Result |
+|---|---|
+| Command line | `zplayer -fullscreen -standalone "/var/lib/korri/roms/zelda-classic/The Deep.qst" sha256:e37f20e4….sav` |
+| Fullscreen | Sway: visible, focused, `fullscreen_mode` 1, 1240x1080. The earlier manual `fullscreen = 1` was removed first. |
+| `zc.cfg` | `replay_upload_prompt = 1`, `clicktofreeze = 0`. `replay_upload` is absent, so it stays off. |
+| `controls.cfg`, scheme `Custom` | `joystick_index = 3`, `btn_menu = 0`. |
+| Home (BTN_MODE) injected on `P1` | A still screen did not change. |
+| Tap injected at the touchscreen centre | The screen did not change. No positive control shows that the tap reached the game. |
+| A (B-East) injected on `P1` | The screen changed from the quest intro to gameplay. |
+| Physical touch and Home | Not tested by a person. |
+
+The account's `controls.cfg` also has `btn_s=8`, set by hand. Allegro's gamepad
+button 8 is Start, and upstream's default `btn_s=10` is the left stick button.
+Upstream's default `btn_ex2=8` is also Start, so Start now triggers both. The
+original is in `controls.cfg.before-seat-fix`.
