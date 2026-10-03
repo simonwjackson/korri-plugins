@@ -7,7 +7,9 @@ This is an experimental port.
 | Target | Verified evidence | Not established |
 |---|---|---|
 | x86_64 Linux | Nix package/contract checks; owned-ISO extraction; packaged Wayland rendering, copied-save load, movement and account-local log/config lookup. The earlier source build also verified save creation and nonzero audio. | Full campaign, physical-controller acceptance, new settings-file creation and long-session stability. |
-| aarch64 Linux | Nix package/contract checks, actual native ELF architecture, installed Wayland backend, real fixture extraction and launch/account guarantees. | ARM rendering, gameplay and handheld performance. |
+| aarch64 Linux | Nix package/contract checks, actual native ELF architecture, installed Wayland backend, real fixture extraction and launch/account guarantees. On the Odin, the exact signed package renders fullscreen through Core and creates native save files. The owner reports functional success but poor framerate. | Save reload, acceptable handheld performance and long-session stability. |
+
+The [Odin deployment record](../../docs/deployments/2026-10-03-fable2-odin.md) separates device measurements from the owner's report. It records the exact installed package, preservation checks and the unresolved performance issue.
 
 ## Owned input
 
@@ -95,22 +97,23 @@ This runs the real callback, extracts the disc, verifies all file paths/sizes an
 
 The SDK keeps Oery's published keep-open and Vulkan tessellation fixes. No new game hooks or generated-code edits are included. Both `wayland-scanner` and EGL development files from `libglvnd` are required at build time. Missing either caused SDL to silently disable Wayland during validation; configure and installed-runtime checks now reject that result.
 
-The packaged gameplay smoke still recorded duplicate-cvar and `BaseHeap::AllocFixed` warnings. They did not prevent the observed save-load and movement sequence. They are not diagnosed or declared harmless.
+The packaged gameplay smoke still recorded duplicate-cvar warnings and `BaseHeap::AllocFixed` errors. They did not prevent the observed save-load and movement sequence. They are not diagnosed or declared harmless.
 
 Upstream provides no root redistribution license for the game project. The compiled engine also contains code translated from the retail executable. The engine is marked unfree, and substitution is disabled for these private outputs. Those settings do **not** prevent a manual cache upload.
 
 No binary-cache publication or target installation is approved by this package. Keep signature, publisher binding and exact-package approval checks enabled. Deployment needs a private, prebuilt delivery route and an approved target. The package must not compile anything on that target.
 
-For a later approved ARM installation, the verified package output is `/nix/store/4683zc4b4dlg4pha11lwi9gffpmibba8-korri-plugin`. First stage and sign its closure in the publisher's already-bound private cache. Set `CACHE_URL` to that exact existing binding, then inspect on the device:
+For another separately approved ARM installation, use the exact package tested on the Odin. These commands pin that tested output, not a new evaluation of the current flake. First stage and sign its closure in the publisher's already-bound private cache. Set `CACHE_URL` to that exact existing binding, then inspect on the device:
 
 ```sh
-sudo korri-plugin inspect "$CACHE_URL" /nix/store/4683zc4b4dlg4pha11lwi9gffpmibba8-korri-plugin
+PACKAGE=/nix/store/j48921lkgairx68vnp2n7lxk51ccmywz-korri-plugin
+sudo korri-plugin inspect "$CACHE_URL" "$PACKAGE"
 ```
 
 Review the report before assigning its digest to `APPROVAL`. Only after approval:
 
 ```sh
-sudo korri-plugin install "$CACHE_URL" /nix/store/4683zc4b4dlg4pha11lwi9gffpmibba8-korri-plugin "$APPROVAL"
+sudo korri-plugin install "$CACHE_URL" "$PACKAGE" "$APPROVAL"
 sudo korri-plugin enable @simonwjackson:fable-ii-recomp
 ```
 
