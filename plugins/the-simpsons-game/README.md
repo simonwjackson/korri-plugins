@@ -147,15 +147,31 @@ and played the opening cutscene. It created a 114800-byte native save plus a
 listed that slot as "The Land of Chocolate", accepted loading it, and showed
 "Continue Game". Native config, logs and shader cache remained under that account.
 
-This verifies early startup and save reload, not full-game completion or playable
-handheld performance. Audible sound and physical controllers remain untested.
-Intel Vulkan initialized in Xvfb but could not present without DRI3; lavapipe
-rendered the same game. No production code change was made for that virtual-display
-limitation. ARM rendering and physical-device acceptance are still pending.
+These x86 checks verify early startup and save reload, not full-game completion
+or playable handheld performance. Intel Vulkan initialized in Xvfb but could not
+present without DRI3; lavapipe rendered the same game. No production code change
+was made for that virtual-display limitation.
 
-Device acceptance still needs an approved private prebuilt delivery route,
-a bound publisher key, exact-package approval and a selected compatible device.
-Never disable signatures or compile on a device to bypass missing delivery.
+### Mini V2 deployment and aspect-ratio limits
+
+The owner-approved ARM plugin was installed through Mini V2's existing signed
+private cache and exact-package approval. A device capture showed gameplay in
+The Land of Chocolate. The native process used the unprivileged runtime account
+and opened the managed controller seats. The account's native fullscreen setting
+was enabled; shared package defaults stayed unchanged.
+
+A requested `1240x1080` experiment appeared stretched. Custom dimensions are
+accepted by the engine, but correct camera and HUD adaptation is not verified.
+Do not describe this as working arbitrary-aspect support. At the owner's request,
+16:9 fullscreen letterboxing was restored and the game was stopped before
+relaunch. The next device check requires the owner's readiness confirmation.
+[Deployment evidence and limits](../../docs/deployments/2026-10-02-simpsons-miniv2.md)
+record the exact installed build and checks.
+
+Audible output, physical button response, device save/reload, full-game completion
+and sustained handheld performance remain unverified. Another device still needs
+an approved private prebuilt delivery route, a bound publisher key and exact-package
+approval. Never disable signatures or compile on a device to bypass missing delivery.
 
 This product includes software developed by in <in@fishtank.com>, the author of
 `extract-xiso`. Its source and license notice are installed with the extractor.
