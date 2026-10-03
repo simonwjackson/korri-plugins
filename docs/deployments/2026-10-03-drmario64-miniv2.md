@@ -1,9 +1,10 @@
-# Dr. Mario 64 preparation on the Mini V2
+# Dr. Mario 64 on the Mini V2
 
 The owner authorized private signing and installation on the Retroid Pocket
 Mini V2. The owner requires an Ask Questions approval before any game launch.
 The signed ARM64 plugin is installed and enabled. Library registration and
-native runner selection are verified. Preparation did not launch Dr. Mario 64.
+native runner selection are verified. After both launch and session-stop
+approvals arrived, the normal native route launched Dr. Mario 64.
 
 ## Exact artifacts
 
@@ -68,17 +69,57 @@ matches the owned input. Only this game's runner selection changed. A fresh
 installed package, and no route warnings. The available RetroArch route was
 not selected. Download-only policy remained unchanged.
 
-## Pending physical validation
+## Approved native launch
 
-Ask Questions prompt `305bda40-680b-4781-8cfc-3e10719defe7` remains pending.
-Do not repost it or infer launch approval from session changes. The prompt
-mentions The Deep because registration was waiting when it was posted.
-Registration has since finished. Another session, NES `Dr Mario`, was running
-at the final readiness check. Its launch ID is
-`7f52bd81f0d31605d2332c63f073fd90`. Approval to stop the earlier The Deep
-session does not authorize silently stopping this different session.
+The owner selected Start in Ask Questions prompt
+`305bda40-680b-4781-8cfc-3e10719defe7`. NES `Dr Mario` had since replaced
+The Deep. The owner separately approved stopping that exact NES session in
+prompt `257cec8f-643e-4c02-8028-26e5e692af19`.
 
-GPU rendering, audible sound, controllers, gameplay, campaign save/reload,
-and native settings persistence remain unverified on this device.
-Signing and installation do not establish physical playability. Keep the
-launch paused until the owner answers the next Ask Questions prompt.
+Core stopped only launch `7f52bd81f0d31605d2332c63f073fd90` through
+`app.session.stop` with `expectedLaunchId`. No force-stop was needed.
+`app.local-games.launch.selected` then started the exact installed native
+Dr. Mario 64 runner with no warnings.
+
+| Runtime observation | Verified value |
+|---|---|
+| Launch ID | `492191dc84fa26cdbe0c699d126010a2` |
+| Systemd unit | `korri-game-492191dc84fa26cdbe0c699d126010a2.service` |
+| Native PID | `56366` |
+| Runtime account | `korri`, UID 1000 |
+| Hardening | `NoNewPrivileges=yes` |
+| Actual executable | The exact ARM64 engine listed above. |
+| Core session phase | `running` |
+| Video backend | SDL X11 on Xwayland. |
+
+The first device screenshot showed the native title screen beside the portal.
+The game window was focused and visible, but tiled at 620x1080.
+An exact-window Sway command gave only that native window fullscreen space.
+No global compositor rule or native settings file was edited. The resulting
+window was focused, visible, and fullscreen at 1240x1080. A second inspected
+screenshot showed the game's bottle tutorial. No synthetic controller input
+was sent; these frames do not establish player-controlled gameplay.
+
+The process mapped the device's Mesa 25.3.2 Vulkan drivers, including Turnip
+and software Vulkan. Loaded driver libraries alone do not identify which
+physical Vulkan device the renderer selected. The screenshots establish
+rendered output on the actual device, not a complete GPU acceptance test.
+
+## Remaining validation and notices
+
+Audible sound, physical controllers, player-controlled gameplay, campaign
+save/reload, native settings persistence, and restart behavior remain
+unverified on this device. Leave the approved game running for the owner.
+
+Startup logged `Failed to preload executable!` and a missing
+`recompcontrollerdb.txt`, but the native title and tutorial rendered.
+The mapping warning matters for the pending controller test. Do not infer
+working controls from successful startup or loaded audio libraries.
+
+The first screenshot also showed the portal's `BrainUnreachable` error.
+Core's control-socket RPC remained available and the native game ran.
+The portal error is separate from this successful native launch. Its cause
+was not verified. No portal service or configuration was changed.
+
+Captures and runtime receipts stay in the private deployment directories.
+No ROM-derived screenshot or executable was published.
