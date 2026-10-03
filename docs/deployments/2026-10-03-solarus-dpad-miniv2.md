@@ -2,8 +2,8 @@
 
 The signed Solarus D-pad correction is enabled on the Retroid Pocket Mini V2.
 Yarntown restarted through Korri using the corrected engine. Native SDL lookup
-of the owner's recorded direction sequence now passes. Physical acceptance of
-the corrected game remains pending.
+of the owner's recorded direction sequence now passes. The owner confirmed
+that all four D-pad directions are correct and that the game plays well.
 
 ## Cause and correction
 
@@ -97,6 +97,7 @@ The process has UID/GID 1000, no effective capabilities, and `NoNewPrivileges`.
 The exact-PID focus/fullscreen workaround remained necessary. The compositor
 reported the window visible and focused. A later screenshot showed Yarntown's
 language selector. This is not a persistent fix for portal window handoff.
+The owner declined further automatic-focus work and plans to use gamescope.
 
 The original recorded direction sequence now passes the same native SDL probe
 against the updated database on the device. The engine log verifies that this
@@ -105,8 +106,9 @@ through update and relaunch before physical acceptance testing.
 
 ## Remaining limits
 
-Physical acceptance of D-pad gameplay after the correction remains pending.
-The owner has not confirmed audible sound. Native save preservation is checked,
+The owner confirmed physical D-pad gameplay after the correction: "All four
+directions are correct." The owner has not explicitly confirmed audible sound.
+Native save preservation is checked,
 but device Continue/save/reload acceptance is not complete.
 
 The earlier session logged `No such custom entity model: 'ephemeral_effect'`
