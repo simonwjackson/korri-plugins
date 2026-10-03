@@ -161,9 +161,27 @@ Additional private evidence is in the same staging directory:
 | Native startup and hardware Vulkan rendering | Verified at the first-run memory-card prompt. |
 | Runtime user and sandbox | Verified UID, zero capabilities, and `NoNewPrivs`. |
 | Korri library launch and Core session ownership | Not verified; no library record was registered. |
-| Physical controls and audible sound | Not verified. |
-| Gameplay, save/reload, performance, and netplay | Not verified. |
+| Physical controls | The owner reported no D-pad response in the standalone test. Managed-session input is untested. |
+| Audible sound, gameplay, save/reload, performance, and netplay | Not verified. |
 
-Melee remains running at the observed prompt for a physical-control check.
+The owner attributed the D-pad result to the input permissions normally acquired
+by the launcher. Main's `host/session_state.rs` calls `begin_session` and acquires
+an input-seat lease before starting the game unit. The standalone invocation did
+not take that path. The exact device-side permission failure was not inspected.
+
+The agent closed only the recorded renderer window through Sway. Its process
+exited and systemd reported `Deactivated successfully`. The ISO hash remained
+unchanged. Core reported `SessionCompleted` for the old Nocturne session.
+`renderer-exit.log` and `renderer-stopped.json` record these results.
+
+The subsequent read-only catalog check found only the Nocturne game and release.
+The installed system declarations contained no GameCube record, and Melee's
+measured release was not registered. `registration-facts.json` records that
+check. The existing `config/catalog.rs` contract requires a release's `system`;
+its value is unresolved for this disc. Normal launcher preparation must reuse
+an existing GameCube catalog or wait for the owner to choose that identifier.
+It must not assign a system from the ISO extension or its directory name.
+No managed Melee launch has occurred.
+
 Binary closures and the owner's disc remain private. Public binary publication
 has not been approved.
