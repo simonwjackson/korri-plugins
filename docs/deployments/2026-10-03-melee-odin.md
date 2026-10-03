@@ -74,7 +74,8 @@ runtime user received read and traverse ACLs on this new subtree, not write
 access. Existing plugin selections, catalog YAML, device YAML, Nix settings,
 and publisher settings retained their hashes. The system generation did not
 change. No service was restarted. Nocturne retained the same running launch ID.
-No Melee process has been launched, and no launch approval is recorded.
+At the end of preparation, Melee had not started. Launch approval was still
+pending.
 
 The first cache merge stopped because an existing dependency's `.narinfo`
 contained fewer additional signatures. Its NAR identity and every non-signature
@@ -91,14 +92,78 @@ The plugin matches only the measured release. It declares no GameCube system
 or generic ISO discovery claim. This preparation does not create catalog
 records or add a discovery claim to obtain a library launch. Library registration
 remains separate work. A standalone runtime test does not prove library launch,
-Core session ownership, or physical controller routing. The next renderer
-experiment can invoke the installed `plugin-launch` callback under a transient
+Core session ownership, or physical controller routing. The renderer
+experiment invokes the installed `plugin-launch` callback under a transient
 runtime-user unit. `/var/tmp/melee-odin-runtime-profile.json` records the actual
 running Nocturne unit's sandbox and its filtered display/audio environment.
 The profile retains zero capabilities, `NoNewPrivileges=yes`, private PID and
 temporary namespaces, and the existing inaccessible control paths. Capturing
 this profile did not start a game process or change the active game.
 
-ARM64 graphics, audio, physical controls, gameplay, save/reload, performance,
-and netplay remain unverified. Binary closures and the owner's disc remain
-private. Public binary publication has not been approved.
+## Approved renderer test
+
+The owner selected `stop-nocturne-and-launch` in question
+`melee-odin-launch-approval`, ask `51fe5256-eedd-49bb-becc-3c7a86bff871`.
+The agent issued a stop request only for the recorded Nocturne session.
+Core returned `HostRecoveryBlocked`. The unit was still in `stop-sigterm`,
+and Core still reported phase `stopping`. Melee was not started at that point.
+A later check verified that Nocturne had no process and Core was idle. No
+recovery record was deleted, and no daemon was restarted to force that result.
+
+The installed callback then started Melee in `melee-renderer-test.service`.
+The native executable was:
+
+```text
+/nix/store/i6gqn5j5v59hjmsggp3s5nrs0ihh0rxz-melee-pc-0.2.2-beta/libexec/melee-pc/melee
+```
+
+The native PID was `35372`, UID `1000`, account `korri`. Its effective capability
+mask was zero and `/proc/35372/status` reported `NoNewPrivs: 1`. The transient
+unit reused the observed host sandbox, including its private PID and temporary
+namespaces and inaccessible control paths. It is not a Core-owned game session.
+
+The display was initially powered off. The first capture waited for the display
+and exceeded its timeout. The agent powered on `DSI-1`, then made only Melee's
+recorded window fullscreen. The next observation reported a visible, focused
+window named `melee-pc`, fullscreen mode `1`, with a 1920×1080 rectangle.
+
+The native log selected:
+
+```text
+graphics backend: vulkan (auto), adapter: Turnip Adreno (TM) 740 [5143:43050a01], driver: turnip Mesa driver: Mesa 25.3.2
+```
+
+The agent opened `melee-odin-later.png`. It showed the first-run prompt:
+"The Memory Card in Slot A has no saved Game Data. Create Game Data?"
+The `Yes` option was selected. This is observed rendering, not an inference
+from a live process or the GPU log. Two captures three seconds apart had the
+same hash, consistent with an unanswered static prompt. Their SHA-256 was:
+
+```text
+2f686aba20b6483cc0b366c22cfcbb26f669e3fb292c2b564db65aefbdda8f12
+```
+
+The log also reported `Failed to open /proc/cpuinfo` and two
+`Failed to close file at idx: 0` messages. Their effect on gameplay or saving
+has not been established. The sandbox was not weakened to remove them.
+No systemd units failed during observation. Original catalog, device settings,
+plugin selections, Nix settings, publisher settings, and the system generation
+still matched the preparation snapshot.
+
+Additional private evidence is in the same staging directory:
+`nocturne-stop-request.json`, `nocturne-stopped.json`, `standalone-launch.json`,
+`melee-observed.json`, `runtime-profile.json`, `melee-window.json`,
+`melee-native.log`, and `melee-odin*.png`.
+
+| Acceptance item | Result |
+|---|---|
+| Signed ARM64 installation | Verified with recursive signature checking. |
+| Native startup and hardware Vulkan rendering | Verified at the first-run memory-card prompt. |
+| Runtime user and sandbox | Verified UID, zero capabilities, and `NoNewPrivs`. |
+| Korri library launch and Core session ownership | Not verified; no library record was registered. |
+| Physical controls and audible sound | Not verified. |
+| Gameplay, save/reload, performance, and netplay | Not verified. |
+
+Melee remains running at the observed prompt for a physical-control check.
+Binary closures and the owner's disc remain private. Public binary publication
+has not been approved.
