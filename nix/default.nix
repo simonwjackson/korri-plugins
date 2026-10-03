@@ -111,7 +111,10 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     zquestPlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
-      source = ../plugins/zquest-classic;
+      source = pkgs.lib.fileset.toSource {
+        root = ../plugins/zquest-classic;
+        fileset = ../plugins/zquest-classic/plugin.ts;
+      };
       plugin = _: import ../plugins/zquest-classic/plugin.nix { launcher = zquestLauncher; };
     };
     zelda3Package = import ../plugins/zelda3/package.nix { inherit pkgs; };
@@ -328,6 +331,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix run .#verify-zelda3 -- /path/to/owned/USA-ROM.sfc' \
           'ZQuest Classic supports x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-zquest-classic' \
+          '  nix build --no-link .#zquest-classic-source' \
           '  nix build --no-link .#checks.x86_64-linux.korri-zquest-classic-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-zquest-classic-plugin' \
           '  nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state' \
@@ -402,6 +406,10 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-zelda3 = zelda3Plugin;
       zelda3 = zelda3Package;
       zquest-classic = zquestLauncher;
+      zquest-classic-source = import ./zquest-source-release.nix {
+        inherit pkgs;
+        engine = zquestEngine;
+      };
       korri-plugin-zquest-classic = zquestPlugin;
       korri-plugin-fallout1-ce = fallout1Plugin;
       korri-plugin-fallout2-ce = fallout2Plugin;
