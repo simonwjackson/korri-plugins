@@ -26,8 +26,6 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-drmario64` | `@simonwjackson:drmario64`, private owned-ROM build | x86_64 and aarch64 Linux build targets |
 | `drmario64` | Native Dr. Mario 64 launcher with account-owned state | x86_64 and aarch64 Linux build targets |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
-| `korri-plugin-solarus` | `@simonwjackson:solarus` | x86_64 and aarch64 Linux |
-| `solarus` | Standalone Solarus 2.1.4 runtime | x86_64 and aarch64 Linux |
 | `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
 | `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
 | `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
@@ -242,23 +240,9 @@ establish physical-device gameplay, signed publication, or installation approval
 
 ## Solarus
 
-[Solarus](plugins/solarus/README.md) runs `.solarus` quests with native saves
-under the account root supplied by Korri. It packages Solarus 2.1.4 without quests, an editor,
-or game assets. Devices receive the engine prebuilt. Discovery does not claim
-general ZIP files, and no library folder is registered automatically.
-
-```sh
-nix build --no-link .#korri-plugin-solarus
-nix build --no-link .#checks.x86_64-linux.korri-solarus-plugin
-nix build --no-link .#checks.aarch64-linux.korri-solarus-plugin
-```
-
-The checks exercise host seed/declaration validation, the production launch
-callback, the native engine, archive loading, and save/reload in two supplied
-account roots. Core currently always supplies `users/default`; this plugin does
-not add account selection. The checks use a headless fixture, not a complete
-game. Physical display, audio and controller acceptance remain separate. The check-only workflow does not sign, publish, or
-install packages.
+Solarus has moved to the official [korri-os/plugins](https://github.com/korri-os/plugins/tree/main/plugins/solarus)
+repository. See that source for build instructions. This personal flake no longer
+provides Solarus.
 
 ## Zelda3
 
