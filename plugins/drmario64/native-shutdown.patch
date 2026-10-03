@@ -1,0 +1,524 @@
+Private single-game process-lifetime shutdown; apply AFTER native-launch.patch.
+Main: af91e3bf56b1ffc329ff4327fdc2380515463de7
+N64ModernRuntime: cd6dc4a349215563595141b4493384baf21975a1
+
+IDLE acknowledges cooperative quiescence before the final EEPROM snapshot.
+Join persistent writers and save native settings before status-bearing _Exit.
+Retain RDRAM, worker contexts, loaded mod code and queues until process death.
+This does not provide in-process restart, forced cancellation or fsync durability.
+
+--- a/include/zelda_config.h
++++ b/include/zelda_config.h
+@@ -12,7 +12,7 @@
+ 
+     // TODO: Move loading configs to the runtime once we have a way to allow per-project customization.
+     void load_config();
+-    void save_config();
++    bool save_config();
+     
+     void reset_input_bindings();
+     void reset_cont_input_bindings();
+--- a/lib/N64ModernRuntime/librecomp/include/librecomp/game.hpp
++++ b/lib/N64ModernRuntime/librecomp/include/librecomp/game.hpp
+@@ -89,7 +89,8 @@
+      *
+      * It must be called only once and it must be called before `ultramodern::preinit`.
+      */
+-    void start(
++    // Returns persistence status; this private port retains workers until _Exit.
++    bool start(
+         const Version& project_version,
+         ultramodern::renderer::WindowHandle window_handle,
+         const recomp::rsp::callbacks_t& rsp_callbacks,
+--- a/lib/N64ModernRuntime/librecomp/include/librecomp/mods.hpp
++++ b/lib/N64ModernRuntime/librecomp/include/librecomp/mods.hpp
+@@ -345,6 +345,8 @@
+         public:
+             ModContext();
+             ~ModContext();
++            // Stop producers before calling; retain loaded code for parked workers.
++            bool finish_configuration();
+ 
+             void register_game(const std::string& mod_game_id);
+             void register_embedded_mod(const std::string& mod_id, std::span<const uint8_t> mod_bytes);
+@@ -419,6 +421,7 @@
+             std::unordered_map<recomp_func_t*, PatchData> patched_funcs;
+             std::unordered_map<std::string, size_t> loaded_mods_by_id;
+             std::unique_ptr<std::thread> mod_configuration_thread;
++            bool configuration_save_failed = false; // Read only after joining.
+             moodycamel::BlockingConcurrentQueue<ModConfigQueueVariant> mod_configuration_thread_queue;
+             std::filesystem::path mods_config_path;
+             std::filesystem::path mod_config_directory;
+--- a/lib/N64ModernRuntime/librecomp/src/mods.cpp
++++ b/lib/N64ModernRuntime/librecomp/src/mods.cpp
+@@ -646,7 +646,7 @@
+     auto_enabled_mods.clear();
+ }
+ 
+-bool save_mod_config_storage(const std::filesystem::path &path, const std::string &mod_id, const recomp::Version &mod_version, const recomp::mods::ConfigStorage &config_storage, const recomp::mods::ConfigSchema &config_schema) {
++bool save_mod_config_storage(const std::filesystem::path &path, const std::string &mod_id, const recomp::Version &mod_version, const recomp::mods::ConfigStorage &config_storage, const recomp::mods::ConfigSchema &config_schema) try {
+     using json = nlohmann::json;
+     json config_json;
+     config_json["mod_id"] = mod_id;
+@@ -685,7 +685,11 @@
+     output_file << std::setw(4) << config_json;
+     output_file.close();
+ 
+-    return recomp::finalize_output_file_with_backup(path);
++    return !output_file.fail() && recomp::finalize_output_file_with_backup(path);
++}
++catch (const std::exception& error) {
++    fprintf(stderr, "Mod settings save exception: %s\n", error.what());
++    return false;
+ }
+ 
+ bool parse_mods_config(const std::filesystem::path &path, std::unordered_set<std::string> &enabled_mods, std::vector<std::string> &mod_order) {
+@@ -713,7 +717,7 @@
+     return true;
+ }
+ 
+-bool save_mods_config(const std::filesystem::path &path, const std::unordered_set<std::string> &enabled_mods, const std::vector<std::string> &mod_order) {
++bool save_mods_config(const std::filesystem::path &path, const std::unordered_set<std::string> &enabled_mods, const std::vector<std::string> &mod_order) try {
+     nlohmann::json config_json;
+     config_json["enabled_mods"] = enabled_mods;
+     config_json["mod_order"] = mod_order;
+@@ -726,7 +730,11 @@
+     output_file << std::setw(4) << config_json;
+     output_file.close();
+ 
+-    return recomp::finalize_output_file_with_backup(path);
++    return !output_file.fail() && recomp::finalize_output_file_with_backup(path);
++}
++catch (const std::exception& error) {
++    fprintf(stderr, "Mod enable/order save exception: %s\n", error.what());
++    return false;
+ }
+ 
+ void recomp::mods::ModContext::dirty_mod_configuration_thread_process() {
+@@ -765,7 +773,15 @@
+             handle_variant(variant);
+         }
+ 
+-        if (active && !pending_mods.empty()) {
++        // End is not globally ordered against other producers in this queue.
++        // With producers stopped, drain everything before flushing pending sets.
++        if (!active) {
++            while (mod_configuration_thread_queue.try_dequeue(variant)) {
++                handle_variant(variant);
++            }
++        }
++
++        if (!pending_mods.empty()) {
+             {
+                 std::unique_lock opened_mods_lock(opened_mods_mutex);
+                 for (const std::string &id : pending_mods) {
+@@ -782,13 +798,16 @@
+ 
+             for (const std::string &id : pending_mods) {
+                 config_path = mod_config_directory / std::string(id + ".json");
+-                save_mod_config_storage(config_path, id, pending_mod_version[id], pending_mod_storage[id], pending_mod_schema[id]);
++                if (!save_mod_config_storage(config_path, id, pending_mod_version[id], pending_mod_storage[id], pending_mod_schema[id])) {
++                    fprintf(stderr, "Failed to save mod settings for %s\n", id.c_str());
++                    configuration_save_failed = true;
++                }
+             }
+ 
+             pending_mods.clear();
+         }
+ 
+-        if (active && pending_config_save) {
++        if (pending_config_save) {
+             {
+                 // Store the enabled mods and the order.
+                 std::unique_lock lock(opened_mods_mutex);
+@@ -799,7 +818,10 @@
+                 }
+             }
+ 
+-            save_mods_config(mods_config_path, config_enabled_mods, config_mod_order);
++            if (!save_mods_config(mods_config_path, config_enabled_mods, config_mod_order)) {
++                fprintf(stderr, "Failed to save mod enable/order settings\n");
++                configuration_save_failed = true;
++            }
+             pending_config_save = false;
+         }
+     }
+@@ -933,10 +955,18 @@
+     }
+ }
+ 
++bool recomp::mods::ModContext::finish_configuration() {
++    if (mod_configuration_thread) {
++        mod_configuration_thread_queue.enqueue(ModConfigQueueEnd());
++        mod_configuration_thread->join();
++        mod_configuration_thread.reset();
++        fprintf(stderr, "[Shutdown] Mod settings flush: %s\n", configuration_save_failed ? "failed" : "ok");
++    }
++    return !configuration_save_failed;
++}
++
+ recomp::mods::ModContext::~ModContext() {
+-    mod_configuration_thread_queue.enqueue(ModConfigQueueEnd());
+-    mod_configuration_thread->join();
+-    mod_configuration_thread.reset();
++    finish_configuration();
+ }
+ 
+ recomp::mods::ModContentTypeId recomp::mods::ModContext::register_content_type(const ModContentType& type) {
+--- a/lib/N64ModernRuntime/librecomp/src/pi.cpp
++++ b/lib/N64ModernRuntime/librecomp/src/pi.cpp
+@@ -94,6 +94,8 @@
+     // Used to tell the consumer thread that the saving thread is ready for a file swap.
+     moodycamel::LightweightSemaphore swap_file_ready_sempahore;
+     std::mutex save_buffer_mutex;
++    // Only the saver writes this; main reads it after joining the saver.
++    bool saving_failed = false;
+ } save_context;
+ 
+ const std::u8string save_folder = u8"saves";
+@@ -112,25 +114,33 @@
+     save_context.save_file_path = save_folder_path / (name + u8".bin");
+ }
+ 
+-void update_save_file() {
+-    bool saving_failed = false;
+-    {
++extern std::atomic_bool exited;
++
++bool update_save_file(bool interactive_error = true) {
++    try {
+         std::ofstream save_file = recomp::open_output_file_with_backup(ultramodern::get_save_file_path(), std::ios_base::binary);
+-
+         if (save_file.good()) {
+-            std::lock_guard lock{ save_context.save_buffer_mutex };
+-            save_file.write(save_context.save_buffer.data(), save_context.save_buffer.size());
+-        }
+-        else {
+-            saving_failed = true;
+-        }
+-    }
+-    if (!saving_failed) {
+-        saving_failed = !recomp::finalize_output_file_with_backup(ultramodern::get_save_file_path());
+-    }
+-    if (saving_failed) {
++            {
++                std::lock_guard lock{ save_context.save_buffer_mutex };
++                save_file.write(save_context.save_buffer.data(), save_context.save_buffer.size());
++            }
++            // Check write, flush and close before replacing the accepted save.
++            save_file.close();
++            if (!save_file.fail() && recomp::finalize_output_file_with_backup(ultramodern::get_save_file_path())) {
++                return true;
++            }
++        }
++    }
++    catch (const std::exception& error) {
++        fprintf(stderr, "[Shutdown] Save exception: %s\n", error.what());
++    }
++    fprintf(stderr, "Failed to write the save file\n");
++    // Preserve the native warning during play, but never open a dialog while
++    // shutdown is waiting for the saver or after the UI has stopped.
++    if (interactive_error && !exited.load()) {
+         ultramodern::error_handling::message_box("Failed to write to the save file. Check your file permissions and whether the save folder has been moved to Dropbox or similar, as this can cause issues.");
+     }
++    return false;
+ }
+ 
+ extern std::atomic_bool exited;
+@@ -153,7 +163,7 @@
+ 
+         // If an action came through that affected the save file, save the updated contents.
+         if (save_buffer_updated) {
+-            update_save_file();
++            save_context.saving_failed = !update_save_file() || save_context.saving_failed;
+         }
+ 
+         if (save_context.swap_file_pending_sempahore.tryWait()) {
+@@ -260,10 +270,16 @@
+     read_save_file();
+ }
+ 
+-void ultramodern::join_saving_thread() {
++bool ultramodern::join_saving_thread() {
+     if (save_context.saving_thread.joinable()) {
+         save_context.saving_thread.join();
+-    }
++        // Main calls this only after the game safe point. No producer or writer
++        // can race this last snapshot, even if exited skipped the debounce pass.
++        const bool saved = update_save_file(false);
++        fprintf(stderr, "[Shutdown] Final EEPROM flush: %s\n", saved ? "ok" : "failed");
++        return saved && !save_context.saving_failed;
++    }
++    return true; // No initialized save context (quit before starting the game).
+ }
+ 
+ void do_dma(RDRAM_ARG PTR(OSMesgQueue) mq, gpr rdram_address, uint32_t physical_addr, uint32_t size, uint32_t direction) {
+--- a/lib/N64ModernRuntime/librecomp/src/recomp.cpp
++++ b/lib/N64ModernRuntime/librecomp/src/recomp.cpp
+@@ -459,6 +459,10 @@
+ 
+ std::optional<std::u8string> current_game = std::nullopt;
+ std::atomic<GameStatus> game_status = GameStatus::None;
++std::atomic_bool exited = false;
++extern std::atomic_bool game_shutdown_acknowledged;
++// Written by bootstrap, read only after joining it.
++static bool game_entrypoint_started = false;
+ 
+ void run_thread_function(uint8_t* rdram, uint64_t addr, uint64_t sp, uint64_t arg) {
+     auto find_it = game_roms.find(current_game.value());
+@@ -524,25 +528,29 @@
+ 
+ void recomp::start_game(const std::u8string& game_id) {
+     std::lock_guard<std::mutex> lock(current_game_mutex);
++    // Serialize first-VI autostart against quit, including before bootstrap.
++    if (exited.load() || game_status.load() != GameStatus::None) {
++        return;
++    }
+     current_game = game_id;
+     game_status.store(GameStatus::Running);
+     game_status.notify_all();
+ }
+ 
+ bool ultramodern::is_game_started() {
+-    return game_status.load() != GameStatus::None;
+-}
+-
+-std::atomic_bool exited = false;
++    // Quit without a game must still use dummy VI state on an in-flight VI.
++    return game_status.load() == GameStatus::Running;
++}
++
+ moodycamel::LightweightSemaphore graphics_shutdown_ready;
+ 
+ void ultramodern::quit() {
++    std::lock_guard<std::mutex> lock(current_game_mutex);
+     exited.store(true);
+     GameStatus desired = GameStatus::None;
+     game_status.compare_exchange_strong(desired, GameStatus::Quit);
+     game_status.notify_all();
+-    std::lock_guard<std::mutex> lock(current_game_mutex);
+-    current_game.reset();
++    // Workers can still be initializing. Keep their game ID for process lifetime.
+ }
+ 
+ void recomp::mods::enable_mod(const std::string& mod_id, bool enabled) {
+@@ -680,7 +688,8 @@
+                             mod_error_stream << "\n";                                
+                         }
+                         ultramodern::error_handling::message_box(mod_error_stream.str().c_str());
+-                        game_status.store(GameStatus::None);
++                        std::lock_guard<std::mutex> lock(current_game_mutex);
++                        game_status.store(exited.load() ? GameStatus::Quit : GameStatus::None);
+                         return false;
+                     }
+                 }
+@@ -690,6 +699,7 @@
+                 save_type = game_entry.save_type;
+                 ultramodern::init_saving(rdram);
+ 
++                game_entrypoint_started = true;
+                 try {
+                     game_entry.entrypoint(rdram, context);
+                 } catch (ultramodern::thread_terminated& terminated) {
+@@ -729,7 +739,7 @@
+         save_type == SaveType::AllowAll;
+ }
+ 
+-void recomp::start(
++bool recomp::start(
+     const recomp::Version& version,
+     ultramodern::renderer::WindowHandle window_handle,
+     const recomp::rsp::callbacks_t& rsp_callbacks,
+@@ -802,7 +812,8 @@
+ 
+     if (alloc_failed) {
+         ultramodern::error_handling::message_box("Failed to allocate memory!");
+-        return;
++        mod_context->finish_configuration();
++        return false;
+     }
+ 
+     recomp::register_heap_exports();
+@@ -829,24 +840,22 @@
+         }
+     }
+ 
++    // Bootstrap decides whether an IDLE thread exists. A quit before first VI
++    // must not wait for an acknowledgement from a game that never started.
++    game_thread.join();
++    if (game_entrypoint_started) {
++        game_shutdown_acknowledged.wait(false);
++        fprintf(stderr, "[Shutdown] Game parked at IDLE safe point\n");
++    }
+     graphics_shutdown_ready.signal();
+-
+-    game_thread.join();
+     ultramodern::join_event_threads();
+     ultramodern::join_thread_cleaner_thread();
+-    ultramodern::join_saving_thread();
+-    
+-    // Free rdram.
+-    bool free_failed;
+-#ifdef _WIN32
+-    // VirtualFree returns zero on failure.
+-    free_failed = (VirtualFree(rdram, 0, MEM_RELEASE) == 0);
+-#else
+-    // munmap returns -1 on failure.
+-    free_failed = (munmap(rdram, allocation_size) == -1);
+-#endif
+-
+-    if (free_failed) {
+-        printf("Failed to free rdram\n");
+-    }
+-}
++    bool saved = ultramodern::join_saving_thread();
++    // UI/event producers have stopped and game producers are parked.
++    saved = mod_context->finish_configuration() && saved;
++
++    // IDLE, blocked game workers and the detached timer still own RDRAM and
++    // runtime/mod storage. Keep all of it until main explicitly terminates the
++    // process after saving native settings. This private port is single-game.
++    return saved;
++}
+--- a/lib/N64ModernRuntime/ultramodern/include/ultramodern/ultramodern.hpp
++++ b/lib/N64ModernRuntime/ultramodern/include/ultramodern/ultramodern.hpp
+@@ -124,7 +124,7 @@
+ void quit();
+ void join_event_threads();
+ void join_thread_cleaner_thread();
+-void join_saving_thread();
++bool join_saving_thread();
+ 
+ void set_audio_callbacks(const audio_callbacks_t& callbacks);
+ 
+--- a/lib/N64ModernRuntime/ultramodern/src/scheduling.cpp
++++ b/lib/N64ModernRuntime/ultramodern/src/scheduling.cpp
+@@ -42,7 +42,20 @@
+     ultramodern::check_running_queue(PASS_RDRAM1);
+ }
+ 
++extern std::atomic_bool exited;
++std::atomic_bool game_shutdown_acknowledged{false};
++
+ extern "C" void yield_self_1ms(RDRAM_ARG1) {
++    // Dr. Mario 64 injects this hook only in its lowest-priority IDLE loop.
++    // Scheduling is cooperative: park here without dispatching another worker.
++    // Never return/throw, since the thread epilogue would resume a successor.
++    if (exited.load()) {
++        game_shutdown_acknowledged.store(true);
++        game_shutdown_acknowledged.notify_one();
++        for (;;) {
++            game_shutdown_acknowledged.wait(true);
++        }
++    }
+     ultramodern::wait_for_external_message_timed(PASS_RDRAM1, 1);
+     ultramodern::check_running_queue(PASS_RDRAM1);
+ }
+--- a/src/game/config.cpp
++++ b/src/game/config.cpp
+@@ -243,6 +243,10 @@
+         }
+ 
+         output_file << std::setw(4) << json_data;
++        output_file.close();
++        if (output_file.fail()) {
++            return false;
++        }
+     }
+     return recomp::finalize_output_file_with_backup(path);
+ }
+@@ -585,19 +589,38 @@
+     }
+ }
+ 
+-void zelda64::save_config() {
++bool zelda64::save_config() {
+     std::filesystem::path recomp_dir = zelda64::get_app_folder_path();
+ 
+     if (recomp_dir.empty()) {
+-        return;
+-    }
+-
+-    std::filesystem::create_directories(recomp_dir);
+-    
+-    // TODO error handling for failing to save config files.
+-
+-    save_general_config(recomp_dir / general_filename);
+-    save_graphics_config(recomp_dir / graphics_filename);
+-    save_controls_config(recomp_dir / controls_filename);
+-    save_sound_config(recomp_dir / sound_filename);
+-}
++        fprintf(stderr, "Native settings path is empty\n");
++        return false;
++    }
++
++    std::error_code ec;
++    std::filesystem::create_directories(recomp_dir, ec);
++    if (ec) {
++        fprintf(stderr, "Failed to create native settings directory: %s\n", ec.message().c_str());
++        return false;
++    }
++
++    // Attempt every file, including when another file fails. Report exceptions
++    // as persistence failures rather than unwinding through live worker storage.
++    auto save_one = [&](auto save, std::u8string_view filename) {
++        try {
++            if (save(recomp_dir / filename)) {
++                return true;
++            }
++        }
++        catch (const std::exception& error) {
++            fprintf(stderr, "Native settings save exception: %s\n", error.what());
++        }
++        fprintf(stderr, "Failed to save native settings file: %s\n", std::filesystem::path(filename).string().c_str());
++        return false;
++    };
++    bool saved = save_one(save_general_config, general_filename);
++    saved = save_one(save_graphics_config, graphics_filename) && saved;
++    saved = save_one(save_controls_config, controls_filename) && saved;
++    saved = save_one(save_sound_config, sound_filename) && saved;
++    return saved;
++}
+--- a/src/main/main.cpp
++++ b/src/main/main.cpp
+@@ -1,4 +1,6 @@
+ #include <cstdio>
++#include <cstdlib>
++#include <iostream>
+ #include <cassert>
+ #include <unordered_map>
+ #include <vector>
+@@ -733,7 +735,7 @@
+         autostart_pending.store(true);
+     }
+ 
+-    recomp::start(
++    bool saved = recomp::start(
+         project_version,
+         {},
+         rsp_callbacks,
+@@ -746,9 +748,22 @@
+         threads_callbacks
+     );
+ 
++    // Runtime/UI producers have stopped. Save settings even if EEPROM or mod
++    // persistence failed, and never turn any persistence failure into success.
++    const bool config_saved = zelda64::save_config();
++    fprintf(stderr, "[Shutdown] Native settings flush: %s\n", config_saved ? "ok" : "failed");
++    saved = config_saved && saved;
++
+     if (preloaded) {
+         release_preload(preload_context);
+     }
+ 
+-    return EXIT_SUCCESS;
+-}
++    // Detached timer and parked game workers still reference process-owned
++    // queues and RDRAM. Only the normal main path terminates, after all explicit
++    // persistent writers finish; do not run global destructors underneath them.
++    fprintf(stderr, "[Shutdown] Persistence complete: %s\n", saved ? "ok" : "failed");
++    std::cout.flush();
++    std::cerr.flush();
++    std::fflush(nullptr);
++    std::_Exit(saved ? EXIT_SUCCESS : EXIT_FAILURE);
++}

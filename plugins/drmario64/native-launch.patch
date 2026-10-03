@@ -1,0 +1,82 @@
+--- a/src/main/main.cpp
++++ b/src/main/main.cpp
+@@ -7,6 +7,8 @@
+ #include <numeric>
+ #include <stdexcept>
+ #include <cinttypes>
++#include <string_view>
++#include <atomic>
+ 
+ #include "nfd.h"
+ 
+@@ -58,6 +60,7 @@
+ #include "../../lib/rt64/src/contrib/stb/stb_image.h"
+ 
+ const std::string version_string = "1.0.0";
++static std::atomic_bool autostart_pending{false};
+ 
+ template<typename... Ts>
+ void exit_error(const char* str, Ts ...args) {
+@@ -81,7 +84,7 @@
+         SDL_SetHint(SDL_HINT_JOYSTICK_WGI, "0");
+     }
+ 
+-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) > 0) {
++    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMECONTROLLER) < 0) {
+         exit_error("Failed to initialize SDL2: %s\n", SDL_GetError());
+     }
+ 
+@@ -558,8 +561,17 @@
+ #define REGISTER_FUNC(name) recomp::overlays::register_base_export(#name, name)
+ 
+ int main(int argc, char** argv) {
+-    (void)argc;
+-    (void)argv;
++    // The external launcher validates/imports the owned ROM into the native
++    // APP_FOLDER_PATH before selecting this direct-start mode.
++    const bool autostart = argc == 2 && std::string_view(argv[1]) == "--start";
++    if (argc == 2 && std::string_view(argv[1]) == "--help") {
++        puts("Usage: drmario64_recomp [--start]");
++        return EXIT_SUCCESS;
++    }
++    if (argc != 1 && !autostart) {
++        fputs("Usage: drmario64_recomp [--start]\n", stderr);
++        return 2;
++    }
+     recomp::Version project_version{};
+     if (!recomp::Version::from_string(version_string, project_version)) {
+         ultramodern::error_handling::message_box(("Invalid version string: " + version_string).c_str());
+@@ -675,7 +687,15 @@
+     };
+ 
+     ultramodern::events::callbacks_t thread_callbacks{
+-        .vi_callback = recomp::update_rumble,
++        .vi_callback = []() {
++            recomp::update_rumble();
++            // The first VI initializes the native dummy video state. Starting
++            // before that skips initialization and crashes vi_thread_func.
++            if (autostart_pending.exchange(false)) {
++                recomp::start_game(supported_games[0].game_id);
++                recompui::hide_all_contexts();
++            }
++        },
+         .gfx_init_callback = recompui::update_supported_options,
+     };
+ 
+@@ -703,6 +723,16 @@
+ 
+     recomp::set_single_controller_mode(false);
+     
++    if (autostart) {
++        recomp::check_all_stored_roms();
++        if (!recomp::is_rom_valid(supported_games[0].game_id)) {
++            fputs("Direct start requires an imported Dr. Mario 64 US ROM\n", stderr);
++            return EXIT_FAILURE;
++        }
++        // Queue the game only after the first VI has initialized video state.
++        autostart_pending.store(true);
++    }
++
+     recomp::start(
+         project_version,
+         {},

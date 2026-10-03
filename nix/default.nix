@@ -206,6 +206,32 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           allowSubstitutes = false;
           preferLocalBuild = true;
         };
+    drmario64Pkgs = import nixpkgs {
+      inherit system;
+      config.allowUnfreePredicate = package: pkgs.lib.getName package == "drmario64-recomp";
+    };
+    drmario64Engine =
+      (import ../plugins/drmario64/engine.nix { pkgs = drmario64Pkgs; }).overrideAttrs
+        (old: {
+          patches = (old.patches or [ ]) ++ [
+            ../plugins/drmario64/native-launch.patch
+            ../plugins/drmario64/native-shutdown.patch
+          ];
+        });
+    drmario64Package = import ../plugins/drmario64/package.nix {
+      inherit pkgs;
+      engine = drmario64Engine;
+    };
+    drmario64Plugin =
+      (mkPlugin {
+        publisher.namespace = "@simonwjackson";
+        source = ../plugins/drmario64;
+        plugin = _: import ../plugins/drmario64/plugin.nix { inherit drmario64Package; };
+      }).overrideAttrs
+        {
+          allowSubstitutes = false;
+          preferLocalBuild = true;
+        };
     twoShipPlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
       source = ../plugins/2ship;
@@ -275,6 +301,37 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       text = ''
         exec ${pkgs.python3}/bin/python3 -I ${./simpsons-runtime-check.py} \
           ${simpsonsPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
+    prepareDrMario64 = pkgs.writeShellApplication {
+      name = "prepare-drmario64";
+      text = ''
+        exec ${pkgs.python3}/bin/python3 -I ${../plugins/drmario64/prepare-rom.py} \
+          ${../plugins/drmario64/launch.py} "$@"
+      '';
+    };
+    drmario64WindowClose =
+      pkgs.runCommandCC "drmario64-window-close"
+        {
+          buildInputs = [ pkgs.libx11 ];
+        }
+        ''
+          mkdir -p "$out/bin"
+          $CC -Wall -Wextra -Werror ${./drmario64-window-close.c} -lX11 -o "$out/bin/drmario64-window-close"
+        '';
+    verifyDrMario64 = pkgs.writeShellApplication {
+      name = "verify-drmario64";
+      runtimeInputs = [
+        drmario64WindowClose
+        pkgs.xorg.xorgserver
+        pkgs.xorg.xauth
+        pkgs.xdotool
+        pkgs.imagemagick
+      ];
+      text = ''
+        export VK_DRIVER_FILES=${pkgs.mesa}/share/vulkan/icd.d/lvp_icd.${pkgs.stdenv.hostPlatform.parsed.cpu.name}.json
+        exec ${pkgs.python3}/bin/python3 ${./drmario64-runtime-check.py} \
+          ${drmario64Plugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
     verifyTwoShip = pkgs.writeShellApplication {
@@ -391,6 +448,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix run .#verify-simpsons -- /path/to/owned/USA-disc.iso  # needs about 5 GB temporary space' \
           '  Keep Simpsons native binaries private; no publication is approved.' \
           'Simpsons builds do not extract game data; verify-simpsons explicitly uses owned media.' \
+          'Dr. Mario 64 has private x86_64 and aarch64 Linux build targets:' \
+          '  nix build --option builders "" --option post-build-hook "" --option secret-key-files "" .#korri-plugin-drmario64' \
+          '  nix build --option builders "" --option post-build-hook "" --option secret-key-files "" .#checks.${system}.korri-drmario64-plugin' \
+          '  nix run --option builders "" --option post-build-hook "" --option secret-key-files "" .#verify-drmario64 -- /path/to/owned/US-ROM.n64' \
+          'Dr. Mario 64 needs the owned US ROM in the local Nix store; see plugins/drmario64/README.md.' \
+          'Ask the owner before sending Dr. Mario 64 sources, inputs or build jobs to fuji.' \
+          'Never publish Dr. Mario 64 ROM inputs or native outputs to public caches or releases.' \
           'No signing, binary publication or device installation runs here.'
       '';
     };
@@ -424,6 +488,8 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-actraiser = actraiserPlugin;
       korri-plugin-the-simpsons-game = simpsonsPlugin;
       korri-plugin-2ship = twoShipPlugin;
+      drmario64 = drmario64Package;
+      korri-plugin-drmario64 = drmario64Plugin;
       verify-2ship = verifyTwoShip;
       fable-ii-recomp-native = fableEngine;
       fable-ii-extract-xiso = fableExtractor;
@@ -434,6 +500,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         inherit pkgs;
         package = drMarioPlugin;
         engine = drMarioEngine;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
+      korri-drmario64-plugin = import ./drmario64-check.nix {
+        inherit pkgs;
+        package = drmario64Plugin;
+        engine = drmario64Engine;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
@@ -543,6 +617,16 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         type = "app";
         program = "${verifyDrMario}/bin/verify-dr-mario";
         meta.description = "Verify Dr. Mario with an owned Europe ROM on a build machine.";
+      };
+      prepare-drmario64 = {
+        type = "app";
+        program = "${prepareDrMario64}/bin/prepare-drmario64";
+        meta.description = "Validate and normalize an owned Dr. Mario 64 US ROM locally without overwriting files.";
+      };
+      verify-drmario64 = {
+        type = "app";
+        program = "${verifyDrMario64}/bin/verify-drmario64";
+        meta.description = "Privately test native Dr. Mario 64 startup and restart with an owned US ROM.";
       };
       verify-actraiser = {
         type = "app";
