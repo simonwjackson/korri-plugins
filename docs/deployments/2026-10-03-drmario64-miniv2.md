@@ -2,8 +2,8 @@
 
 The owner authorized private signing and installation on the Retroid Pocket
 Mini V2. The owner requires an Ask Questions approval before any game launch.
-The signed ARM64 plugin is installed and enabled. Library registration is
-pending an idle session. No Dr. Mario 64 process has run on the device.
+The signed ARM64 plugin is installed and enabled. Library registration and
+native runner selection are verified. Preparation did not launch Dr. Mario 64.
 
 ## Exact artifacts
 
@@ -16,6 +16,8 @@ pending an idle session. No Dr. Mario 64 process has run on the device.
 | ARM64 engine | `/nix/store/d4xghqzg5nbkkypsdqxzcab43ai8ijbm-drmario64-recomp-1.0.0-af91e3b/libexec/drmario64_recomp` |
 | Exact-package approval | `6eba5e2312fbc0de8103e93a791c330525431278b29d3aa1e99b63444699c9f0` |
 | Native runner | `@simonwjackson:drmario64/drmario64` |
+| Library game ID | `01M41MGPRVK00QX6XRK7S5XZV6` |
+| Library ROM | `/var/lib/korri/roms/Dr. Mario 64 (USA).n64` |
 | Owned swap16 ROM SHA-256 | `613778b244784492a881c0d72d6017f82c39026706a406bd7ef95c6f33e53b89` |
 
 ## Verified installation
@@ -51,18 +53,30 @@ required the cache itself to be root-owned. The actual cache belongs to
 The corrected guard checks that existing arrangement. No ownership or
 permission changed.
 
+## Verified library registration
+
+Preparation did not stop The Deep. Its session ended while the registration
+watcher waited. After three idle samples over 60 seconds, registration backed
+up the catalog, device configuration, and private discovery state. The
+existing offline catalog importer reused `/var/lib/korri` as the scan root.
+The import preserved all 2,333 previous games, 2,333 releases, storage
+registrations, and existing locations.
+
+The owned ROM now resides in the existing ROM directory. Its SHA-256 still
+matches the owned input. Only this game's runner selection changed. A fresh
+`app.local-games.routes` response verified the selected native runner, exact
+installed package, and no route warnings. The available RetroArch route was
+not selected. Download-only policy remained unchanged.
+
 ## Pending physical validation
 
-The existing session is The Deep, with launch ID
-`7adfe41cd0818fdd04261057c4828860`. Preparation leaves that session running.
-Library registration waits for three idle session samples over 60 seconds.
-Registration uses the existing offline catalog importer and existing
-`/var/lib/korri` scan root. The owned ROM remains in the private staging
-directory until registration copies it into the existing ROM directory.
-
-The approval question must disclose this remaining registration step.
-Switching games needs approval to stop The Deep and launch Dr. Mario 64.
-The owner must save current progress before approving that switch.
+Ask Questions prompt `305bda40-680b-4781-8cfc-3e10719defe7` remains pending.
+Do not repost it or infer launch approval from session changes. The prompt
+mentions The Deep because registration was waiting when it was posted.
+Registration has since finished. Another session, NES `Dr Mario`, was running
+at the final readiness check. Its launch ID is
+`7f52bd81f0d31605d2332c63f073fd90`. Approval to stop the earlier The Deep
+session does not authorize silently stopping this different session.
 
 GPU rendering, audible sound, controllers, gameplay, campaign save/reload,
 and native settings persistence remain unverified on this device.
