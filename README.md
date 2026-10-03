@@ -8,7 +8,7 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 
 | Output | Plugin or contents | Platforms |
 |---|---|---|
-| `korri-plugin-dr-mario` | `@simonwjackson:dr-mario`, owned Europe NES ROM | x86_64 verified; aarch64 build target, verification pending |
+| `korri-plugin-dr-mario` | `@simonwjackson:dr-mario`, owned Europe NES ROM | x86_64 and aarch64 Linux |
 | `dr-mario-engine` | DrMarioNesRecomp Europe native executable without a ROM | x86_64 and aarch64 Linux targets |
 | `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 and aarch64 Linux |
 | `korri-plugin-nocturne` | `@simonwjackson:nocturne` | x86_64 and aarch64 Linux |
@@ -63,9 +63,9 @@ nix run --option builders '' --option post-build-hook '' .#verify-dr-mario -- '/
 ```
 
 Build off-device. The owner requires a prompt before sending builds to `fuji`
-and a separate approval before device testing. The x86_64 package and owned-ROM
-checks pass; ARM verification is blocked by builder connectivity. Native outputs
-contain translated retail code and remain private. No signing, publication,
+and a separate approval before device testing. Package and owned-ROM checks pass
+on both architectures, including native save-file loading and account isolation.
+Native outputs contain translated retail code and remain private. No signing, publication,
 installation, or device trust change is included.
 
 ## The Simpsons Game
