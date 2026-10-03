@@ -36,6 +36,8 @@ pkgs.runCommand "korri-solarus-plugin-check"
       --moduleResolution Bundler plugins/solarus/plugin.ts
     bun nix/solarus-check.ts ${package} \
       ${hostPackage}/bin/korri-plugin ${korridPackage}/bin/korrid ${recordArguments}
+    python3 ${./solarus-controller-check.py} ${pkgs.SDL2}/lib/libSDL2.so \
+      ${solarusPackage.lib}/share/solarus/gamecontrollerdb.txt
     python3 ${./solarus-runtime-check.py} ${package} ${pkgs.stdenv.hostPlatform.system} \
       ${korridPackage}/bin/korrid ${headless} ${./solarus-quest}
     touch "$out"

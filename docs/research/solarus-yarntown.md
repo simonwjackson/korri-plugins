@@ -2,8 +2,11 @@
 
 Yarntown v1.0.6 is installed on the Retroid Pocket Mini V2 and launched through
 Korri. Host gameplay and save/reload passed. Device rendering passed after a
-manual focus correction. Physical controls, audible sound, and device
-save/reload remain unverified.
+manual focus correction. The owner verified gameplay with the left stick, A rolling, and B attacking.
+The owner reported all four D-pad directions inverted. The native SDL lookup
+check reproduced that inversion in the engine's bundled controller database.
+The correction passes checks on both architectures. Physical acceptance of
+the correction, audible sound, and device save/reload remain unverified.
 
 The owner authorized choosing any Solarus quest and required an `ask_user`
 decision before device work. The owner then chose idle-only installation and
@@ -138,10 +141,50 @@ unresolved and is outside this plugin test.
 
 The engine connected to `Built-in Audio Speaker Playback` after a PipeWire
 connection error. This verifies an audio connection, not audible sound.
-The engine opened `/dev/input/event8` through `/dev/input/event11`. This does
-not verify physical button behavior. Device gameplay, physical input, audible
-sound, and native save/reload still need acceptance testing. Do not stop or
+The engine opened `/dev/input/event8` through `/dev/input/event11`. The owner
+later verified left-stick gameplay, A rolling, and B attacking, but reported
+an inverted D-pad. A native `save_1` then existed in account storage.
+Audible sound and native save/reload still need acceptance testing. Do not stop or
 replace a running game without explicit permission.
+
+### D-pad diagnosis and scoped correction
+
+The owner tapped physical Up, Right, Down, Left in that order. A passive
+read-only evdev capture recorded the player seat's `ABS_HAT0Y = -1`,
+`ABS_HAT0X = 1`, `ABS_HAT0Y = 1`, and `ABS_HAT0X = -1`, each followed by release.
+These are the correct Linux hat directions. The capture did not grab or
+inject input, restart services, or change any controller mapping.
+
+A native SDL probe used Solarus's actual initialization sequence. It set
+`SDL_GAMECONTROLLERCONFIG_FILE` to the installed engine database before
+`SDL_Init(SDL_INIT_GAMECONTROLLER)`. All four Korri-seat GUIDs matched the
+bundled Linux Xbox 360 entry. That entry bound `dpup:h0.4`, `dpright:h0.8`,
+`dpdown:h0.1`, and `dpleft:h0.2`. These are the opposite hat directions.
+The default SDL mapping was correct before that database was loaded.
+
+`plugins/solarus/xbox360-dpad.patch` changes only those four bindings to
+`dpup:h0.1`, `dpright:h0.2`, `dpdown:h0.4`, and `dpleft:h0.8`.
+All button and stick bindings remain unchanged. Quest bytes, quest settings,
+account saves, and Korri's controller routing are not part of this correction.
+The fix applies to Solarus's Linux Xbox 360 entry; it does not fix OpenGOAL/Jak.
+
+`nix/solarus-controller-check.py` loads the packaged database through native
+SDL's GUID lookup. It checks the generic Xbox 360 GUID and all four observed
+Korri-seat GUIDs. The original database fails with
+`dpup: expected h0.1, got h0.4`. Both architecture checks pass after the patch,
+including the existing engine launch, account isolation, and save/reload tests.
+Formatting and Python lint checks also pass.
+
+The user's A/B observations match the quest's roll/action and sword/attack
+behavior. This correction does not swap the face buttons. Separately, the
+engine logs `No such custom entity model: 'ephemeral_effect'` when rolling.
+This error comes from `scripts/action/dash_manager.lua:55`. The earlier host
+smoke test did not test rolling. It does not establish error-free real-game
+compatibility, and the D-pad correction does not repair this quest error.
+
+The owner explicitly permitted stopping and restarting the current quest for
+diagnosis. A restart loads a saved checkpoint, not unsaved gameplay progress.
+Physical acceptance after deployment remains required.
 
 The private device stage is `/var/tmp/solarus-yarntown-c78t8ahk`.
 It contains `before-library-import/`, `import-summary.json`, `library-import.log`,
