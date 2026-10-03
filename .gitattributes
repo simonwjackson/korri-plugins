@@ -4,3 +4,4 @@ plugins/the-simpsons-game/account-storage.patch whitespace=-blank-at-eol
 plugins/actraiser/auto-viewport.patch whitespace=-blank-at-eol
 plugins/opengoal/patches/linux-arm64.patch whitespace=-blank-at-eol
 plugins/fable-ii-recomp/patches/account-storage.patch whitespace=-blank-at-eol
+plugins/dr-mario/pal-timing.patch whitespace=-blank-at-eol

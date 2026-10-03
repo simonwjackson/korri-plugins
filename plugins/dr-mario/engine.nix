@@ -33,6 +33,8 @@ pkgs.stdenv.mkDerivation {
   patches = [
     ./account-storage.patch
     ./literal-rom-path.patch
+    # Europe-only runner: derive video, CPU and audio from PAL hardware clocks.
+    ./pal-timing.patch
   ];
   nativeBuildInputs = [ pkgs.cmake ];
   buildInputs = [
