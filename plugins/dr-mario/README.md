@@ -158,7 +158,7 @@ or ending.
 | Native engine build | Passed on `zao`. | Passed natively on `fuji`. |
 | Strict contract, packaged manifest, host admission and invalid-ROM rejection | Passed on `zao`. | Passed on `fuji`. |
 | Owned-ROM runtime check | Passed with PAL CPU/frame/audio timing, long paths and inherited-diagnostic suppression. | Passed the same PAL verifier on `fuji`, including native save-file loading and account isolation. |
-| Physical device installation and gameplay | Not run. | Signed Mini V2 installation, fullscreen capture and speaker routing verified. Owner reports the game works but feels fast. PAL update needs separate deployment approval. |
+| Physical device installation and gameplay | Not run. | Signed PAL update running on Mini V2. Live cadence measured 49.98 to 50.33 frames/second. Digital audio clocks and speaker routing passed. Owner speed and sound acceptance pending. |
 
 The 2026-10-03 local verification also passed Nix formatting, Ruff formatting and
 lint, strict TypeScript checking, and Git whitespace checks. The long-path test
@@ -182,5 +182,9 @@ copy, temporary GC root, and test directory were removed after each test. The
 engine builds need no ROM. Neither architecture's native output was published
 publicly. [Device evidence](../../docs/deployments/2026-10-03-dr-mario-miniv2.md)
 records the earlier signed installation and the remaining physical acceptance
-checks. That installation still has NTSC clocks. The PAL package needs separate
-approval before installation or interruption of another game.
+checks. The owner approved the PAL package update and launch. The Mini V2 now
+runs the corrected native engine. Live readings confirm approximately 50
+frames/second with turbo off and audio near 44.1 kHz without observed bridge
+counter growth. All 35 other plugin selections, 2334 catalog games/releases and
+the existing account files remain unchanged. Device save/load, audible quality
+and the owner's sense of speed still need acceptance.
