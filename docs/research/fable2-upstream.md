@@ -2,7 +2,7 @@
 
 Checked on 2026-10-02 for a Fable 2 plugin in `simonwjackson/korri-plugins`, targeting x86_64 and aarch64 Linux.
 
-No plugin or deployment package was implemented. Native x86_64 validation now covers menu navigation, character selection, new-game save creation, save reload into Bowerstone Old Town, stick-controlled movement, and nonzero audio output. Full-campaign completion, physical-controller/device acceptance and ARM gameplay remain unverified. The sections below distinguish source findings from subsequent runtime tests.
+Plugin integration is now under verification. Native x86_64 validation covers menu navigation, character selection, new-game save creation, save reload into Bowerstone Old Town, stick-controlled movement, and nonzero audio output. Full-campaign completion, physical-controller/device acceptance and ARM gameplay remain unverified. The sections below distinguish source findings from subsequent runtime tests.
 
 ## Findings
 
@@ -90,7 +90,7 @@ The remote ISO's size and modification time stayed unchanged across hashing. The
 
 The XEX hash matches himdo's recorded USA/Europe GOTY image. Its payload hash also matches the USA/Europe payload in `docs/GERMAN_GOTY_SUPPORT.md`. The title ID, entry point and image base match Oery's record. These checks identify the input; they do not establish compatibility with every Oery hook. The private validation checkout pins this measured XEX hash in `docs/re/entry-xex.sha256` and generates code from that same file. It does not substitute a French executable or remove hash validation.
 
-The SDK at `c94f5ebdcb3c9d1a460ca48e04f9758448f8d518` built on `zao` with its exact 22 top-level submodule pins. The only source changes reconstruct the published [keep-open](fable2-patches/sdk-keep-open.patch) and [tessellation descriptor-set](fable2-patches/sdk-tessellation.patch) fixes as valid unified diffs. The temporary fault diagnostic patch is excluded. Both diffs pass forward and reverse applicability checks against the pinned source.
+The SDK at `c94f5ebdcb3c9d1a460ca48e04f9758448f8d518` built on `zao` with its exact 22 top-level submodule pins. The only source changes reconstruct the published [keep-open](../../plugins/fable-ii-recomp/patches/sdk-keep-open.patch) and [tessellation descriptor-set](../../plugins/fable-ii-recomp/patches/sdk-tessellation.patch) fixes as valid unified diffs. The temporary fault diagnostic patch is excluded. Both diffs pass forward and reverse applicability checks against the pinned source.
 
 Clang 20.1.8, CMake 4.3.4 and Ninja 1.13.2 built the native x86_64 CLI, runtime and Vulkan plugin in RelWithDebInfo mode. Running `rexgluerd --version` reports `0.10.0.2-dev.gc94f5eb`. This verifies the SDK build, not Fable gameplay. The artifacts contain absolute Nix dependencies and are not deployment packages. No device build or installation ran.
 
@@ -118,12 +118,48 @@ The test runtime loaded `librexruntimerd.so` and `libTracyClientrd.so` from the 
 
 An experiment removed Oery's direct UI/ImGui linkage from the executable. It linked successfully and removed duplicate cvar warnings, but did not establish an input improvement. The experiment was reverted. No such patch is part of the retained source changes.
 
-## ARM build status
+## ARM source-build result
 
-A supervised build started on the existing `fuji` aarch64 build machine. Its private workspace is `/tmp/fable2-arm-20261002-4fb26a712c8d`. Source commits, all SDK gitlinks, both patches, and the owned XEX hash passed staging checks. Compilation and final ARM ELF/link checks were still pending when this note was updated.
+The supervised build passed on the existing `fuji` aarch64 build machine. Its private workspace is `/tmp/fable2-arm-20261002-4fb26a712c8d`. Source commits, all SDK gitlinks, both patches, and the owned XEX hash passed staging checks. Normal code generation passed in 163 seconds. The full game build completed 1,211 steps in 2,091 seconds.
+
+The final check inspected the actual executable and libraries as ELF64/AArch64, resolved their dependencies, and matched the game-local GPU plugin to the newly built SDK plugin. The SDK CLI ran natively and reported `0.10.0.2-dev.gc94f5eb`. All 587 generated C++ and header files were byte-identical between the completed x86_64 and aarch64 builds. The comparison excluded build metadata and stamp files. The ARM game itself was not run.
+
+Environment setup was slow. It completed while the parent was investigating the delay; the parent interrupted during SDK configuration, then resumed the same pinned build. No alternative environment, source version or machine-wide Nix setting was introduced.
 
 The build resolves ISA flags and compiler names from the pinned SDK's `linux-arm64` preset. Only private build setup changes select `aarch64-linux`, add `wayland-scanner`, choose ARM output paths, and pin the measured USA/Europe XEX. Oery's game hooks and original UI linkage remain unchanged. Sources and owned/generated game code stay out of public caches. The isolated devshell passed to Nix contains only its flake and lock.
 
 The supervisor polls every 30 seconds and propagates phase failures. Build limits are three compiler jobs, two hours for each SDK build stage, four hours for the game stage, and eight hours for aggregate native validation. These are limits, not time estimates. No ARM GUI or handheld acceptance follows from a successful build.
 
-The intended output paths are `oery/build/native/fable_ii` and `sdk/out/linux-arm64/` under that private workspace. Verify the actual final gate logs before using or describing those outputs as built.
+Verified outputs are `oery/build/native/fable_ii` and `sdk/out/linux-arm64/` under that private workspace. Evidence is in `logs/full-game-build.log` and `logs/native-elf-link-gates.log`. These are private development artifacts, not the final Nix plugin package.
+
+## Plugin integration choice
+
+The user chose ISO launch rather than requiring extracted files. The implementation follows the existing native-plugin account contract, keeps Oery's `assets-extracted/00007000` layout, and uses the upstream `fable_ii` application name. A verified temporary ISO snapshot protects extraction from later edits to the caller's file. First-run peak storage is about 15 GB; about 7 GB remains per account.
+
+A clean Nix engine build compiled and linked successfully but failed fixup because the SDK libraries retained `/build/` RPATHs. The package now replaces those paths with `$ORIGIN` before standard fixup and dependency resolution. The forbidden-path check stays enabled. A subsequent dependency check required SDL's OpenXR loader, which is now declared rather than ignored.
+
+The corrected clean x86_64 Nix engine build passed. The actual packaged declaration, host admission, sandboxed callback, native ELF, extractor, account-lock and preservation checks passed. A real owned-ISO run through Core verified all 451 extracted paths/sizes, the XEX hash, cached reuse and native SDL entry. It left the ISO unchanged. That check deliberately disabled video and does not establish packaged GUI gameplay.
+
+A subsequent graphical test exposed another packaging omission: SDL's installed driver list was only `x11` and `offscreen`. Configure logs reported `No package 'egl' found`, so Wayland was disabled despite the scanner dependency. `libglvnd` is now declared. Both SDK/game configure stages require `SDL_VIDEO_DRIVER_WAYLAND`, and the package test queries the actual installed SDL driver list. This new test rejects the earlier package.
+
+## Final package gates
+
+The corrected Nix packages and contract/launcher checks passed on both native build machines. Their installed SDL runtimes include Wayland. The x86_64 owned-ISO check passed again against the corrected package.
+
+| Artifact | Verified store path |
+|---|---|
+| x86_64 native engine | `/nix/store/1xgzkwqxj0nl1rl57ld0q9nnaza14dya-fable-ii-recomp-0-unstable-f3ae1ad` |
+| x86_64 package check | `/nix/store/7mid2ms3snbq2a90vy9znhx9fj310k1f-korri-fable-ii-recomp-plugin-check` |
+| aarch64 native engine | `/nix/store/32cr4gmb0bidfwz9d4m9xh8cx1837awj-fable-ii-recomp-0-unstable-f3ae1ad` |
+| aarch64 plugin | `/nix/store/4683zc4b4dlg4pha11lwi9gffpmibba8-korri-plugin` |
+| aarch64 package check | `/nix/store/mj8k0bhrqql8v92rw393666dr37575n7-korri-fable-ii-recomp-plugin-check` |
+
+After final documentation, test formatting and rebase, the x86_64 check passed again. ARM derivation evaluation also passed and still selects the exact verified engine above. Repeating the ARM check after those final changes was blocked by SSH timeouts to `fuji`; its successful package/check paths above refer to the earlier run. No engine or launcher behavior changed in those final edits.
+
+A separate graphical test executed the actual corrected x86_64 Nix engine. Process mappings confirmed its packaged executable, runtime, GPU plugin and Tracy library, without raw development binaries. Continue loaded a copied save into Bowerstone Old Town. A three-second stick input moved the hero along the street. The original save files remained unchanged, and all test processes were stopped.
+
+Native default logging wrote `user_data_root/logs/fable_ii_001.log`. A separate untouched-wrapper run read `user_data_root/fable_ii.toml` and honored its configured log destination while preserving the TOML bytes. New configuration-file creation was not tested. The graphical run used a process-local virtual controller, not physical handheld controls.
+
+The packaged run retained 33 duplicate-cvar warnings and 3,856 `BaseHeap::AllocFixed` errors. They did not prevent the observed sequence, but their broader consequences are unverified. Do not call this full-campaign, graphics-fidelity, long-session, audible-speaker, ARM gameplay or device acceptance.
+
+Final private evidence includes `/tmp/fable2-final-arm-package.log`, the `final-x86-package-check.log` and `final-owned-iso-check.log` files under the local validation directory, and `/tmp/fable2-packaged-smoke-result.md`. Original screenshots and process mappings are under `runtime-pkg2-lbcq8n4y` and `runtime-pkg2cfg-dcowcctt` in that directory. No game assets, screenshots, generated game code or native binaries were added to Git.

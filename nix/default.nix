@@ -170,6 +170,27 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           engine = simpsonsEngine;
         };
     };
+    fablePkgs = import nixpkgs {
+      inherit system;
+      config.allowUnfreePredicate = package: pkgs.lib.getName package == "fable-ii-recomp";
+    };
+    fableEngine = import ../plugins/fable-ii-recomp/engine.nix { pkgs = fablePkgs; };
+    fableExtractor = import ../plugins/fable-ii-recomp/extractor.nix { inherit pkgs; };
+    fablePlugin =
+      (mkPlugin {
+        publisher.namespace = "@simonwjackson";
+        source = ../plugins/fable-ii-recomp;
+        plugin =
+          _:
+          import ../plugins/fable-ii-recomp/plugin.nix {
+            inherit pkgs;
+            engine = fableEngine;
+          };
+      }).overrideAttrs
+        {
+          allowSubstitutes = false;
+          preferLocalBuild = true;
+        };
     twoShipPlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
       source = ../plugins/2ship;
@@ -251,6 +272,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       package = meleePlugin;
       korridPackage = korri.packages.${system}.korrid;
     };
+    verifyFable = pkgs.writeShellApplication {
+      name = "verify-fable-ii";
+      text = ''
+        exec ${pkgs.python3}/bin/python3 -I ${./fable2-owned-check.py} \
+          ${fablePlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
     help = pkgs.writeShellApplication {
       name = "korri-plugins-help";
       text = ''
@@ -318,6 +346,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  NIXPKGS_ALLOW_UNFREE=1 nix run --impure --option builders "" --option post-build-hook "" .#verify-actraiser-auto -- /path/to/ar.sfc  # requires X11 and a Vulkan GPU driver' \
           'ActRaiser requires an owned USA ar.sfc in the private build machine store. See plugins/actraiser/README.md.' \
           'Never publish ActRaiser outputs or its ROM input to public caches or releases.' \
+          'Fable II private source builds target x86_64-linux and aarch64-linux:' \
+          '  nix build --no-link --option builders "" --option post-build-hook "" .#korri-plugin-fable-ii-recomp' \
+          '  nix build --no-link --option builders "" --option post-build-hook "" .#checks.${system}.korri-fable-ii-recomp-plugin' \
+          '  nix run --option builders "" --option post-build-hook "" .#verify-fable-ii -- /path/to/owned/GOTY.iso' \
+          'Fable II requires the verified owned GOTY default.xex in the builder store. See plugins/fable-ii-recomp/README.md.' \
+          'Fable II ISO verification needs about 15 GB temporary free space and tests extraction/native entry, not gameplay.' \
+          'Do not upload Fable II inputs, native outputs or checks to public caches.' \
           'The Simpsons Game has native x86_64 and aarch64 build targets:' \
           '  nix build --no-link .#korri-plugin-the-simpsons-game' \
           '  nix build --no-link .#checks.x86_64-linux.korri-the-simpsons-game-plugin' \
@@ -352,6 +387,9 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-the-simpsons-game = simpsonsPlugin;
       korri-plugin-2ship = twoShipPlugin;
       verify-2ship = verifyTwoShip;
+      fable-ii-recomp-native = fableEngine;
+      fable-ii-extract-xiso = fableExtractor;
+      korri-plugin-fable-ii-recomp = fablePlugin;
     };
     checks = {
       korri-actraiser-plugin = import ./actraiser-check.nix {
@@ -387,6 +425,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-nocturne-plugin = import ./nocturne-check.nix {
         inherit pkgs;
         package = nocturnePlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
+      korri-fable-ii-recomp-plugin = import ./fable2-check.nix {
+        inherit pkgs;
+        package = fablePlugin;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
@@ -477,6 +522,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         type = "app";
         program = "${verifyZelda3}/bin/verify-zelda3";
         meta.description = "Test Zelda3 extraction, native startup and snapshot reload with an owned ROM on a build machine.";
+      };
+      verify-fable-ii = {
+        type = "app";
+        program = "${verifyFable}/bin/verify-fable-ii";
+        meta.description = "Privately verify owned Fable II ISO extraction and native entry on a build machine.";
       };
       verify-simpsons = {
         type = "app";
