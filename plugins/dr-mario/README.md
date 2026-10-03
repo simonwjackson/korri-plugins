@@ -1,7 +1,7 @@
 # Dr. Mario NES Recomp
 
 This plugin adds a native route for the owner's supported Europe NES ROM on
-x86_64 and aarch64 Linux. ARM verification is blocked by access to `fuji`.
+x86_64 and aarch64 Linux. Both native builds and owned-ROM checks passed.
 It uses [mstan/DrMarioNesRecomp](https://github.com/mstan/DrMarioNesRecomp), not
 Dr. Mario 64 or the Turbo ROM hack.
 
@@ -102,8 +102,9 @@ Run on a build machine, never a target device. The user requires an explicit
 disabled until that approval exists. Disable any post-build publication hook.
 The owner subsequently approved continuing off-device work and requires another
 `ask_user` pause before target-device installation or execution. On 2026-10-03,
-SSH to `fuji` timed out and the local Tailscale client reported `Logged out`.
-No network configuration was changed and no target device was contacted.
+the owner restored Tailscale access. The native ARM build and checks then ran on
+`fuji`, after verifying its architecture, idle compiler state, and empty
+post-build hook. No target device was contacted.
 
 ```sh
 nix build --option builders '' --option post-build-hook '' .#korri-plugin-dr-mario
@@ -122,9 +123,9 @@ or ending.
 
 | Check | x86_64 Linux | aarch64 Linux |
 |---|---|---|
-| Native engine build | Passed locally. | Not run; SSH timed out and local Tailscale reported logged out. |
-| Strict contract, packaged manifest, host admission and invalid-ROM rejection | Passed locally. | Not run. |
-| Owned-ROM runtime check | Passed three consecutive runs after review fixes, including long paths and inherited-diagnostic suppression. Each ran 600 native frames with zero dispatch misses. | Not run. |
+| Native engine build | Passed on `zao`. | Passed natively on `fuji`. |
+| Strict contract, packaged manifest, host admission and invalid-ROM rejection | Passed on `zao`. | Passed on `fuji`. |
+| Owned-ROM runtime check | Passed three consecutive runs after review fixes, including long paths and inherited-diagnostic suppression. | Passed the same verifier on `fuji`, including native save-file loading and account isolation. |
 | Physical device installation and gameplay | Not run. | Not run. |
 
 The 2026-10-03 local verification also passed Nix formatting, Ruff formatting and
@@ -132,4 +133,11 @@ lint, strict TypeScript checking, and Git whitespace checks. The long-path test
 failed against the earlier engine and passed after the positional-path patch.
 The runtime test waits for a focusable X window because SDL can replace its
 startup window while selecting a renderer. Review found no remaining blocker
-in the fixes. ARM derivation evaluation passed, but that is not an ARM build.
+in the fixes. Both architectures ran 600 native smoke frames with zero dispatch
+misses and the same six sampled framebuffer hashes. This tests the exercised
+startup path, not complete gameplay.
+
+ARM runtime evidence is `/tmp/dr-mario-arm-evidence-nbrlgdo6/runtime.log` on `zao`.
+The builder's private ROM copy, temporary GC root, and test directory were removed
+after the test. The engine builds need no ROM. Neither architecture's native
+output was published.
