@@ -1,0 +1,58 @@
+import type {
+  PluginLaunchInput,
+  PluginLaunchOutput,
+} from "../../contracts/generated/korrid"
+
+export const name = "signs-of-rain"
+export const title = "Signs of Rain"
+export const description =
+  "Runs the packaged Signs of Rain game with native data in Korri account storage."
+
+// RunnerRecord.releases matches existing whole-file library identities.
+// source.nix hashes the actual packaged PCK, not the source tree or a filename.
+export const runners = {
+  "signs-of-rain": {
+    id: "@simonwjackson:signs-of-rain/signs-of-rain",
+    program: "signs-of-rain",
+    releases: ["sha256:@PACK_SHA256@"],
+  },
+}
+
+function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
+  if (input.runnerId !== runners["signs-of-rain"].id) {
+    throw new Error("Unknown Signs of Rain runner")
+  }
+  if (input.corePath !== undefined) {
+    throw new Error("Signs of Rain is a standalone game and loads no emulator core")
+  }
+  if (
+    input.overrides?.config !== undefined ||
+    Object.keys(input.overrides?.settings ?? {}).length > 0
+  ) {
+    throw new Error("Signs of Rain does not implement Korri launch overrides")
+  }
+  if (
+    [input.program, input.contentPath, input.accountRoot].some(
+      path => !path.startsWith("/") || path.includes("\0"),
+    )
+  ) {
+    throw new Error("Signs of Rain requires absolute program, pack and account paths without NUL bytes")
+  }
+  return {
+    command: input.program,
+    args: ["--main-pack", input.contentPath,
+      "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3_es",
+      "--", "--handheld", "--graphics=fast"],
+    // project.godot uses Godot's custom user directory "signs-of-rain".
+    // With these host overrides removed, Linux Godot uses
+    // HOME/.local/share/signs-of-rain for user:// and native settings/replays.
+    env: { HOME: input.accountRoot },
+    envUnset: ["XDG_DATA_HOME", "XDG_CONFIG_HOME", "XDG_CACHE_HOME"],
+    cwd: input.accountRoot,
+    directories: [input.accountRoot],
+  }
+}
+
+export const handlers = {
+  "launch.prepare": prepareLaunch,
+}

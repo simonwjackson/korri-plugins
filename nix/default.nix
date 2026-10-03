@@ -3,6 +3,7 @@
   nixpkgs,
   flake-utils,
   skate3,
+  signs-of-rain,
 }:
 flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   system:
@@ -97,6 +98,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       publisher.namespace = "@simonwjackson";
       source = ../plugins/super-mario-world;
       plugin = _: import ../plugins/super-mario-world/plugin.nix { inherit pkgs; };
+    };
+    signsOfRainPackage = signs-of-rain.packages.${system}.signs-of-rain;
+    signsOfRainPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = import ../plugins/signs-of-rain/source.nix {
+        inherit pkgs signsOfRainPackage;
+      };
+      plugin = _: import ../plugins/signs-of-rain/plugin.nix { inherit signsOfRainPackage; };
     };
     zquestEngine = import ../plugins/zquest-classic/package.nix { inherit pkgs; };
     zquestLauncher = import ../plugins/zquest-classic/launcher.nix {
@@ -372,6 +381,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-super-mario-world-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-super-mario-world-plugin' \
           '  nix run .#verify-smw -- /path/to/owned/USA-ROM.smc  # optional, temporary assets only' \
+          'Signs of Rain has x86_64-linux and aarch64-linux package targets:' \
+          '  nix build --no-link --option builders "" --option post-build-hook "" .#korri-plugin-signs-of-rain' \
+          '  nix build --no-link --option builders "" --option post-build-hook "" .#checks.${system}.korri-signs-of-rain-plugin' \
+          'Signs of Rain ARM plugin builds need an approved ARM builder; see plugins/signs-of-rain/README.md.' \
+          'Register its exact packaged PCK in the existing library; no general PCK discovery is added.' \
           'Zelda3 supports x86_64-linux and aarch64-linux:' \
           '  nix build --no-link .#korri-plugin-zelda3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin' \
@@ -456,6 +470,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-dr-mario = drMarioPlugin;
       verify-dr-mario = verifyDrMario;
       korri-plugin-super-mario-world = smwPlugin;
+      korri-plugin-signs-of-rain = signsOfRainPlugin;
       korri-plugin-zelda3 = zelda3Plugin;
       zelda3 = zelda3Package;
       zquest-classic = zquestLauncher;
@@ -511,6 +526,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-2ship-plugin = import ./2ship-check.nix {
         inherit pkgs;
         package = twoShipPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
+      korri-signs-of-rain-plugin = import ./signs-of-rain-check.nix {
+        inherit pkgs signsOfRainPackage;
+        package = signsOfRainPlugin;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;

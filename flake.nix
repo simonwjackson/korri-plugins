@@ -6,6 +6,7 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     skate3.url = "github:simonwjackson/skate-3-flake/4e58e784407326d4da9dab5ab2b44fd32eb03c22";
+    signs-of-rain.url = "github:simonwjackson/signs-of-rain/a5a320681fa0688a618b0894d04de1a00b1ad537";
   };
 
   outputs =
@@ -14,6 +15,7 @@
       nixpkgs,
       flake-utils,
       skate3,
+      signs-of-rain,
       ...
     }:
     import ./nix {
@@ -22,6 +24,7 @@
         nixpkgs
         flake-utils
         skate3
+        signs-of-rain
         ;
     };
 }
