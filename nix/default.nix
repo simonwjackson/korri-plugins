@@ -175,6 +175,8 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/2ship;
       plugin = _: import ../plugins/2ship/plugin.nix { inherit pkgs; };
     };
+    # The viewport verifier still needs Pillow after the starter-pack move.
+    python = pkgs.python3.withPackages (packages: [ packages.pillow ]);
     verifyActraiser = pkgs.writeShellApplication {
       name = "verify-actraiser";
       text = ''
