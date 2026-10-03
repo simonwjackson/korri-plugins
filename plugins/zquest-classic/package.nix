@@ -26,24 +26,51 @@ let
     rev = "26d95b90aea7c36732a2df50df1c6fa26c96f93e";
     sha256 = "1likzpanrhlqsvdji1dy0ya067knb7ixq4hnw5rl7m87qrj1cjr5";
   };
-in
-pkgs.stdenv.mkDerivation {
-  pname = "zquest-classic";
-  version = "unstable-2026-06-18";
-  src = pkgs.fetchFromGitHub {
+  upstream = pkgs.fetchFromGitHub {
     owner = "ZQuestClassic";
     repo = "ZQuestClassic";
     rev = "882c906b17e35b4105188e6305ae2929aeba30e3";
     sha256 = "02fs0fm9wih9ly23ivxcvr346cj0dkg7yxsf97q7xzyw6vk36n2y";
   };
+  assets = import ./public-assets.nix {
+    inherit pkgs;
+    source = upstream;
+  };
   patches = [
     ./standalone-quest-path.patch
+    ./public-player.patch
     # Match the initialized 100 ms waits in the other Allegro Legacy workers.
     # An indeterminate timespec can starve the audio event queue on ARM.
     ./sound-thread-timeout.patch
   ]
   ++ lib.optional pkgs.stdenv.hostPlatform.isAarch64 ./aarch64-disable-x86-tile-simd.patch;
-  patchFlags = [ "-p0" ];
+  publicSource = import ./public-source.nix {
+    inherit
+      pkgs
+      upstream
+      assets
+      patches
+      ;
+  };
+in
+pkgs.stdenv.mkDerivation {
+  pname = "zquest-classic";
+  version = "unstable-2026-06-18-public1";
+  src = publicSource;
+  passthru = {
+    inherit publicSource assets;
+    upstreamRevision = upstream.rev;
+    # Corresponding-source release inputs; never export the original upstream
+    # resource tree or the build/check closure when publishing binaries.
+    sourceDependencies = {
+      inherit
+        stduuid
+        allegro5
+        gme
+        poolSTL
+        ;
+    };
+  };
   nativeBuildInputs = with pkgs; [
     cmake
     ninja
@@ -114,9 +141,6 @@ pkgs.stdenv.mkDerivation {
   installPhase = ''
     runHook preInstall
     cmake --install . --config Release --prefix "$out"
-    # These optional editor/example assets contain Git LFS pointers in the
-    # source archive. A player package must not advertise them as real quests.
-    rm -r "$out/share/zquestclassic/quests" "$out/share/zquestclassic/tilesets"
     # FetchContent overrides bypass upstream's dependency-license collection.
     mkdir -p "$out/share/zquestclassic/licenses/pinned-dependencies"
     cp ${stduuid}/LICENSE "$out/share/zquestclassic/licenses/pinned-dependencies/stduuid.txt"
@@ -126,6 +150,9 @@ pkgs.stdenv.mkDerivation {
     cp ${poolSTL}/LICENSE-Boost.txt "$out/share/zquestclassic/licenses/pinned-dependencies/poolSTL-Boost.txt"
     cp ${poolSTL}/LICENSE-BSD.txt "$out/share/zquestclassic/licenses/pinned-dependencies/poolSTL-BSD.txt"
     cp ${poolSTL}/LICENSE-MIT.txt "$out/share/zquestclassic/licenses/pinned-dependencies/poolSTL-MIT.txt"
+    # The build source already excludes all unapproved resources. Include the
+    # final notices in the content inventory, not only the upstream install.
+    (cd "$out/share/zquestclassic"; find . -type f -print0 | sort -z | xargs -0 sha256sum) > "$out/share/zquestclassic-resources.sha256"
     runHook postInstall
   '';
   meta = {

@@ -20,7 +20,7 @@ import time
 
 from PIL import Image
 
-package, engine, korrid, system, fixtures = sys.argv[1:]
+package, engine, korrid, system, fixtures, public_fixture = sys.argv[1:]
 package, engine = Path(package), Path(engine)
 manifest = json.loads((package / "manifest.json").read_text())
 launcher = Path(manifest["files"]["zplayer"])
@@ -195,12 +195,12 @@ def snapshot_when_ready(directory, child):
         return False
 
     # Loading consumes input; its opening wipe can still accept F12. This known
-    # default quest is static while idle, so two equal rendered frames establish
+    # generated room is static while idle, so two equal rendered frames establish
     # the end of that transition without assuming an architecture-specific delay.
     wait_for(ready, child, "native screenshot responds with a stable game frame")
 
 
-def play(quest, owner, *, save=False, concurrent=False):
+def play(quest, owner, *, save=False, concurrent=False, complete=False):
     directory = owner / "zquest-classic"
     native_log = directory / "allegro.log"
     native_log.unlink(missing_ok=True)
@@ -244,6 +244,47 @@ def play(quest, owner, *, save=False, concurrent=False):
                 assert "already running" in rejected.stderr, rejected.stderr
                 assert digest(save_file) == before
             snapshot_when_ready(directory, child)
+            if complete:
+                before = digest(save_file)
+                subprocess.run(["xdotool", "keydown", "Right"], check=True, timeout=5)
+                time.sleep(0.8)
+                subprocess.run(["xdotool", "keyup", "Right"], check=True, timeout=5)
+                started = time.monotonic()
+                captured_ending = False
+
+                def finished():
+                    nonlocal captured_ending
+                    if (
+                        digest(save_file) != before
+                        and native_log.read_text(errors="replace").count(
+                            "[QUEST METADATA]"
+                        )
+                        >= 2
+                    ):
+                        return True
+                    # Capture the built-in presentation for inspection, not a
+                    # user quest or a copied test image. Input stays responsive.
+                    if not captured_ending and time.monotonic() - started > 35:
+                        (directory / "ending.png").write_bytes(capture_screen())
+                        captured_ending = True
+                    subprocess.run(
+                        ["xdotool", "keydown", "Return"], check=True, timeout=5
+                    )
+                    time.sleep(0.05)
+                    subprocess.run(
+                        ["xdotool", "keyup", "Return"], check=True, timeout=5
+                    )
+                    time.sleep(0.5)
+                    return False
+
+                wait_for(
+                    finished,
+                    child,
+                    "built-in ending saved and returned to the quest",
+                    timeout=180,
+                )
+                assert captured_ending and (directory / "saves/backup").is_dir()
+                snapshot_when_ready(directory, child)
             if save:
                 before = digest(save_file)
                 for action in ["F6", "Return", "Down", "Return"]:
@@ -344,9 +385,10 @@ seatless.mkdir()
 (seatless / "event0").write_text("")
 assert loaded.seat_joystick(seatless) is None
 
-# Use upstream's shipped default quest, not retail data or downloaded fan games.
+# An original generated room exercises the public player without a copied
+# template, tiles, music or quest. The fixture never enters the runtime closure.
 quest = root / "Quest '; $(exit 19).qst"
-shutil.copyfile(resources / "modules/classic/default.qst", quest)
+shutil.copyfile(public_fixture, quest)
 original_hash = digest(quest)
 owner = account("Player One '; $(exit 21)")
 save = play(quest, owner, save=True, concurrent=True)
@@ -375,6 +417,10 @@ updated_save = play(moved, owner)
 assert updated_save != save
 assert digest(save) == saved_hash
 assert len(list((owner / "zquest-classic/saves").glob("*.sav"))) == 2
+
+# The original room's native win-flag variant exercises the actual built-in
+# ending, replacement fonts/graphics, START acknowledgement and save/reload.
+play(Path(public_fixture).with_name("public-win.qst"), account("Ending"), complete=True)
 
 # Reject unsupported or missing inputs before creating state.
 os.mkfifo(root / "pipe.qst")
@@ -415,10 +461,33 @@ except ValueError:
     pass
 assert (repair / "assets").resolve() == root
 
-# Assert upstream's recorded script execution on the real interpreter. These
-# fetched test fixtures are not part of the distributable plugin closure.
+# Exercise the new missing-tiles refusal through the real reader, followed by
+# a successful generated-quest load. Native qe_missing_tiles is appended as 15
+# in core/qst.h; old numeric error codes remain unchanged.
+load_account = account("Tile requirements") / "zquest-classic"
+loaded.prepare_resources(load_account)
+for input_path, expected in (
+    (Path(public_fixture).with_name("public-missing-tiles.qst"), 15),
+    (Path(public_fixture), 0),
+):
+    result = subprocess.run(
+        [executable, "-headless", "-load-and-quit", str(input_path)],
+        cwd=load_account,
+        env=dict(os.environ, ZC_DISABLE_CHDIR="1"),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=45,
+    )
+    assert result.returncode == expected, result.stdout
+
+# Assert upstream's recorded script execution on the real interpreter. Only
+# graphics hashes use the static public-font baseline in zquest-fixtures.nix;
+# script traces, RNG, timing and controls retain upstream's expectations.
+# These fetched test fixtures are not in the distributable plugin closure.
 script_account = account("Script replay") / "zquest-classic"
 loaded.prepare_resources(script_account)
+loaded.configure(script_account, None)
 replay_result = subprocess.run(
     [
         executable,

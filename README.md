@@ -273,7 +273,10 @@ through the native player. It preserves legacy's `zelda-classic` system and
 standalone launch mode. Each account has separate native configuration and
 saves. Saves use the quest's content hash, so renaming retains a save while
 changed quest contents get a separate save. The editor and quest downloads
-are outside this plugin's scope.
+are outside this plugin's scope. The `public1` build removes bundled quests
+and uncleared media. It supplies original sound cues, silent default music,
+licensed replacement fonts, and neutral menu/ending graphics. Quests needing
+legacy default tiles are explicitly unsupported; user quest music is unchanged.
 
 ```sh
 nix build --no-link .#korri-plugin-zquest-classic
@@ -286,7 +289,11 @@ Build only on build machines. Checks use the real player, Core launch executor,
 and Xvfb to exercise input, screenshots, save writes, and reload. They do not
 establish physical-device, controller, or audio acceptance. The package retains
 the legacy development snapshot and interpreter backend, not the latest stable
-release. Signed publication and device installation require separate approval.
+release. `zquest-classic-source` supplies a corresponding-source archive for
+each architecture. The approved public cache is
+`https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
+Publication does not change existing device trust or clear user quest rights.
+See the plugin README for limitations, licenses and the publication procedure.
 
 ## Fallout 1 and 2 Community Edition
 

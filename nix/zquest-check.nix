@@ -8,6 +8,7 @@
 }:
 let
   fixtures = import ./zquest-fixtures.nix { inherit pkgs engine; };
+  publicFixture = import ./zquest-public-fixture.nix { inherit pkgs; };
   contractSource = builtins.path {
     path = contract;
     name = "korrid.ts";
@@ -62,7 +63,14 @@ pkgs.runCommand "korri-zquest-classic-plugin-check"
     tsc --project tsconfig.json
     bun nix/zquest-check.ts ${package} ${hostPackage}/bin/korri-plugin \
       ${korridPackage}/bin/korrid ${recordArguments}
+    python3 ${./zquest-publication-check.py} \
+      ${package} ${engine} ${engine.assets} ${engine.publicSource}
+    mkdir asset-reader
+    cp ${../plugins/zquest-classic/public-assets-validate.py} asset-reader/public-assets-validate.py
+    cp ${../plugins/zquest-classic/public-assets-metrics.json} asset-reader/public-assets-metrics.json
+    xvfb-run -a python3 asset-reader/public-assets-validate.py \
+      --resources ${engine.assets} --allegro-library ${engine}/lib/liballeg.so --midi-playback
     xvfb-run -a -s '-screen 0 800x600x24' python3 ${./zquest-runtime-check.py} \
-      ${package} ${engine} ${korridPackage}/bin/korrid ${pkgs.stdenv.hostPlatform.system} ${fixtures}
+      ${package} ${engine} ${korridPackage}/bin/korrid ${pkgs.stdenv.hostPlatform.system} ${fixtures} ${publicFixture}/public-room.qst
     touch "$out"
   ''

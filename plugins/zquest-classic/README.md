@@ -24,8 +24,9 @@ the literal quest path, and an account-owned state directory. Core performs the
 launch under its existing policy. No Core schema or permission expansion is
 required. Unsupported launch overrides and libretro cores are rejected.
 
-Build machines compile the native player. Devices receive prebuilt outputs.
-Both architectures use the ZScript interpreter, following the legacy package.
+Build machines compile the native player from a cleaned source tree. Devices
+receive prebuilt outputs. Both architectures use the ZScript interpreter,
+following the legacy package.
 The ARM patch selects upstream's scalar tile renderer instead of x86 SIMD.
 This costs performance for script-heavy quests. The package disables the
 updater, WebSocket scripting, and native file-dialog dependency.
@@ -42,6 +43,31 @@ FreePats license and mapping remain in the closure.
 before each wait, matching its keyboard, mouse, timer, and joystick workers.
 The original worker passed an uninitialized timeout. Sound-enabled ARM checks
 exposed stalls that the original muted checks did not cover.
+
+## Public resource build
+
+The `public1` package contains no bundled quest, NSF soundtrack, original
+sound bank, or original bitmap-font collection. It does not clear the rights
+to quests supplied by users. The publication audit is in
+[docs/research/zquest-publication-audit.md](../../docs/research/zquest-publication-audit.md).
+
+| Resource | Public build behavior |
+|---|---|
+| Default sound effects | 61 original generated cues keep the existing numeric sound slots. They do not imitate the original game recordings. |
+| Default MIDI music | Seven valid silent tracks satisfy the native loader. Quest-provided music still plays. |
+| Runtime fonts | ProggyVector-derived raster fonts retain measured character widths and line heights. Special game alphabets are not reproduced. |
+| Native menus and ending | Original geometric markers and neutral completion text replace the stock presentation. User quest content is not changed. |
+| Old quests without embedded tiles | Rejected with a missing-default-tiles explanation instead of loading stock artwork or displaying broken graphics. |
+| Optional editor/example material | Not included in the runtime resources. |
+
+The separately licensed ZQuest Commons logo, icon and theme music remain with
+their terms and credits. ProggyVector remains for the debugger with its font
+license. FreePats remains the software MIDI instrument bank. Resource generation,
+format requirements and notices are in [ASSET-LICENSES.md](ASSET-LICENSES.md).
+
+The player sounds and looks different from upstream. Unusual script glyphs can
+lose meaning when replaced with licensed generic glyphs. The resource checks
+validate their format and origin inputs, not every community quest's layout.
 
 ## Saves and configuration
 
@@ -122,18 +148,26 @@ nix build --no-link .#checks.aarch64-linux.korri-zquest-classic-plugin
 
 The checks exercise the real manifest, strict launch types, host admission,
 and production sandboxed callback. They run the packaged player through Core
-on Xvfb, using upstream's default quest rather than retail data. They exercise
+on Xvfb, using an original generated geometric room rather than an upstream
+template or retail data. They exercise
 keyboard input, native screenshots, in-game save writes, reload after a rename,
 separate accounts, changed-release isolation, concurrent-session refusal, and
 preservation of local files. Test accounts do not answer the upload question,
 so a launcher regression stops the run at upstream's modal. The checks assert
-the exact handheld-settings edits and that the player keeps them on exit. They also assert upstream's `auto_scopes.zplay`
-script replay against the pinned interpreter. Its Git LFS files are fetched
+the exact handheld-settings edits and that the player keeps them on exit.
+They also assert upstream's `auto_scopes.zplay` against the pinned interpreter.
+Only 26 graphics hashes change for the public fonts. All upstream script
+traces, RNG, controls and timing remain exact. Its Git LFS files are fetched
 by hash for tests only and are absent from the plugin closure.
+The native asset reader checks all 61 samples, 101 font slots/metrics, seven
+silent MIDI tracks and two bitmaps. It exercises the real MIDI timer at each
+default loop boundary. The original win-room variant exercises the ending,
+acknowledgement, save write, backup and return to the quest.
 A private PulseAudio null sink exercises real sound initialization without
 hardware or an ALSA sequencer. These checks do not establish audible output,
 physical-controller support, all-quest compatibility, or device acceptance.
-Both checks passed on native x86_64 and aarch64 build machines on 2026-10-02.
+The cleaned public player checks passed on native x86_64 and aarch64 build
+machines on 2026-10-03.
 The check-only GitHub workflow runs both architectures and publishes nothing.
 
 For an interactive run with separate test state:
@@ -144,12 +178,40 @@ nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state
 
 ## Publication and installation
 
-The output contains upstream runtime resources, including its default module,
-fonts, sounds, and music, plus license notices. It omits the editor binaries
-and optional quest/tileset directories whose archive entries are Git LFS
-pointers. It does not bundle a selection of community quests. Upstream declares
-GPLv3 for the project. Public redistribution of included game-derived assets
-requires a separate rights review; a successful build is not that review.
+The output contains the reviewed and generated runtime resources described
+above, plus license notices. It omits the editor and all bundled quests.
+Upstream declares GPLv3 for the project. The `public1` recipe selects
+reviewed runtime resources before compilation and provides generated replacements. A successful build alone does not prove
+asset rights. The publication gate checks the final resource inventory and
+compares every generated file with its source derivation. The release process
+also checks the exact runtime closure and corresponding-source archives.
+
+### Corresponding source
+
+```sh
+nix build --no-link .#packages.x86_64-linux.zquest-classic-source
+nix build --no-link .#packages.aarch64-linux.zquest-classic-source
+```
+
+These outputs contain architecture-specific source archives with the cleaned
+engine, explicit CMake dependency sources, generator inputs/notices, and a
+standalone Nix recipe. They exclude upstream quest/media collections and
+unneeded dependency demo/test media. `BUILDING.txt` explains rebuilding from
+the extracted source. Source archives and exact `revision.txt`/architecture
+path lists accompany the binary release. The original integration recipes are
+also in this repository at that revision.
+
+### Signed cache publication
+
+Public destination: `https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
+Publish only the exact checked ZQuest plugin outputs, never all flake packages,
+a build/test closure, or a copy of the private cache. Each batch uses its own
+source tag and the existing standard Korri GitHub binary-cache publisher.
+Upload corresponding source before publishing its binary batch.
+
+Publisher binding is separate from publication. An existing device bound to
+the private cache does not automatically trust a different cache URL. This
+release does not change device bindings or bypass signature/approval checks.
 
 ## Device installation
 
