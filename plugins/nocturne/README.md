@@ -112,3 +112,20 @@ This is a startup test, not full-game, physical-device, audible-output,
 controller, or gameplay save/load acceptance. Window-close did not terminate the
 upstream process within 20 seconds in the headless test. The test reports that
 condition and kills only its own process. Clean shutdown remains unverified.
+
+## Device results
+
+The [Odin 2 Portal test](../../docs/deployments/2026-10-03-nocturne-odin.md)
+reached the main menu on Turnip Adreno 740 with fullscreen enabled, Xenos selected,
+and asynchronous shader compilation disabled. That native account configuration
+is device-local; package defaults are unchanged. Disabling asynchronous compilation
+can add pauses and was not proven necessary by an Odin A/B test. Controls and
+save/load remain unverified. The game was stopped after the test.
+
+The [Mini V2 installation](../../docs/deployments/2026-10-02-nocturne-miniv2.md)
+remains rendering-unverified after a black-screen result. Its native-renderer
+switch is an unverified experiment. The game is stopped pending owner approval.
+
+The Odin's approved personal publisher binding is a backed-up `/etc` override,
+not part of its immutable system generation. A future NixOS activation can replace
+it. Read the deployment record before updating or relying on reboot restoration.
