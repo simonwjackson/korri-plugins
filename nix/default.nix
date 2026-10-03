@@ -98,12 +98,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/super-mario-world;
       plugin = _: import ../plugins/super-mario-world/plugin.nix { inherit pkgs; };
     };
-    solarusPackage = import ../plugins/solarus/package.nix { inherit pkgs; };
-    solarusPlugin = mkPlugin {
-      publisher.namespace = "@simonwjackson";
-      source = ../plugins/solarus;
-      plugin = _: import ../plugins/solarus/plugin.nix { inherit solarusPackage; };
-    };
     zquestEngine = import ../plugins/zquest-classic/package.nix { inherit pkgs; };
     zquestLauncher = import ../plugins/zquest-classic/launcher.nix {
       inherit pkgs;
@@ -378,11 +372,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-super-mario-world-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-super-mario-world-plugin' \
           '  nix run .#verify-smw -- /path/to/owned/USA-ROM.smc  # optional, temporary assets only' \
-          'Solarus supports x86_64-linux and aarch64-linux:' \
-          '  nix build --no-link .#korri-plugin-solarus' \
-          '  nix build --no-link .#checks.x86_64-linux.korri-solarus-plugin' \
-          '  nix build --no-link .#checks.aarch64-linux.korri-solarus-plugin' \
-          'Solarus discovers .solarus quests and keeps saves in the account root supplied by Korri.' \
           'Zelda3 supports x86_64-linux and aarch64-linux:' \
           '  nix build --no-link .#korri-plugin-zelda3' \
           '  nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin' \
@@ -467,8 +456,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-dr-mario = drMarioPlugin;
       verify-dr-mario = verifyDrMario;
       korri-plugin-super-mario-world = smwPlugin;
-      korri-plugin-solarus = solarusPlugin;
-      solarus = solarusPackage;
       korri-plugin-zelda3 = zelda3Plugin;
       zelda3 = zelda3Package;
       zquest-classic = zquestLauncher;
@@ -524,13 +511,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-2ship-plugin = import ./2ship-check.nix {
         inherit pkgs;
         package = twoShipPlugin;
-        contract = korri.lib.${system}.pluginContract;
-        hostPackage = korri.packages.${system}.korri-plugin-host;
-        korridPackage = korri.packages.${system}.korrid;
-      };
-      korri-solarus-plugin = import ./solarus-check.nix {
-        inherit pkgs solarusPackage;
-        package = solarusPlugin;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
