@@ -13,8 +13,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-melee-pc` | `@simonwjackson:melee-pc`, beta | x86_64 and aarch64 Linux |
 | `melee-pc` | Native Melee PC runtime and owned-disc launcher | x86_64 and aarch64 Linux |
 | `nocturne` | NocturneRecomp native launcher for owned XBLA assets | x86_64 and aarch64 Linux |
-| `korri-plugin-opengoal` | `@simonwjackson:opengoal`, Jak trilogy including Renegade | x86_64 Linux only |
-| `opengoal` | Native runtime without game assets or compiler | x86_64 Linux only |
+| `korri-plugin-opengoal` | `@simonwjackson:opengoal`, Jak trilogy including Renegade | x86_64 and aarch64 Linux |
+| `opengoal` | Native runtime without game assets or compiler | x86_64 and aarch64 Linux |
 | `opengoal-tools` | Off-device disc preparation and GOAL compiler | x86_64 Linux build machine only |
 | `korri-plugin-actraiser` | `@simonwjackson:actraiser`, private owned-ROM build | x86_64 and aarch64 Linux |
 | `actraiser` | Private native executable and owned-ROM launcher | x86_64 and aarch64 Linux |
@@ -118,17 +118,22 @@ public binary-cache publication needs separate rights review and approval.
 ## Jak and Daxter trilogy
 
 [OpenGOAL](plugins/opengoal/README.md) runs prepared Jak 1, Jak II, Jak II: Renegade,
-and Jak 3 data. The x86_64 plugin includes the prebuilt runtime, not game assets
-or a compiler. Disc validation and GOAL compilation run explicitly on a build
-machine. Transfer the complete upstream data tree to the target afterwards.
-The runner matches measured `out/<game>/iso/GAME.CGO` files in registered library
-releases. It does not claim ISO files or create library entries. Linux ARM is
-deferred. Signed publication and live installation remain separate steps.
+and Jak 3 data. Devices receive native runtimes without game assets or compilers.
+Build machines compile the Linux ARM runtime from pinned source with a Linux patch;
+x86_64 uses the upstream release binary. Disc preparation runs explicitly on an
+x86 build machine and selects `--instruction-set x86` or `arm64`. Transfer the
+complete prepared tree afterwards. The runner matches only its architecture's
+measured `out/<game>/iso/GAME.CGO` files in registered library releases. It does
+not claim ISO files or create library entries. Signed publication and live
+installation remain separate steps. Mini V2 validation requires owner readiness
+approval before deployment.
 
 ```sh
 nix build --no-link .#korri-plugin-opengoal
 nix build --no-link .#checks.x86_64-linux.korri-opengoal-plugin
-nix run .#prepare-opengoal -- --game jak2 --iso /path/to/owned.iso --output /path/to/new-data
+nix build --no-link .#checks.aarch64-linux.korri-opengoal-plugin
+nix run .#prepare-opengoal -- --game jak2 --instruction-set arm64 --iso /path/to/owned.iso --output /path/to/new-data
+nix run .#verify-opengoal -- /path/to/prepared-data --game jak2
 ```
 
 ## ActRaiser

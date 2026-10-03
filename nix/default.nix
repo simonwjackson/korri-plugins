@@ -19,6 +19,23 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     mkPlugin = korri.lib.${system}.mkPlugin { inherit pkgs; };
     opengoalPackages = import ../plugins/opengoal/package.nix { inherit pkgs; };
+    verifyOpengoal = pkgs.writeShellApplication {
+      name = "verify-opengoal";
+      runtimeInputs = [
+        pkgs.xorg.xorgserver
+        pkgs.xorg.xauth
+        pkgs.imagemagick
+        pkgs.pulseaudio
+        pkgs.dbus
+      ];
+      text = ''
+        export LIBGL_DRIVERS_PATH=${pkgs.mesa}/lib/dri
+        export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.mesa ]}
+        export __GLX_VENDOR_LIBRARY_NAME=mesa
+        exec dbus-run-session -- ${pkgs.python3}/bin/python3 ${./opengoal-owned-check.py} \
+          ${packages.korri-plugin-opengoal} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
     prepareOpengoal = pkgs.writeShellApplication {
       name = "prepare-opengoal";
       text = ''
@@ -27,19 +44,20 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     packages =
       pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-        opengoal = opengoalPackages.runtime;
+        # The x86 tools cross-compile either instruction set off-device.
         opengoal-tools = opengoalPackages.tools;
+      }
+      // {
+        opengoal = opengoalPackages.runtime;
         korri-plugin-opengoal = mkPlugin {
           publisher.namespace = "@simonwjackson";
-          source = ../plugins/opengoal;
+          source = import ../plugins/opengoal/source.nix { inherit pkgs; };
           plugin =
             _:
             import ../plugins/opengoal/plugin.nix {
               opengoalRuntime = opengoalPackages.runtime;
             };
         };
-      }
-      // {
         # The native flake's default is the prebuilt release on x86_64 and the
         # source build on aarch64. Native builds run on builders, never devices.
         korri-plugin-skate-3 = mkPlugin {
@@ -273,11 +291,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-nocturne-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-nocturne-plugin' \
           '  nix run .#verify-nocturne -- /path/to/extracted/default.xex' \
-          'OpenGOAL trilogy supports x86_64 Linux; game preparation runs off-device:' \
+          'OpenGOAL supports x86_64-linux and aarch64-linux; builds and preparation run off-device:' \
           '  nix build --no-link .#korri-plugin-opengoal' \
           '  nix build --no-link .#checks.x86_64-linux.korri-opengoal-plugin' \
-          '  nix run .#prepare-opengoal -- --game jak2 --iso /path/to/owned.iso --output /path/to/new-data' \
-          'OpenGOAL requires registered out/<game>/iso/GAME.CGO releases and their complete prepared directories.' \
+          '  nix build --no-link .#checks.aarch64-linux.korri-opengoal-plugin' \
+          '  nix run .#prepare-opengoal -- --game jak2 --instruction-set arm64 --iso /path/to/owned.iso --output /path/to/new-data' \
+          '  nix run .#verify-opengoal -- /path/to/prepared-data --game jak2  # build machines only' \
+          'OpenGOAL requires architecture-matched out/<game>/iso/GAME.CGO releases and their complete prepared directories.' \
           '2 Ship 2 Harkinian supports x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-2ship' \
           '  nix build --no-link .#checks.x86_64-linux.korri-2ship-plugin' \
@@ -324,6 +344,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       nocturne = nocturnePackage;
       korri-plugin-nocturne = nocturnePlugin;
       verify-nocturne = verifyNocturne;
+      verify-opengoal = verifyOpengoal;
       actraiser = actraiserPackage;
       korri-plugin-actraiser = actraiserPlugin;
       korri-plugin-the-simpsons-game = simpsonsPlugin;
@@ -404,12 +425,10 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
       };
-    }
-    // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
       korri-opengoal-plugin = import ./opengoal-check.nix {
         inherit pkgs;
         package = packages.korri-plugin-opengoal;
-        tools = opengoalPackages.tools;
+        tools = if system == "x86_64-linux" then opengoalPackages.tools else null;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
@@ -421,6 +440,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         type = "app";
         program = "${verifyMelee}/bin/verify-melee";
         meta.description = "Test Melee native launch and state preservation with an owned ISO on a GPU-equipped build machine.";
+      };
+      verify-opengoal = {
+        type = "app";
+        program = "${verifyOpengoal}/bin/verify-opengoal";
+        meta.description = "Test native OpenGOAL startup with prepared owned data on a build machine.";
       };
       verify-actraiser = {
         type = "app";

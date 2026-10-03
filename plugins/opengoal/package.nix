@@ -43,48 +43,52 @@ let
   };
 in
 {
-  runtime = pkgs.stdenvNoCC.mkDerivation (
-    common
-    // {
-      pname = "opengoal-runtime";
-      # SDL is statically linked, but its X11, audio and GL backends use dlopen.
-      # Keep these in the ELF RUNPATH even though they are absent from DT_NEEDED.
-      buildInputs = common.buildInputs ++ runtimeLibraries;
-      runtimeDependencies = runtimeLibraries;
-      # SDL's .note.dlopen also lists optional Steam storage and PowerVR GLES.
-      # Neither is used by OpenGOAL's desktop OpenGL runtime.
-      autoPatchelfIgnoreMissingDeps = [
-        "libsteam_api.so"
-        "libGLES_CM.so.1"
-      ];
-      installPhase = ''
-        runHook preInstall
-        install -Dm755 gk "$out/libexec/opengoal/gk"
-        install -Dm644 ${licenseFile} "$out/share/licenses/opengoal/LICENSE"
-        mkdir -p "$out/bin" "$out/share/opengoal/data"
-        cp -r data/game data/custom_assets data/launcher data/log "$out/share/opengoal/data/"
-        ln -s ../../share/opengoal/data "$out/libexec/opengoal/data"
-        ln -s ../libexec/opengoal/gk "$out/bin/gk"
-        # No launcher wrapper: pass --proj-path to a prepared writable data tree.
-        # HOME/XDG_CONFIG_HOME and upstream save paths remain unchanged.
-        runHook postInstall
-      '';
-      installCheckPhase = ''
-        runHook preInstallCheck
-        "$out/bin/gk" --version
-        "$out/bin/gk" --help > help.txt
-        grep -F -- --proj-path help.txt
-        test ! -e "$out/bin/extractor"
-        test ! -e "$out/bin/goalc"
-        test ! -e "$out/share/opengoal/data/goal_src"
-        runHook postInstallCheck
-      '';
-      meta = common.meta // {
-        description = "OpenGOAL native runtime without retail game data or preparation tools";
-        mainProgram = "gk";
-      };
-    }
-  );
+  runtime =
+    if pkgs.stdenv.hostPlatform.isAarch64 then
+      import ./arm-package.nix { inherit pkgs; }
+    else
+      pkgs.stdenvNoCC.mkDerivation (
+        common
+        // {
+          pname = "opengoal-runtime";
+          # SDL is statically linked, but its X11, audio and GL backends use dlopen.
+          # Keep these in the ELF RUNPATH even though they are absent from DT_NEEDED.
+          buildInputs = common.buildInputs ++ runtimeLibraries;
+          runtimeDependencies = runtimeLibraries;
+          # SDL's .note.dlopen also lists optional Steam storage and PowerVR GLES.
+          # Neither is used by OpenGOAL's desktop OpenGL runtime.
+          autoPatchelfIgnoreMissingDeps = [
+            "libsteam_api.so"
+            "libGLES_CM.so.1"
+          ];
+          installPhase = ''
+            runHook preInstall
+            install -Dm755 gk "$out/libexec/opengoal/gk"
+            install -Dm644 ${licenseFile} "$out/share/licenses/opengoal/LICENSE"
+            mkdir -p "$out/bin" "$out/share/opengoal/data"
+            cp -r data/game data/custom_assets data/launcher data/log "$out/share/opengoal/data/"
+            ln -s ../../share/opengoal/data "$out/libexec/opengoal/data"
+            ln -s ../libexec/opengoal/gk "$out/bin/gk"
+            # No launcher wrapper: pass --proj-path to a prepared writable data tree.
+            # HOME/XDG_CONFIG_HOME and upstream save paths remain unchanged.
+            runHook postInstall
+          '';
+          installCheckPhase = ''
+            runHook preInstallCheck
+            "$out/bin/gk" --version
+            "$out/bin/gk" --help > help.txt
+            grep -F -- --proj-path help.txt
+            test ! -e "$out/bin/extractor"
+            test ! -e "$out/bin/goalc"
+            test ! -e "$out/share/opengoal/data/goal_src"
+            runHook postInstallCheck
+          '';
+          meta = common.meta // {
+            description = "OpenGOAL native runtime without retail game data or preparation tools";
+            mainProgram = "gk";
+          };
+        }
+      );
 
   tools = pkgs.stdenvNoCC.mkDerivation (
     common
