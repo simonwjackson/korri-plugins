@@ -1,7 +1,7 @@
 {
   pkgs,
   package,
-  tools,
+  tools ? null,
   contract,
   hostPackage,
   korridPackage,
@@ -33,7 +33,10 @@ pkgs.runCommand "korri-opengoal-plugin-check"
     nativeBuildInputs = [
       pkgs.bun
       pkgs.typescript
+    ]
+    ++ pkgs.lib.optionals (tools != null) [
       pkgs.python3
+      pkgs.strace
     ];
   }
   ''
@@ -45,7 +48,10 @@ pkgs.runCommand "korri-opengoal-plugin-check"
     cd work
     tsc --project tsconfig.json
     bun nix/opengoal-check.ts ${package} \
-      ${hostPackage}/bin/korri-plugin ${korridPackage}/bin/korrid ${argvProgram}
-    python3 ${./opengoal-prepare-check.py} ${../plugins/opengoal/prepare.py} ${tools}
+      ${hostPackage}/bin/korri-plugin ${korridPackage}/bin/korrid ${argvProgram} ${pkgs.stdenv.hostPlatform.system}
+    ${pkgs.lib.optionalString (tools != null) ''
+      python3 ${./opengoal-prepare-check.py} ${../plugins/opengoal/prepare.py} ${tools}
+      python3 ${./opengoal-frame-check.py} ${./opengoal-owned-check.py}
+    ''}
     touch "$out"
   ''
