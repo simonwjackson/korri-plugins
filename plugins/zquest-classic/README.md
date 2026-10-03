@@ -70,19 +70,44 @@ an explicit user operation and depends on that quest's save compatibility.
 The launcher holds a directory lock across native execution. A second session
 for the same account fails rather than sharing configuration and saves.
 Package updates refresh resource links. The launcher refuses to replace local
-files or foreign links at those resource names. It does not replace the
-player's native configuration. Edit `zc.cfg` while the player is stopped.
-Changing upstream's `save_folder` setting changes where it writes saves.
-Upstream starts windowed. A handheld compositor can require `fullscreen = 1`
-in the native `[zeldadx]` section. Xvfb does not verify that compositor behavior.
+files or foreign links at those resource names. Edit `zc.cfg` while the player
+is stopped. Changing upstream's `save_folder` setting changes where it writes
+saves.
+
+## Handheld settings
+
+The owner chose these launcher settings on 2026-10-02. The launcher writes
+them into the account's native files before every start. It changes only the
+named keys and keeps every other line.
+
+| Setting | Where | Effect |
+|---|---|---|
+| `-fullscreen` | command line | The player fills the screen. Upstream starts windowed. It overrides `fullscreen` in `zc.cfg`. |
+| `replay_upload_prompt = 1` | `zc.cfg`, `[zeldadx]` | Upstream's upload question is marked as asked. `replay_upload` keeps its value; upstream's default is off. The plugin does not consent for the user. |
+| `clicktofreeze = 0` | `zc.cfg`, `[zeldadx]` | A touch or click does not open the system menu. |
+| `btn_menu = 0` | every scheme in `controls.cfg` except `Default` | The gamepad menu button does not open the system menu. |
+| `joystick_index` | the same schemes | Selects `Korri Seat P1`, where Korri sends the device's own controls. |
+
+Upstream resets the `Default` scheme on every start, so it cannot hold these
+keys. When the global scheme is `Default` or missing, the launcher selects
+`Custom`, the scheme upstream creates on its own first start.
+
+Allegro numbers joysticks in unsorted `/dev/input` order. On the Mini V2 that
+made the newest seat, `Korri Seat P4`, joystick 0, so the player ignored the
+pad. The launcher repeats Allegro's joystick test to find the seat's index.
+Without a Korri seat it leaves `joystick_index` unchanged.
+
+The system menu is the player's only in-game route to settings and to ending
+the game. Korri stops the session instead. The Escape key still opens the menu,
+because upstream hard-codes it; this matters only with a keyboard attached. A
+quest-specific scheme that names `Default` also keeps the menu button.
 
 Existing `/storage/saves/zquest-classic` data remains untouched. There is no
 fallback read, dual write, or automatic migration from legacy.
 
 Keep companion music files beside the quest as its author specifies. Archives
 must be unpacked before discovery. Do not modify a quest while it is running.
-Upstream asks whether to upload gameplay replays. The plugin does not consent
-for the user. Normal signature and permission checks remain required.
+Normal signature and permission checks remain required.
 
 ## Build and verify
 
@@ -100,7 +125,9 @@ and production sandboxed callback. They run the packaged player through Core
 on Xvfb, using upstream's default quest rather than retail data. They exercise
 keyboard input, native screenshots, in-game save writes, reload after a rename,
 separate accounts, changed-release isolation, concurrent-session refusal, and
-preservation of local files. They also assert upstream's `auto_scopes.zplay`
+preservation of local files. Test accounts do not answer the upload question,
+so a launcher regression stops the run at upstream's modal. The checks assert
+the exact handheld-settings edits and that the player keeps them on exit. They also assert upstream's `auto_scopes.zplay`
 script replay against the pinned interpreter. Its Git LFS files are fetched
 by hash for tests only and are absent from the plugin closure.
 A private PulseAudio null sink exercises real sound initialization without

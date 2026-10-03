@@ -115,12 +115,11 @@ def command(quest, account):
 def account(name):
     directory = root / name / "zquest-classic"
     directory.mkdir(parents=True)
-    # Native test-only upload settings. Audio initialization stays enabled to
-    # catch the missing-ALSA-sequencer crash seen on the Mini V2.
+    # Audio initialization stays enabled to catch the missing-ALSA-sequencer
+    # crash seen on the Mini V2. The launcher must answer the upload question:
+    # an unanswered modal would stop every input step below.
     (directory / "zc.cfg").write_text(
-        "[zeldadx]\nnosound = 0\nfullscreen = 0\n"
-        "replay_upload = 0\nreplay_upload_prompt = 1\n"
-        "[korri_test]\nsentinel = keep-me\n"
+        "[zeldadx]\nnosound = 0\nreplay_upload = 0\n[korri_test]\nsentinel = keep-me\n"
     )
     return directory.parent
 
@@ -267,7 +266,14 @@ def play(quest, owner, *, save=False, concurrent=False):
             key("F10")
             key("Return")
             assert child.wait(timeout=20) == 0
-            assert "sentinel = keep-me" in (directory / "zc.cfg").read_text()
+            settings = directory / "zc.cfg"
+            assert "sentinel = keep-me" in settings.read_text()
+            # The player rewrites its config on exit; the kiosk keys must stay.
+            assert loaded.read_config(settings, "zeldadx", "clicktofreeze") == "0"
+            assert loaded.read_config(settings, "zeldadx", "replay_upload") == "0"
+            scheme = loaded.read_config(settings, "Controls", "global_control_scheme")
+            controls = directory / "controls.cfg"
+            assert loaded.read_config(controls, scheme, "btn_menu") == "0"
             return save_file
         except Exception:
             screenshot = capture_screen()
@@ -291,6 +297,52 @@ def play(quest, owner, *, save=False, concurrent=False):
                     os.killpg(child.pid, signal.SIGKILL)
                     child.wait()
 
+
+loader = importlib.machinery.SourceFileLoader("zquest_launcher", str(launcher))
+spec = importlib.util.spec_from_loader(loader.name, loader)
+loaded = importlib.util.module_from_spec(spec)
+loader.exec_module(loaded)
+
+# Kiosk settings change only their own keys. "Default" is reset by the player,
+# so a fresh account gets upstream's first generated scheme name instead.
+fresh = root / "kiosk-fresh"
+fresh.mkdir()
+loaded.configure(fresh, 3)
+assert (fresh / "zc.cfg").read_text() == (
+    "[zeldadx]\nreplay_upload_prompt = 1\nclicktofreeze = 0\n"
+    "[Controls]\nglobal_control_scheme = Custom\n"
+)
+assert (fresh / "controls.cfg").read_text() == (
+    "[Custom]\nbtn_menu = 0\njoystick_index = 3\n"
+)
+kept = root / "kiosk-kept"
+kept.mkdir()
+(kept / "zc.cfg").write_text(
+    "# note\n[zeldadx]\nclicktofreeze = 1\nsentinel = keep\n\n"
+    "[Controls]\nglobal_control_scheme = Mine\n"
+)
+(kept / "controls.cfg").write_text(
+    "[Default]\nbtn_menu=9\n[Mine]\nbtn_menu=9\njoystick_index=0\n"
+    "key_a=26\n\n[Other]\nkey_a=1\n"
+)
+(kept / "controls.cfg").chmod(0o640)
+loaded.configure(kept, None)
+assert (kept / "zc.cfg").read_text() == (
+    "# note\n[zeldadx]\nclicktofreeze = 0\nsentinel = keep\n"
+    "replay_upload_prompt = 1\n\n[Controls]\nglobal_control_scheme = Mine\n"
+)
+assert (kept / "controls.cfg").read_text() == (
+    "[Default]\nbtn_menu=9\n[Mine]\nbtn_menu = 0\njoystick_index=0\n"
+    "key_a=26\n\n[Other]\nkey_a=1\nbtn_menu = 0\n"
+)
+assert (kept / "controls.cfg").stat().st_mode & 0o777 == 0o640
+assert sorted(path.name for path in kept.iterdir()) == ["controls.cfg", "zc.cfg"]
+# Without a Korri seat the player keeps its configured joystick. A regular
+# file with an input device name is not a joystick.
+seatless = root / "no-seats"
+seatless.mkdir()
+(seatless / "event0").write_text("")
+assert loaded.seat_joystick(seatless) is None
 
 # Use upstream's shipped default quest, not retail data or downloaded fan games.
 quest = root / "Quest '; $(exit 19).qst"
@@ -349,19 +401,15 @@ assert (assets / "user-file").read_text() == "preserve"
 
 # Exercise the actual packaged resource setup too: owned links can be repaired,
 # foreign links cannot.
-loader = importlib.machinery.SourceFileLoader("zquest_launcher", str(launcher))
-spec = importlib.util.spec_from_loader(loader.name, loader)
-module = importlib.util.module_from_spec(spec)
-loader.exec_module(module)
 repair = root / "resource-repair"
 repair.mkdir()
 (repair / "assets").symlink_to("/nix/store/old-zquest/share/zquestclassic/assets")
-module.prepare_resources(repair)
+loaded.prepare_resources(repair)
 assert (repair / "assets").resolve() == resources / "assets"
 (repair / "assets").unlink()
 (repair / "assets").symlink_to(root)
 try:
-    module.prepare_resources(repair)
+    loaded.prepare_resources(repair)
     raise AssertionError("foreign resource link was replaced")
 except ValueError:
     pass
@@ -370,7 +418,7 @@ assert (repair / "assets").resolve() == root
 # Assert upstream's recorded script execution on the real interpreter. These
 # fetched test fixtures are not part of the distributable plugin closure.
 script_account = account("Script replay") / "zquest-classic"
-module.prepare_resources(script_account)
+loaded.prepare_resources(script_account)
 replay_result = subprocess.run(
     [
         executable,
