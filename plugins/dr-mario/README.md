@@ -126,7 +126,7 @@ or ending.
 | Native engine build | Passed on `zao`. | Passed natively on `fuji`. |
 | Strict contract, packaged manifest, host admission and invalid-ROM rejection | Passed on `zao`. | Passed on `fuji`. |
 | Owned-ROM runtime check | Passed three consecutive runs after review fixes, including long paths and inherited-diagnostic suppression. | Passed the same verifier on `fuji`, including native save-file loading and account isolation. |
-| Physical device installation and gameplay | Not run. | Not run. |
+| Physical device installation and gameplay | Not run. | Signed Mini V2 installation, fullscreen capture and speaker routing verified. Physical controls/audio acceptance pending. |
 
 The 2026-10-03 local verification also passed Nix formatting, Ruff formatting and
 lint, strict TypeScript checking, and Git whitespace checks. The long-path test
@@ -140,4 +140,6 @@ startup path, not complete gameplay.
 ARM runtime evidence is `/tmp/dr-mario-arm-evidence-nbrlgdo6/runtime.log` on `zao`.
 The builder's private ROM copy, temporary GC root, and test directory were removed
 after the test. The engine builds need no ROM. Neither architecture's native
-output was published.
+output was published publicly. The owner subsequently approved private signed
+installation on the Mini V2. [Device evidence](../../docs/deployments/2026-10-03-dr-mario-miniv2.md)
+records its normal sandboxed launch and the remaining physical acceptance checks.
