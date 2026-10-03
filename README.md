@@ -8,6 +8,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 
 | Output | Plugin or contents | Platforms |
 |---|---|---|
+| `korri-plugin-dr-mario` | `@simonwjackson:dr-mario`, owned Europe NES ROM | x86_64 verified; aarch64 build target, verification pending |
+| `dr-mario-engine` | DrMarioNesRecomp Europe native executable without a ROM | x86_64 and aarch64 Linux targets |
 | `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 and aarch64 Linux |
 | `korri-plugin-nocturne` | `@simonwjackson:nocturne` | x86_64 and aarch64 Linux |
 | `korri-plugin-melee-pc` | `@simonwjackson:melee-pc`, beta | x86_64 and aarch64 Linux |
@@ -46,6 +48,25 @@ responded to movement input. ARM gameplay and handheld acceptance are unverified
 Keep the XEX and compiled outputs out of public caches. The plugin instructions
 cover private builds, package checks, and the owned-ISO verification task.
 No publication, device trust change or target installation is included.
+
+## Dr. Mario NES Recomp
+
+[Dr. Mario](plugins/dr-mario/README.md) adds an exact-ROM native runner for the
+owner's Europe cartridge. It stores native settings and save states separately
+for each Korri account. The Turbo hack and the original Japan/USA ROM do not
+match this build. Upstream calls it a playable preview, not a finished port.
+
+```sh
+nix build --option builders '' --option post-build-hook '' .#korri-plugin-dr-mario
+nix build --option builders '' --option post-build-hook '' .#checks.x86_64-linux.korri-dr-mario-plugin
+nix run --option builders '' --option post-build-hook '' .#verify-dr-mario -- '/path/to/Dr. Mario (Europe).nes'
+```
+
+Build off-device. The owner requires a prompt before sending builds to `fuji`
+and a separate approval before device testing. The x86_64 package and owned-ROM
+checks pass; ARM verification is blocked by builder connectivity. Native outputs
+contain translated retail code and remain private. No signing, publication,
+installation, or device trust change is included.
 
 ## The Simpsons Game
 

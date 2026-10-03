@@ -1,0 +1,21 @@
+diff --git a/nesrecomp/runner/src/launcher.c b/nesrecomp/runner/src/launcher.c
+index 1f6affe..24a892e 100644
+--- a/nesrecomp/runner/src/launcher.c
++++ b/nesrecomp/runner/src/launcher.c
+@@ -512,0 +513 @@ reopen_recomp_launcher:
++    char *selected_rom = rom_path;
+@@ -515,2 +516,3 @@ reopen_recomp_launcher:
+-        /* Backwards-compatible: ROM path given on command line */
+-        strncpy(rom_path, argv[1], sizeof(rom_path) - 1);
++        /* Keep the complete positional path. The picker buffer is not a
++         * limit on file paths supplied by Korri or the command line. */
++        selected_rom = argv[1];
+@@ -518 +520 @@ reopen_recomp_launcher:
+-        if (expected_crc != 0 && !verify_rom(rom_path, expected_crc)) {
++        if (expected_crc != 0 && !verify_rom(selected_rom, expected_crc)) {
+@@ -520 +522 @@ reopen_recomp_launcher:
+-                    rom_path);
++                    selected_rom);
+@@ -556 +558 @@ reopen_recomp_launcher:
+-    new_argv[new_argc++] = rom_path;
++    new_argv[new_argc++] = selected_rom;

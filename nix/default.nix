@@ -15,6 +15,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           "nocturnerecomp"
           "2ship2harkinian"
           "melee-pc"
+          "drmario-nes-recomp"
         ];
     };
     mkPlugin = korri.lib.${system}.mkPlugin { inherit pkgs; };
@@ -70,6 +71,17 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
             };
         };
       };
+    drMarioEngine = import ../plugins/dr-mario/engine.nix { inherit pkgs; };
+    drMarioPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = ../plugins/dr-mario;
+      plugin =
+        _:
+        import ../plugins/dr-mario/plugin.nix {
+          inherit pkgs;
+          engine = drMarioEngine;
+        };
+    };
     actraiserPackage = import ../plugins/actraiser/package.nix { inherit pkgs; };
     actraiserPlugin =
       (mkPlugin {
@@ -198,6 +210,17 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     # The viewport verifier still needs Pillow after the starter-pack move.
     python = pkgs.python3.withPackages (packages: [ packages.pillow ]);
+    verifyDrMario = pkgs.writeShellApplication {
+      name = "verify-dr-mario";
+      runtimeInputs = [
+        pkgs.xorg.xorgserver
+        pkgs.xdotool
+      ];
+      text = ''
+        exec ${pkgs.python3}/bin/python3 -I ${./dr-mario-runtime-check.py} \
+          ${drMarioPlugin} ${drMarioEngine} ${korri.packages.${system}.korrid}/bin/korrid "$@"
+      '';
+    };
     verifyActraiser = pkgs.writeShellApplication {
       name = "verify-actraiser";
       text = ''
@@ -284,6 +307,10 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       text = ''
         printf '%s\n' \
           'Run on a build machine, not a target device:' \
+          '  nix build --option builders "" --option post-build-hook "" .#korri-plugin-dr-mario' \
+          '  nix build --option builders "" --option post-build-hook "" .#checks.${system}.korri-dr-mario-plugin' \
+          '  nix run --option builders "" --option post-build-hook "" .#verify-dr-mario -- /path/to/owned-Europe.nes' \
+          'Dr. Mario requires approval before sending builds to fuji. Native outputs stay private.' \
           'Super Mario World supports x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-super-mario-world' \
           '  nix build --no-link .#checks.x86_64-linux.korri-super-mario-world-plugin' \
@@ -366,6 +393,9 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   in
   {
     packages = packages // {
+      dr-mario-engine = drMarioEngine;
+      korri-plugin-dr-mario = drMarioPlugin;
+      verify-dr-mario = verifyDrMario;
       korri-plugin-super-mario-world = smwPlugin;
       korri-plugin-solarus = solarusPlugin;
       solarus = solarusPackage;
@@ -392,6 +422,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-fable-ii-recomp = fablePlugin;
     };
     checks = {
+      korri-dr-mario-plugin = import ./dr-mario-check.nix {
+        inherit pkgs;
+        package = drMarioPlugin;
+        engine = drMarioEngine;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
+      };
       korri-actraiser-plugin = import ./actraiser-check.nix {
         inherit pkgs;
         package = actraiserPlugin;
@@ -492,6 +530,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         type = "app";
         program = "${verifyOpengoal}/bin/verify-opengoal";
         meta.description = "Test native OpenGOAL startup with prepared owned data on a build machine.";
+      };
+      verify-dr-mario = {
+        type = "app";
+        program = "${verifyDrMario}/bin/verify-dr-mario";
+        meta.description = "Verify Dr. Mario with an owned Europe ROM on a build machine.";
       };
       verify-actraiser = {
         type = "app";
