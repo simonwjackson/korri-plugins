@@ -20,6 +20,7 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `actraiser` | Private native executable and owned-ROM launcher | x86_64 and aarch64 Linux |
 | `korri-plugin-the-simpsons-game` | `@simonwjackson:the-simpsons-game` | x86_64 with AVX2 and aarch64 Linux build targets |
 | `korri-plugin-2ship` | `@simonwjackson:2ship` | x86_64 and aarch64 Linux |
+| `korri-plugin-fable-ii-recomp` | `@simonwjackson:fable-ii-recomp`, private owned-XEX build | x86_64 and aarch64 Linux build targets |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-solarus` | `@simonwjackson:solarus` | x86_64 and aarch64 Linux |
 | `solarus` | Standalone Solarus 2.1.4 runtime | x86_64 and aarch64 Linux |
@@ -29,6 +30,22 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `zelda3` | Standalone native engine and owned-ROM launcher | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout1-ce` | `@simonwjackson:fallout1-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
+
+## Fable II
+
+[Fable II](plugins/fable-ii-recomp/README.md) matches the measured USA/Europe
+GOTY ISO and uses Oery's native recompilation. Builds need the owned XEX on a
+private build machine. Runtime extraction keeps the ISO unchanged and puts
+native data and saves under the selected Korri account.
+
+First installation needs about 15 GB of temporary free space; about 7 GB of
+extracted files remains per account. Both Nix package checks passed. The
+packaged x86_64 engine rendered the opening area, loaded a copied save and
+responded to movement input. ARM gameplay and handheld acceptance are unverified.
+
+Keep the XEX and compiled outputs out of public caches. The plugin instructions
+cover private builds, package checks, and the owned-ISO verification task.
+No publication, device trust change or target installation is included.
 
 ## The Simpsons Game
 
