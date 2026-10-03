@@ -125,6 +125,22 @@
     },
     "nixpkgs_3": {
       "locked": {
+        "lastModified": 1773389992,
+        "narHash": "sha256-wvfdLLWJ2I9oEpDd9PfMA8osfIZicoQ5MT1jIwNs9Tk=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c06b4ae3d6599a672a6210b7021d699c351eebda",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "c06b4ae3d6599a672a6210b7021d699c351eebda",
+        "type": "github"
+      }
+    },
+    "nixpkgs_4": {
+      "locked": {
         "lastModified": 1790822859,
         "narHash": "sha256-69xHQhAeMAD2wDXO7T2pcOZIF9Sga2W+JkmY2a11Ops=",
         "owner": "NixOS",
@@ -161,6 +177,7 @@
         "flake-utils": "flake-utils",
         "korri": "korri",
         "nixpkgs": "nixpkgs_2",
+        "signs-of-rain": "signs-of-rain",
         "skate3": "skate3"
       }
     },
@@ -185,9 +202,28 @@
         "type": "github"
       }
     },
-    "skate3": {
+    "signs-of-rain": {
       "inputs": {
         "nixpkgs": "nixpkgs_3"
+      },
+      "locked": {
+        "lastModified": 1791069419,
+        "narHash": "sha256-u8v7If+cQNNfOYrjmruzVeFa7lFAhm1tv8GjIlqvbCQ=",
+        "owner": "simonwjackson",
+        "repo": "signs-of-rain",
+        "rev": "a5a320681fa0688a618b0894d04de1a00b1ad537",
+        "type": "github"
+      },
+      "original": {
+        "owner": "simonwjackson",
+        "repo": "signs-of-rain",
+        "rev": "a5a320681fa0688a618b0894d04de1a00b1ad537",
+        "type": "github"
+      }
+    },
+    "skate3": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_4"
       },
       "locked": {
         "lastModified": 1790974745,

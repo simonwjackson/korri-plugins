@@ -26,12 +26,26 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-drmario64` | `@simonwjackson:drmario64`, private owned-ROM build | x86_64 and aarch64 Linux build targets |
 | `drmario64` | Native Dr. Mario 64 launcher with account-owned state | x86_64 and aarch64 Linux build targets |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
+| `korri-plugin-signs-of-rain` | `@simonwjackson:signs-of-rain`, exact packaged PCK | x86_64 checked; aarch64 Linux build target |
 | `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
 | `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
 | `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
 | `zelda3` | Standalone native engine and owned-ROM launcher | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout1-ce` | `@simonwjackson:fallout1-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
+
+## Signs of Rain
+
+[Signs of Rain](plugins/signs-of-rain/README.md) references the game's native
+flake package and generates an exact-PCK release hash at build time. Register
+that PCK manually in the existing library. No general Godot discovery or
+automatic game tile is added. Native data uses the supplied Korri account root.
+
+The game input pins published `a5a3206`. The x86 package, TypeScript checks,
+actual Core admission and sandbox launch checks pass. The ARM game runtime
+builds off-device. ARM plugin packaging still needs an approved ARM builder;
+the current x86 host reports a platform mismatch. There is no hardware or
+60 FPS acceptance, device installation, trust change, or Core schema change.
 
 ## Fable II
 
