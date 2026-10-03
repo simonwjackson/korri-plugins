@@ -203,6 +203,10 @@ also in this repository at that revision.
 
 ### Signed cache publication
 
+[Public release and verification record](../../docs/deployments/2026-10-03-zquest-public-release.md)
+identifies the exact published outputs, corresponding source and device-test
+limits. Both source archives and signed payloads are public.
+
 Public destination: `https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
 Publish only the exact checked ZQuest plugin outputs, never all flake packages,
 a build/test closure, or a copy of the private cache. Each batch uses its own
