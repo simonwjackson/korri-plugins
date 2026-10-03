@@ -3,7 +3,10 @@
 On 2026-10-02, the owner approved installing Solarus on the Retroid Pocket Mini
 V2 through its existing signed-cache route. The ARM64 plugin is installed and
 enabled. The installed `solarus-run -help` command succeeds as user `korri`.
-No quest was installed, registered, or launched on the device.
+No quest was installed, registered, or launched during this plugin installation.
+The later [Yarntown verification](../research/solarus-yarntown.md) records
+quest installation and launch, including the manual display-focus correction
+and the remaining acceptance checks.
 
 ## Exact installed artifacts
 
@@ -62,7 +65,7 @@ again. The device retains the original signed and approved output above.
 | Exact-package approval and activation | Passed; enabled registry and selection agree. |
 | Native target execution | The installed engine's `-help` ran as user `korri`. |
 | Quest loading and save/reload | Passed earlier on native x86_64 and ARM64 build machines, not on this device. |
-| Device display, physical input, audible sound, real-game compatibility | Not tested. No quest was launched. |
+| Device display, physical input, audible sound, real-game compatibility | Not tested during plugin installation. See the later Yarntown verification for quest evidence and limits. |
 | Account selection | The plugin respects supplied accountRoot. The pinned Core currently uses `users/default`. |
 
 The plugin discovers `.solarus` files only in folders already selected for
