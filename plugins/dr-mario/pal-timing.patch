@@ -1,0 +1,398 @@
+--- a/nesrecomp/runner/src/main_runner.c
++++ b/nesrecomp/runner/src/main_runner.c
+@@ -30,6 +30,7 @@
+ #include "savestate.h"
+ #include "logger.h"
+ #include "apu.h"
++#include "pal_timing.h"
+ #include "mapper.h"
+ #include "game_extras.h"
+ #include "debug_server.h"
+@@ -407,8 +408,8 @@
+ 
+ /* ---- Audio state ---- */
+ static SDL_AudioDeviceID  s_audio_dev = 0;
+-#define AUDIO_SAMPLES_PER_FRAME 735
+-static int16_t            s_audio_frame[AUDIO_SAMPLES_PER_FRAME];
++/* PAL averages 881.877 samples/frame at 44100 Hz. The largest block is 882. */
++static int16_t            s_audio_frame[882];
+ 
+ /* SDL audio callback (round-2): runs on the audio thread at the device's steady
+  * cadence and pulls mono samples from the bridge. This is the consumer that the
+@@ -890,20 +891,24 @@
+     /* Generate one frame of audio after NMI (APU registers now up-to-date).
+      * Skip in turbo mode — queued audio would pile up faster than it drains. */
+     if (s_audio_dev && !g_turbo && !s_smoke_frames) {
++        static double sample_remainder = 0.0;
++        sample_remainder += 44100.0 * PAL_FRAME_SECONDS;
++        int audio_samples = (int)sample_remainder;
++        sample_remainder -= audio_samples;
+         static int s_synth_mode = -2;            /* -2 = not yet queried */
+         static uint64_t s_synth_pos = 0;
+         if (s_synth_mode == -2) s_synth_mode = recomp_audio_synth_mode();
+         if (s_synth_mode != RAD_SYNTH_OFF)
+             recomp_audio_synth_fill(s_synth_mode, s_audio_frame,
+-                                    AUDIO_SAMPLES_PER_FRAME, 1, 44100.0, &s_synth_pos);
++                                    audio_samples, 1, 44100.0, &s_synth_pos);
+         else
+-            apu_generate(s_audio_frame, AUDIO_SAMPLES_PER_FRAME);
++            apu_generate(s_audio_frame, audio_samples);
+ 
+         /* T1: raw emulator-rate PCM, before volume. */
+         recomp_audio_debug_push_i16("t1_apu", s_audio_frame,
+-                                    AUDIO_SAMPLES_PER_FRAME, 44100.0, 1);
+-
+-        /* T0: per-channel raw DAC levels for the same 735-sample window
++                                    audio_samples, 44100.0, 1);
++
++        /* T0: per-channel raw DAC levels for the same PAL sample window
+          * (pulse1/pulse2/triangle/noise/dmc), staged by apu_generate. NULL
+          * when capture is off; skipped when a synth source replaced the APU. */
+         if (s_synth_mode == RAD_SYNTH_OFF) {
+@@ -912,7 +917,7 @@
+             for (int t0c = 0; t0c < 5; t0c++) {
+                 const int16_t *t0buf = apu_debug_t0(t0c);
+                 if (t0buf) recomp_audio_debug_push_i16(t0_names[t0c], t0buf,
+-                                                       AUDIO_SAMPLES_PER_FRAME, 44100.0, 1);
++                                                       audio_samples, 44100.0, 1);
+             }
+         }
+ 
+@@ -920,16 +925,16 @@
+         int vol = g_nes_config.volume;
+         if (vol < 100) {
+             if (vol < 0) vol = 0;
+-            for (int i = 0; i < AUDIO_SAMPLES_PER_FRAME; i++)
++            for (int i = 0; i < audio_samples; i++)
+                 s_audio_frame[i] = (int16_t)((int)s_audio_frame[i] * vol / 100);
+         }
+         /* T2: what the bridge receives. */
+         recomp_audio_debug_push_i16("t2_bridge_in", s_audio_frame,
+-                                    AUDIO_SAMPLES_PER_FRAME, 44100.0, 1);
++                                    audio_samples, 44100.0, 1);
+ 
+         if (s_bridge_ready) {
+             SDL_LockMutex(s_audio_mtx);
+-            rab_push(&s_bridge, s_audio_frame, AUDIO_SAMPLES_PER_FRAME);
++            rab_push(&s_bridge, s_audio_frame, audio_samples);
+             double fill = rab_fill_ms(&s_bridge);
+             rab_stats st; rab_get_stats(&s_bridge, &st);
+             SDL_UnlockMutex(s_audio_mtx);
+@@ -942,7 +947,7 @@
+         } else {
+             /* legacy fallback (bridge failed to init): old push path */
+             SDL_QueueAudio(s_audio_dev, s_audio_frame,
+-                           AUDIO_SAMPLES_PER_FRAME * sizeof(int16_t));
++                           audio_samples * sizeof(int16_t));
+         }
+     }
+ 
+@@ -953,7 +958,7 @@
+         static uint64_t s_audio_frames_seen = 0;
+         if (s_dump_frames == -2) {
+             const char *e = getenv("RECOMP_AUDIO_DEBUG_DUMP_SECS");
+-            s_dump_frames = (e && *e) ? (int)(atof(e) * 60.0) : -1;
++            s_dump_frames = (e && *e) ? (int)(atof(e) / PAL_FRAME_SECONDS) : -1;
+         }
+         if (s_dump_frames > 0) {
+             s_audio_frames_seen++;
+@@ -1200,14 +1205,25 @@
+         SDL_RenderPresent(s_renderer);
+     }
+ 
+-    /* 60Hz pacing — skipped in turbo mode */
++    /* PAL game time owns the cadence. Keep the fractional deadline across
++     * frames, including vsync waits and SDL_Delay rounding. Do not add a full
++     * sleep after each present, which would tie game speed to monitor refresh. */
++    static double next_tick = 0.0;
+     if (!g_turbo) {
+-        static uint32_t s_last_tick = 0;
+-        uint32_t now = SDL_GetTicks();
+-        if (s_last_tick == 0) s_last_tick = now;
+-        uint32_t elapsed = now - s_last_tick;
+-        if (elapsed < 16) SDL_Delay(16 - elapsed);
+-        s_last_tick = SDL_GetTicks();
++        double frequency = (double)SDL_GetPerformanceFrequency();
++        double period = frequency * PAL_FRAME_SECONDS;
++        double now = (double)SDL_GetPerformanceCounter();
++        if (next_tick == 0.0) next_tick = now;
++        next_tick += period;
++        /* A long pause must not cause a burst of fast-forward catch-up frames. */
++        if (now > next_tick + period) next_tick = now;
++        while (now < next_tick) {
++            Uint32 delay = (Uint32)((next_tick - now) * 1000.0 / frequency);
++            SDL_Delay(delay > 0 ? delay : 1);
++            now = (double)SDL_GetPerformanceCounter();
++        }
++    } else {
++        next_tick = 0.0;
+     }
+ }
+ 
+--- a/nesrecomp/runner/src/runtime.c
++++ b/nesrecomp/runner/src/runtime.c
+@@ -10,6 +10,7 @@
+ #include "override_chr.h"
+ #include "ppu_dot.h"
+ #include "crc32.h"
++#include "pal_timing.h"
+ #include <stdio.h>
+ #include <string.h>
+ #include <stdlib.h>
+@@ -98,10 +99,10 @@
+  * this frame. Diagnostics for the HUD-tear-during-transition bug. */
+ int     g_spr0_split_write_scanline = -1;
+ 
+-/* CPU-cycle-to-scanline conversion. PPU runs at 3x CPU; 341 dots per scanline.
+- * s_ops_count is the per-frame CPU cycle accumulator from maybe_trigger_vblank. */
++/* Convert the accumulated CPU clock, not each instruction, so the PAL
++ * fractional dot remainder survives. */
+ static inline int scanline_from_cycles(uint32_t cpu_cycles) {
+-    return (int)((cpu_cycles * 3u) / 341u);
++    return (int)((cpu_cycles * PAL_CPU_DIVIDER) / (PAL_PPU_DIVIDER * PAL_DOTS_PER_LINE));
+ }
+ static int     g_ppuaddr_latch = 0;
+ /* NOTE: g_scroll_latch removed — real NES shares a single write toggle
+@@ -495,37 +496,18 @@
+     return (c << 24) | (b << 16) | a;
+ }
+ 
+-/* Cycle budget per frame.  Real NES: 29780.666 CPU cycles between NMIs
+- * (341*262/3 for NTSC).  Generated code passes each instruction's cycle
+- * count to maybe_trigger_vblank(). */
+-#define OPS_PER_FRAME 29781
+-
+-/* Rung 2 — dot-accurate frame length (env NESRECOMP_DOT_CLOCK, default OFF).
+- * The fixed 29781 threshold runs +0.5 cyc/frame fast vs the NTSC 29780.5 average
+- * (measured by the co-sim: recomp 29780.999 vs Mesen 29780.500). The true frame
+- * is 89342 PPU dots (=29780.667 cyc), or 89341 on odd frames with rendering on
+- * (the skipped pre-render dot). We track the exact dot debt and hand back an
+- * INTEGER per-frame CPU-cycle budget carrying the remainder thirds, so the mean
+- * frame length is the oracle's 29780.5 instead of 29781 — the frame boundary
+- * becomes a dot event, not a fixed cycle count. Gated + default-off until the
+- * co-sim certifies no game-logic regression; then it becomes the default. */
+-#define FRAME_DOTS_EVEN 89342          /* 341 * 262 */
+-static int      s_dotclock     = -1;   /* -1 unqueried, 0 legacy, 1 dot-accurate */
+-static int      s_odd_frame    = 0;    /* toggles each frame (odd-frame dot skip) */
+-static int      s_dot_debt     = 0;    /* leftover dots (0..2) carried across frames */
+-static uint32_t s_frame_budget = OPS_PER_FRAME;  /* current frame's integer cycle target */
+-
+-/* Compute the NEXT frame's integer CPU-cycle budget from the exact dot count,
+- * carrying the sub-cycle remainder so the running mean is dot-accurate. */
++/* PAL: 33247.5 CPU cycles between video frames. Carry the half-cycle
++ * instead of rounding every frame. No NTSC odd-frame dot skip or clock mode. */
++static uint32_t s_clock_remainder = 0;
++static uint32_t s_frame_budget = PAL_FRAME_DOTS * PAL_PPU_DIVIDER / PAL_CPU_DIVIDER;
++
+ static uint32_t next_frame_budget(void) {
+-    if (s_dotclock <= 0) return OPS_PER_FRAME;
+-    int dots = FRAME_DOTS_EVEN - ((s_odd_frame && (g_ppumask & 0x18)) ? 1 : 0);
+-    s_odd_frame ^= 1;
+-    s_dot_debt += dots;
+-    uint32_t cyc = (uint32_t)(s_dot_debt / 3);
+-    s_dot_debt -= (int)(cyc * 3);
++    s_clock_remainder += PAL_FRAME_DOTS * PAL_PPU_DIVIDER;
++    uint32_t cyc = s_clock_remainder / PAL_CPU_DIVIDER;
++    s_clock_remainder %= PAL_CPU_DIVIDER;
+     return cyc;
+ }
++static int s_clock_initialized = 0;
+ 
+ /* bus_tick: called by nes_read/nes_write to count bus operations.
+  * Kept for backward compatibility but no longer critical for NMI timing
+@@ -787,8 +769,9 @@
+  * carry their true video-frame number, so they align to the oracle across gaps.
+  * Each trace function is individually env-gated → no-op in normal builds. */
+ void nes_cosim_emit_boundary(void) {
+-    /* round(g_frame_boundary_cyc / 29780.5) = NTSC video-frame number. */
+-    g_cosim_vframe = (2ULL * g_frame_boundary_cyc + 29780ULL) / 59561ULL;
++    /* Round the PAL boundary CPU clock to its video-frame number. */
++    const uint64_t frame_clocks = PAL_FRAME_DOTS * PAL_PPU_DIVIDER;
++    g_cosim_vframe = (g_frame_boundary_cyc * PAL_CPU_DIVIDER + frame_clocks / 2) / frame_clocks;
+     nes_wram_trace_frame();
+     nes_ppumem_trace_frame();
+     nes_cosim_hash_frame();
+@@ -862,15 +845,9 @@
+ 
+ void maybe_trigger_vblank(int cycles) {
+ 
+-    /* Rung 2: one-time dot-clock init. Dot-accurate frame length is the DEFAULT
+-     * (SMB live-validated by the owner + co-sim-certified on SMB/MM3); set
+-     * NESRECOMP_DOT_CLOCK=0 to force the legacy fixed-29781 threshold. When off,
+-     * next_frame_budget() returns OPS_PER_FRAME verbatim so the legacy path is
+-     * byte-unchanged. */
+-    if (s_dotclock < 0) {
+-        const char *e = getenv("NESRECOMP_DOT_CLOCK");
+-        s_dotclock = (e && *e) ? (*e != '0') : 1;   /* default ON */
++    if (!s_clock_initialized) {
+         s_frame_budget = next_frame_budget();
++        s_clock_initialized = 1;
+     }
+ 
+     /* Drive the APU frame-counter IRQ on the CPU-cycle stream (NMI-independent),
+@@ -1046,7 +1023,7 @@
+     nes_fring_push('V', nes_fring_shadow_digest());
+     g_frame_boundary_cyc = g_nes_cycles;   /* true frame-length ruler (pre-handler) */
+     /* Carry the overshoot like the immediate-fire path. This deferred path can
+-     * fire well past OPS_PER_FRAME (that is why the pending mechanism exists), so
++     * fire well past the frame budget (that is why the pending mechanism exists), so
+      * a single subtraction leaves any residual budget for the next frame; the
+      * carry is approximate here and is superseded by the Rung-2 dot-master clock,
+      * which makes the frame boundary a true dot event rather than a threshold. */
+@@ -2491,7 +2468,8 @@
+     s_scroll_2005_complete=0;s_visible_frame_valid=0;s_visible_frame_frame=0;
+     g_controller1_buttons=g_controller2_buttons=0;s_ctrl1_shift=s_ctrl2_shift=0;s_ctrl1_strobe=false;
+     s_vblank_depth=0;s_interrupt_epoch=0;s_ops_count=0;s_oam_dma_stall=0;
+-    s_odd_frame=0;s_dot_debt=0;s_frame_budget=OPS_PER_FRAME;s_vblank_pending=0;
++    s_clock_remainder=0;s_clock_initialized=0;
++    s_frame_budget=PAL_FRAME_DOTS*PAL_PPU_DIVIDER/PAL_CPU_DIVIDER;s_vblank_pending=0;
+     s_in_irq=0;s_saved_vblank_depth=0;s_open_bus=0;s_ppu_io_latch=0;
+     s_tail_pending=-1;s_tail_caller=-1;s_tail_active_n=0;s_tail_pending_slot=-1;
+     s_last_sync_sx=s_last_sync_sy=0;s_last_sync_t=0;s_last_sync_frame=0;
+--- a/nesrecomp/runner/src/apu.c
++++ b/nesrecomp/runner/src/apu.c
+@@ -1,20 +1,21 @@
+ /*
+- * apu.c — NES APU emulation (NTSC)
++ * apu.c — NES APU emulation (PAL RP2A07)
+  *
+  * Channels: pulse1, pulse2, triangle, noise, DMC (output-level only).
+  * Frame counter: 4-step mode, ticking quarter/half-frame clocks at
+- * approximately 240 Hz by distributing 4 ticks across each audio frame.
++ * approximately 200 Hz on the CPU-cycle stream.
+  *
+  * Audio synthesis uses a fractional timer accumulator: each sample
+- * advances the timer by (CPU_FREQ / SAMPLE_RATE) ~= 40.58 CPU cycles.
++ * advances the timer by (CPU_FREQ / SAMPLE_RATE) ~= 37.70 CPU cycles.
+  * Pulse timers clock every 2 CPU cycles; triangle every 1 CPU cycle.
+  */
+ #include "apu.h"
+ #include "apu_shadow.h"
++#include "pal_timing.h"
+ #include <string.h>
+ #include <stdbool.h>
+ 
+-#define CPU_FREQ        1789773.0f
++#define CPU_FREQ        PAL_CPU_HZ
+ #define SAMPLE_RATE     44100
+ 
+ /* ---- Look-up tables ---- */
+@@ -36,15 +37,14 @@
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15
+ };
+ 
+-/* NTSC noise timer periods in CPU cycles */
++/* PAL timer periods in CPU cycles, from NESdev APU_Noise and APU_DMC. */
+ static const uint16_t NOISE_PERIOD[16] = {
+-    4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
++    4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708, 944, 1890, 3778
+ };
+ 
+-/* NTSC DMC period table — CPU cycles per output-bit clock */
+ static const uint16_t DMC_RATE[16] = {
+-    428, 380, 340, 320, 286, 254, 226, 214,
+-    190, 160, 142, 128, 106,  84,  72,  54
++    398, 354, 316, 298, 276, 236, 210, 198,
++    176, 148, 132, 118,  98,  78,  66,  50
+ };
+ 
+ /* ---- Channel state ---- */
+@@ -569,29 +569,28 @@
+       while (s_dmc.timer_acc >= period) { s_dmc.timer_acc -= period; dmc_clock(); } }
+ }
+ 
+-/* Cycle-accurate frame sequencer: fire quarter/half-frame clocks + the frame IRQ
+- * at their exact NTSC CPU-cycle offsets. 4-step: 7457/14913/22371/29829
+- * (qf; qf+hf; qf; qf+hf+IRQ), wrap 29830. 5-step: +37281 (qf+hf), wrap 37282, no
+- * IRQ. Phase anchored to the last $4017 write (which zeroes s_fc_cycle_acc). */
++/* PAL frame sequencer CPU-cycle offsets, from NESdev APU_Frame_Counter.
++ * 4-step IRQ asserts on cycles 33252..33254, wrapping after the last edge.
++ * The upstream $4017 reset behavior is retained. */
+ static void advance_frame_seq(void) {
+     s_fc_cycle_acc++;
+     if (!s_fc_mode) {
+         switch (s_fc_cycle_acc) {
+-            case 7457:  quarter_frame(); break;
+-            case 14913: quarter_frame(); half_frame(); break;
+-            case 22371: quarter_frame(); break;
+-            case 29829: quarter_frame(); half_frame();
+-                        if (!s_fc_irq_inh) s_fc_irq_flag = true; break;
+-        }
+-        if (s_fc_cycle_acc >= 29830) s_fc_cycle_acc = 0;
++            case 8313:  quarter_frame(); break;
++            case 16627: quarter_frame(); half_frame(); break;
++            case 24939: quarter_frame(); break;
++            case 33253: quarter_frame(); half_frame(); break;
++        }
++        if (s_fc_cycle_acc >= 33252 && !s_fc_irq_inh) s_fc_irq_flag = true;
++        if (s_fc_cycle_acc >= 33254) s_fc_cycle_acc = 0;
+     } else {
+         switch (s_fc_cycle_acc) {
+-            case 7457:  quarter_frame(); break;
+-            case 14913: quarter_frame(); half_frame(); break;
+-            case 22371: quarter_frame(); break;
+-            case 37281: quarter_frame(); half_frame(); break;
+-        }
+-        if (s_fc_cycle_acc >= 37282) s_fc_cycle_acc = 0;
++            case 8313:  quarter_frame(); break;
++            case 16627: quarter_frame(); half_frame(); break;
++            case 24939: quarter_frame(); break;
++            case 41565: quarter_frame(); half_frame(); break;
++        }
++        if (s_fc_cycle_acc >= 41566) s_fc_cycle_acc = 0;
+     }
+ }
+ 
+--- a/nesrecomp/runner/src/ppu_dot.c
++++ b/nesrecomp/runner/src/ppu_dot.c
+@@ -19,6 +19,7 @@
+ #include "nes_runtime.h"
+ #include "ppu_dot.h"
+ #include "mapper.h"
++#include "pal_timing.h"
+ #include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+@@ -33,12 +34,11 @@
+ extern int            g_disable_render_irq;
+ extern uint16_t       g_ppuaddr;
+ 
+-/* PPU geometry. 341 dots/scanline, 3 dots/CPU cycle. Cycle 0 of the frame
+- * budget is VBlank start (scanline 241). The visible region begins after 20
+- * VBlank lines (241..260) + the pre-render line (261) = 21 scanlines. */
+-#define DOTS_PER_LINE   341
++/* PAL: 16/5 dots per CPU cycle. From VBlank start to visible rendering,
++ * 70 VBlank lines and the pre-render line elapse. */
++#define DOTS_PER_LINE   PAL_DOTS_PER_LINE
+ #define VISIBLE_LINES   240
+-#define VBLANK_PRE      21
++#define VBLANK_PRE      71
+ #define DOT_MAXW        512          /* max framebuffer width (matches s_framebuf) */
+ 
+ static uint32_t *s_fb        = NULL;             /* presentation framebuffer */
+@@ -347,7 +347,7 @@
+ 
+     /* Scanline offset from VBlank start (cycle 0). Visible scanline index = the
+      * offset minus the VBlank + pre-render lines. */
+-    int sl  = (int)((ops * 3u) / DOTS_PER_LINE);
++    int sl  = (int)((ops * PAL_CPU_DIVIDER) / (PAL_PPU_DIVIDER * DOTS_PER_LINE));
+     int vis = sl - VBLANK_PRE;
+     if (vis < 0) return;                          /* still in VBlank / pre-render */
+ 
+--- /dev/null
++++ b/nesrecomp/runner/include/pal_timing.h
+@@ -0,0 +1,14 @@
++/* This package runs only the exact Europe Dr. Mario ROM. Hardware clocks:
++ * https://www.nesdev.org/wiki/Cycle_reference_chart
++ * PAL has 312 scanlines, 16/5 dots per CPU cycle and no odd-frame dot skip.
++ * Keep game, sample and host clocks derived from the same master clock. */
++#pragma once
++
++#define PAL_MASTER_HZ        26601712.5
++#define PAL_CPU_DIVIDER      16u
++#define PAL_PPU_DIVIDER      5u
++#define PAL_DOTS_PER_LINE    341u
++#define PAL_LINES_PER_FRAME  312u
++#define PAL_FRAME_DOTS       (PAL_DOTS_PER_LINE * PAL_LINES_PER_FRAME)
++#define PAL_CPU_HZ           (PAL_MASTER_HZ / PAL_CPU_DIVIDER)
++#define PAL_FRAME_SECONDS    (PAL_FRAME_DOTS * (double)PAL_PPU_DIVIDER / PAL_MASTER_HZ)

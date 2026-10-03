@@ -49,6 +49,26 @@ remains in the immutable package. No new Korri configuration language is added.
 `literal-rom-path.patch` preserves positional ROM paths longer than upstream's
 512-byte picker buffer. The verifier exercises such a path.
 
+`pal-timing.patch` corrects a speed bug in the pinned Europe runner. Region
+selection previously chose Europe game code but retained NTSC hardware clocks.
+The owner reported fast gameplay. Local measurements confirmed 60 frames/second
+and 29780.5 CPU cycles/frame instead of PAL's 50.007 frames/second and 33247.5
+CPU cycles/frame. Earlier smoke and save tests did not check playback speed.
+
+The patch derives game, CPU and sample timing from one PAL master clock. It
+uses 312 scanlines, the 16:5 PPU-to-CPU ratio, PAL APU tables and sequencer
+periods, and fractional CPU/sample budgets. An accumulated host deadline avoids
+integer sleep drift and includes time already spent waiting for vsync. It keeps
+upstream vsync, turbo, source pins, generated game code and save format unchanged.
+This is a Europe-only correction, not a generic region selector.
+
+The hardware values come from NESdev's [cycle chart](https://www.nesdev.org/wiki/Cycle_reference_chart),
+[APU frame counter](https://www.nesdev.org/wiki/APU_Frame_Counter),
+[noise](https://www.nesdev.org/wiki/APU_Noise), and
+[DMC](https://www.nesdev.org/wiki/APU_DMC) documentation. The upstream immediate
+`$4017` reset and simplified rendering remain. Correct PAL clocks do not prove
+cycle-perfect emulation or complete gameplay.
+
 The pinned source differs from the upstream README's old hotkey table:
 
 | Action | Pinned native default |
@@ -114,10 +134,22 @@ nix run --option builders '' --option post-build-hook '' .#verify-dr-mario -- '/
 
 The opt-in verifier also accepts a ZIP containing exactly one supported ROM.
 This is test input handling, not ZIP discovery or a production extraction path.
-It uses temporary account roots, private Xvfb, and dummy audio. It deletes its
-copy of retail data when it finishes. It tests native frames, actual Core launch,
+It uses temporary account roots and private Xvfb. The launch checks use dummy
+audio. The audio timing check uses a private PulseAudio null sink, following the
+existing OpenGOAL verifier. SDL's dummy driver truncates callback delays and
+cannot supply a reliable audio clock. The private server does not open physical
+audio devices or the owner's audio server. It deletes its copy of retail data
+when it finishes. It tests native frames, actual Core launch,
 save/load hotkeys, native save-file loading, account isolation, diagnostic-output
-suppression, concurrent-launch refusal, and clean exit. Those checks do not prove
+suppression, concurrent-launch refusal, and clean exit. The timing regression
+also checks actual CPU clocks from upstream's private co-sim output, game frames
+from timed native save files, and fractional sample totals from private PCM
+capture. It checks post-bridge output and requires zero underrun, overflow or
+concealment growth after a ten-second warm-up. Upstream's 200 ms pre-roll needs
+at least about 9.3 seconds to drain toward its 60 ms target at maximum correction.
+The capture checks about two seconds after warm-up. These are digital checks, not
+proof of audible quality. Raw diagnostics remain disabled in normal plugin
+launch. These checks do not prove
 restored gameplay. It does not test a physical screen, sound output, gamepad,
 or ending.
 
@@ -125,8 +157,8 @@ or ending.
 |---|---|---|
 | Native engine build | Passed on `zao`. | Passed natively on `fuji`. |
 | Strict contract, packaged manifest, host admission and invalid-ROM rejection | Passed on `zao`. | Passed on `fuji`. |
-| Owned-ROM runtime check | Passed three consecutive runs after review fixes, including long paths and inherited-diagnostic suppression. | Passed the same verifier on `fuji`, including native save-file loading and account isolation. |
-| Physical device installation and gameplay | Not run. | Signed Mini V2 installation, fullscreen capture and speaker routing verified. Physical controls/audio acceptance pending. |
+| Owned-ROM runtime check | Passed with PAL CPU/frame/audio timing, long paths and inherited-diagnostic suppression. | Passed the same PAL verifier on `fuji`, including native save-file loading and account isolation. |
+| Physical device installation and gameplay | Not run. | Signed Mini V2 installation, fullscreen capture and speaker routing verified. Owner reports the game works but feels fast. PAL update needs separate deployment approval. |
 
 The 2026-10-03 local verification also passed Nix formatting, Ruff formatting and
 lint, strict TypeScript checking, and Git whitespace checks. The long-path test
@@ -137,9 +169,18 @@ in the fixes. Both architectures ran 600 native smoke frames with zero dispatch
 misses and the same six sampled framebuffer hashes. This tests the exercised
 startup path, not complete gameplay.
 
-ARM runtime evidence is `/tmp/dr-mario-arm-evidence-nbrlgdo6/runtime.log` on `zao`.
-The builder's private ROM copy, temporary GC root, and test directory were removed
-after the test. The engine builds need no ROM. Neither architecture's native
-output was published publicly. The owner subsequently approved private signed
-installation on the Mini V2. [Device evidence](../../docs/deployments/2026-10-03-dr-mario-miniv2.md)
-records its normal sandboxed launch and the remaining physical acceptance checks.
+The owner approved the PAL fix and private `fuji` rebuild on 2026-10-03.
+Both architectures measured 33247.497 CPU cycles/frame and 881.877 samples/frame.
+One controlled run bounded game speed around 49.49 to 50.41 frames/second and
+measured 44061.2 samples/second on x86_64 and 44083.8 on aarch64. Both had zero
+post-warm-up bridge counter growth and produced nonzero post-bridge audio.
+The new CPU regression rejects the earlier engine at 29780.508 cycles/frame.
+
+PAL runtime logs are `/tmp/dr-mario-pal-x86_64-linux-runtime.log` and
+`/tmp/dr-mario-pal-aarch64-linux-runtime.log` on `zao`. The builder's private ROM
+copy, temporary GC root, and test directory were removed after each test. The
+engine builds need no ROM. Neither architecture's native output was published
+publicly. [Device evidence](../../docs/deployments/2026-10-03-dr-mario-miniv2.md)
+records the earlier signed installation and the remaining physical acceptance
+checks. That installation still has NTSC clocks. The PAL package needs separate
+approval before installation or interruption of another game.

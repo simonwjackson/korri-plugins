@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """Opt-in owned-ROM checks. No ROM is included in the build or retained by the test."""
 
+import csv
 import hashlib
 import json
 import os
 from pathlib import Path
 import select
 import signal
+import statistics
+import struct
 import subprocess
 import sys
 import tempfile
 import time
+import wave
 import zipfile
 
 
@@ -24,14 +28,14 @@ def run(args, **kwargs):
         raise
 
 
-def wait_for(condition, child, message, seconds=20):
+def wait_for(condition, child, message, seconds=20, interval=0.1):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         if condition():
             return
         if child.poll() is not None:
             raise AssertionError(f"Game exited {child.returncode}: {message}")
-        time.sleep(0.1)
+        time.sleep(interval)
     raise AssertionError(f"Timed out: {message}")
 
 
@@ -101,13 +105,24 @@ def main():
                 str(result_path),
             ],
             cwd=smoke,
-            env=clean_environment,
+            env=dict(
+                clean_environment, NESRECOMP_COSIM_HASH=str(smoke / "clock.jsonl")
+            ),
         )
         report = json.loads(result_path.read_text())
         assert report["frames_run"] == 600, report
         assert report["dispatch_miss_count"] == 0, report
         assert len(set(report["frame_hashes"].values())) > 1, report
         print("Native 600-frame smoke:", json.dumps(report), flush=True)
+        # Existing upstream co-sim output exposes actual pre-handler CPU clocks.
+        # Ignore startup and check the real PAL budget, not a source-code constant.
+        clocks = [
+            json.loads(line)["bclk"]
+            for line in (smoke / "clock.jsonl").read_text().splitlines()
+        ][-200:]
+        cycles_per_frame = (clocks[-1] - clocks[0]) / (len(clocks) - 1)
+        print(f"CPU cycles per PAL frame: {cycles_per_frame:.3f}", flush=True)
+        assert abs(cycles_per_frame - 33247.5) < 0.1, cycles_per_frame
 
         # Private X server, no access to the user's desktop or real audio device.
         server = subprocess.Popen(
@@ -162,7 +177,7 @@ def main():
                 run(["xdotool", "keyup", name], env=environment)
                 time.sleep(0.25)
 
-            def play(account, reload=False):
+            def play(account, reload=False, measure_timing=False):
                 state = account / "DrMarioRecomp"
                 state.mkdir(parents=True, exist_ok=True)
                 config = state / "config.ini"
@@ -238,6 +253,74 @@ def main():
                                 "native save state",
                             )
                             assert save.read_bytes()[:5] == b"NSSR\x02"
+                            if measure_timing:
+
+                                def sample_frame():
+                                    previous = save.stat().st_mtime_ns
+                                    size = save.stat().st_size
+                                    started = time.monotonic()
+                                    run(
+                                        [
+                                            "xdotool",
+                                            "keydown",
+                                            "--delay",
+                                            "0",
+                                            "shift+F1",
+                                        ],
+                                        env=environment,
+                                    )
+                                    try:
+                                        wait_for(
+                                            lambda: (
+                                                save.stat().st_mtime_ns != previous
+                                                and save.stat().st_size == size
+                                            ),
+                                            child,
+                                            "timed native save",
+                                            seconds=5,
+                                            interval=0.005,
+                                        )
+                                        data = save.read_bytes()
+                                        ended = time.monotonic()
+                                    finally:
+                                        run(
+                                            ["xdotool", "keyup", "shift+F1"],
+                                            env=environment,
+                                        )
+                                    assert data[:5] == b"NSSR\x02"
+                                    # Upstream savestate.c puts uint64_t frame_count
+                                    # last in SaveStateData on both target ABIs.
+                                    return (
+                                        started,
+                                        ended,
+                                        struct.unpack("<Q", data[-8:])[0],
+                                    )
+
+                                samples = [sample_frame()]
+                                for _ in range(2):
+                                    time.sleep(4)
+                                    samples.append(sample_frame())
+                                bounds = [
+                                    (
+                                        (b[2] - a[2] - 1) / (b[1] - a[0]),
+                                        (b[2] - a[2] + 1) / (b[0] - a[1]),
+                                    )
+                                    for a, b in zip(samples, samples[1:])
+                                ]
+                                print(
+                                    "Normal plugin-launch PAL frame-rate bounds:",
+                                    bounds,
+                                    flush=True,
+                                )
+                                # Bound keyboard/file-observation latency and one
+                                # frame of quantization. Do not assert a guessed
+                                # instant within the observed save interval.
+                                assert all(hi - lo < 3 for lo, hi in bounds), (
+                                    "Timing observation too uncertain"
+                                )
+                                assert all(
+                                    lo <= 51 and hi >= 49 for lo, hi in bounds
+                                ), bounds
                             rejected = subprocess.run(
                                 request(account),
                                 env=environment,
@@ -268,8 +351,162 @@ def main():
                         stop(child)
 
             first = root / "Player One '; $(exit 21) #"
-            saved = play(first)
+            saved = play(first, measure_timing=True)
             assert play(first, reload=True) == saved
+            # Raw-engine diagnostics are permitted only inside this private test.
+            # Production plugin-launch still strips all diagnostic overrides.
+            audio = root / "audio"
+            audio.mkdir()
+            (audio / "config.ini").write_text("[Display]\nRenderer=1\nFullscreen=0\n")
+            (audio / "input.txt").write_text(
+                "WAIT 60\nHOLD START\nWAIT 2\nRELEASE START\nWAIT 30\nHOLD START\nWAIT 2\nRELEASE START\nWAIT 1000\n"
+            )
+            # SDL dummy truncates callback waits to whole milliseconds and
+            # drifts with scheduler latency. Use the existing OpenGOAL verifier's
+            # private PulseAudio null-sink pattern for a real audio clock instead.
+            # No physical device, shared server, or production buffer changes.
+            pulse_socket = audio / "pulse.sock"
+            (audio / "client.conf").write_text("")
+            pulse_environment = dict(
+                {
+                    name: value
+                    for name, value in clean_environment.items()
+                    if not name.startswith("PULSE_")
+                    and name != "SDL_AUDIO_DEVICE_SAMPLE_FRAMES"
+                },
+                HOME=str(audio),
+                XDG_CONFIG_HOME=str(audio / "config"),
+                XDG_CACHE_HOME=str(audio / "cache"),
+                XDG_DATA_HOME=str(audio / "data"),
+                XDG_RUNTIME_DIR=str(audio),
+                PULSE_RUNTIME_PATH=str(audio / "pulse-runtime"),
+                PULSE_STATE_PATH=str(audio / "pulse-state"),
+                PULSE_CLIENTCONFIG=str(audio / "client.conf"),
+                PULSE_COOKIE=str(audio / "client.cookie"),
+                PULSE_SERVER=f"unix:{pulse_socket}",
+                PULSE_SINK="dr_mario_test",
+                # The server wrapper creates its own bus. The engine needs
+                # only the private Unix audio socket, not the caller's bus.
+                DBUS_SESSION_BUS_ADDRESS=f"unix:path={audio / 'no-shared-bus'}",
+            )
+            with (audio / "pulse.log").open("w") as pulse_log:
+                pulse = subprocess.Popen(
+                    [
+                        "dbus-run-session",
+                        "--",
+                        "pulseaudio",
+                        "--daemonize=no",
+                        "--exit-idle-time=-1",
+                        "--use-pid-file=no",
+                        "--disable-shm",
+                        "-n",
+                        f"--load=module-native-protocol-unix socket={pulse_socket} auth-anonymous=1",
+                        "--load=module-null-sink sink_name=dr_mario_test",
+                    ],
+                    env=pulse_environment,
+                    stdout=pulse_log,
+                    stderr=subprocess.STDOUT,
+                    start_new_session=True,
+                )
+                try:
+                    wait_for(pulse_socket.exists, pulse, "private audio server")
+                    run(
+                        [
+                            str(engine / "bin/DrMarioRecomp"),
+                            str(content),
+                            "--script",
+                            str(audio / "input.txt"),
+                        ],
+                        cwd=audio,
+                        env=dict(
+                            pulse_environment,
+                            DISPLAY=environment["DISPLAY"],
+                            SDL_VIDEODRIVER="x11",
+                            SDL_AUDIODRIVER="pulseaudio",
+                            RECOMP_AUDIO_DEBUG=str(audio),
+                            RECOMP_AUDIO_DEBUG_DUMP_SECS="12",
+                            NESRECOMP_COSIM_HASH=str(audio / "clock.jsonl"),
+                        ),
+                    )
+                except Exception:
+                    print((audio / "pulse.log").read_text(), file=sys.stderr)
+                    raise
+                finally:
+                    stop(pulse)
+            with (audio / "events.csv").open() as events:
+                fills = [
+                    (float(row[0]), dict(pair.split("=", 1) for pair in row[2].split()))
+                    for row in csv.reader(events)
+                    if len(row) > 2 and row[1] == "bfill"
+                ]
+            # Upstream primes 200 ms, targets 60 ms, and drains at at most
+            # 1.5% correction. That cushion alone needs at least about 9.3 seconds.
+            # Exclude server startup and this intentional pre-roll drain.
+            warm = next(
+                i for i, entry in enumerate(fills) if entry[0] - fills[0][0] >= 10000
+            )
+            growth = {
+                key: int(fills[-1][1][key]) - int(fills[warm][1][key])
+                for key in ("under", "over", "stretch_f", "stretch_e")
+            }
+            print(
+                "Audio bridge counter growth after 10-second warm-up:",
+                growth,
+                flush=True,
+            )
+            assert all(value == 0 for value in growth.values()), growth
+            with wave.open(str(audio / "t1_apu.wav")) as pcm:
+                assert pcm.getframerate() == 44100 and pcm.getnchannels() == 1
+                sample_count = pcm.getnframes()
+                pcm_bytes = pcm.readframes(sample_count)
+            samples_per_frame = sample_count / len(fills)
+            # Fills are recorded once per audio frame. Their timestamps avoid
+            # measuring process startup or SDL initialization as game time.
+            produced_rate = (
+                samples_per_frame
+                * (len(fills) - 1)
+                * 1000
+                / (fills[-1][0] - fills[0][0])
+            )
+            print(
+                f"Audio samples/frame: {samples_per_frame:.3f}; samples/second: {produced_rate:.1f}",
+                flush=True,
+            )
+            expected_samples = int(len(fills) * 44100 * 106392 * 5 / 26601712.5)
+            assert abs(sample_count - expected_samples) <= 1, (
+                sample_count,
+                expected_samples,
+            )
+            assert 881 <= samples_per_frame <= 882, samples_per_frame
+            assert abs(produced_rate - 44100) < 1000, produced_rate
+            with wave.open(str(audio / "t3_bridge_out.wav")) as output:
+                assert output.getframerate() == 44100 and output.getnchannels() == 1
+                # The tap has no first-callback timestamp. Server startup and
+                # buffering make its total unsuitable for a wall-rate estimate.
+                # Post-warm-up bridge counters above check downstream starvation.
+                output_count = output.getnframes()
+                output_values = struct.unpack(
+                    f"<{output_count}h", output.readframes(output_count)
+                )
+                assert max(output_values) - min(output_values) > 100, (
+                    "Audio bridge produced no output signal"
+                )
+            values = struct.unpack(f"<{sample_count}h", pcm_bytes)
+            assert max(values) - min(values) > 100, "Game produced no audio signal"
+            clock_rows = [
+                json.loads(line)
+                for line in (audio / "clock.jsonl").read_text().splitlines()
+            ]
+            assert (
+                abs(
+                    statistics.mean(
+                        b["bclk"] - a["bclk"]
+                        for a, b in zip(clock_rows[-200:], clock_rows[-199:])
+                    )
+                    - 33247.5
+                )
+                < 0.1
+            )
             second = root / "Player Two"
             play(second)
             assert (first / "DrMarioRecomp/savestates/slot01.sav").read_bytes() == saved

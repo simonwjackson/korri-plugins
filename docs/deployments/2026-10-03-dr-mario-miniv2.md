@@ -3,7 +3,10 @@
 Verified on 2026-10-03: the signed ARM64 plugin is installed and enabled on the
 Retroid Pocket Mini V2. Normal Korri launch runs the native executable as the
 unprivileged runtime user. A compositor capture shows the game on screen.
-Physical controls and audible sound still need owner confirmation.
+The owner subsequently reported that the game works but feels faster than
+expected. The package recorded below has an NTSC timing bug. It is installation
+evidence, not proof of correct Europe playback speed. The PAL correction needs
+separate device deployment approval.
 
 ## Installation and preservation
 
@@ -53,7 +56,7 @@ runner explicitly and did not change persistent runner preferences.
 | Audio routing | The DrMarioRecomp PipeWire client has a running output stream and two links to the speaker sink. |
 | ROM and configuration | ROM unchanged. Native configuration and keybinds remain in account storage. |
 | Save/load | Both build architectures passed the owned-ROM save-file loading test. Device save/load has not been exercised. |
-| Physical acceptance | Pending owner confirmation of controls and speaker audio. |
+| Physical acceptance | Owner reports the game works, but gameplay feels fast. Timing correction pending. |
 
 The game runs in a PID namespace. Its audio client reports process ID 1 rather
 than the host PID, so audio attribution used the client executable identity and
@@ -67,6 +70,27 @@ separately from the ROM.
 
 A game-board capture is not proof of user input, completed play, or save
 correctness. No frame-rate or audible-quality claim is made.
+
+## PAL correction, not yet installed
+
+The owner approved correcting PAL clocks and rebuilding privately on `fuji`.
+The corrected x86_64 and native aarch64 engines passed owned-ROM tests off-device.
+Both measured 33247.497 CPU cycles/frame and 881.877 audio samples/frame. Timed
+native saves bounded speed around 50 frames/second. Digital audio production
+measured about 44.1 kHz, with no post-warm-up underrun, overflow or concealment
+growth through the private PulseAudio null sink. Both ran 600 smoke frames with
+zero dispatch misses and identical sampled framebuffer hashes. Source pins,
+generated game code and native save format remain unchanged.
+
+The earlier engine fails the new CPU regression at 29780.508 cycles/frame.
+Earlier smoke and save checks did not measure playback speed. SDL's dummy audio
+driver also supplied an inaccurate test clock. The final audio check uses a
+private virtual sink and isolates both server and client state.
+
+No PAL package replacement or game interruption is approved yet. The device
+still has the package recorded above. No handheld PAL frame-rate, physical audio,
+or restored-gameplay result exists. Deployment must retain existing account
+files, catalog entries, plugin selections, signatures and publisher trust.
 
 ## Evidence
 

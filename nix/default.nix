@@ -244,6 +244,8 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       runtimeInputs = [
         pkgs.xorg.xorgserver
         pkgs.xdotool
+        pkgs.pulseaudio
+        pkgs.dbus
       ];
       text = ''
         exec ${pkgs.python3}/bin/python3 -I ${./dr-mario-runtime-check.py} \
