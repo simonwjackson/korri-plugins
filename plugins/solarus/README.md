@@ -21,9 +21,14 @@ archive and expect it to become a Solarus quest.
 The engine receives the absolute content path as one literal argument.
 Spaces, quotes and shell syntax remain part of the filename. No shell parses
 quest paths. Emulator cores and Korri launch overrides are rejected.
-Use each quest's native settings instead. Upstream display, controller and
-audio defaults remain unchanged; the plugin does not force fullscreen or
-add RetroArch session controls.
+Use each quest's native settings instead. The plugin does not force fullscreen
+or add RetroArch session controls. Display and audio defaults remain unchanged.
+
+The packaged controller database corrects one upstream Linux Xbox 360 entry.
+Its four D-pad hat bindings were inverted. This entry also matches Korri's
+player seats on the Mini V2. The patch retains all button and stick bindings
+and leaves other controller entries unchanged. It does not change A/B actions
+chosen by a quest or repair the separate OpenGOAL/Jak input path.
 
 Upstream 2.1.4 accepts quest formats 1.5, 1.6, 2.0 and 2.1 at its version gate.
 That is not proof that every quest works. Older quests can still depend on
@@ -69,7 +74,11 @@ The checks use the actual packaged engine and Core's production
 types, host seed/declaration validation, literal arguments, unsupported
 overrides, native ELF architecture, archive/directory launch, persistent
 save/reload across processes, two supplied account roots, and preservation
-of desktop saves and quest bytes. The test quest uses native save APIs and contains no third-party assets.
+of desktop saves and quest bytes. An SDL lookup test loads the installed
+controller database and checks D-pad, button, and stick bindings for the
+Linux Xbox 360 GUID and four observed Korri-seat GUIDs. It fails on the original
+inverted database. The test quest uses native save APIs and contains no
+third-party assets.
 
 A test-only launcher adds upstream's `-no-video` and `-no-audio` flags. These
 headless checks do not establish display output, audible sound, physical
@@ -113,7 +122,9 @@ license obligations. Packaging is not approval to redistribute a quest.
 
 The owner-approved Mini V2 installation used its existing signed private cache
 on 2026-10-02. The plugin is enabled, and the installed engine's `-help` runs as
-user `korri`. No quest was launched on the device. The
+user `korri`. No quest was launched during that installation. The later
+[Yarntown verification](../../docs/research/solarus-yarntown.md) records a real
+quest launch and its acceptance limits. The
 [deployment record](../../docs/deployments/2026-10-02-solarus-miniv2.md) identifies
 the exact output, approval, preserved state, and two pre-existing failed units.
 No public binary publication or reboot acceptance is claimed.
