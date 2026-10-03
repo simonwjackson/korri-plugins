@@ -151,10 +151,12 @@ The corrected Nix packages and contract/launcher checks passed on both native bu
 | x86_64 native engine | `/nix/store/1xgzkwqxj0nl1rl57ld0q9nnaza14dya-fable-ii-recomp-0-unstable-f3ae1ad` |
 | x86_64 package check | `/nix/store/7mid2ms3snbq2a90vy9znhx9fj310k1f-korri-fable-ii-recomp-plugin-check` |
 | aarch64 native engine | `/nix/store/32cr4gmb0bidfwz9d4m9xh8cx1837awj-fable-ii-recomp-0-unstable-f3ae1ad` |
-| aarch64 plugin | `/nix/store/4683zc4b4dlg4pha11lwi9gffpmibba8-korri-plugin` |
-| aarch64 package check | `/nix/store/mj8k0bhrqql8v92rw393666dr37575n7-korri-fable-ii-recomp-plugin-check` |
+| aarch64 plugin | `/nix/store/j48921lkgairx68vnp2n7lxk51ccmywz-korri-plugin` |
+| aarch64 package check | `/nix/store/vv9b9i5ikq0znjg65wnk9l33qmyza2gr-korri-fable-ii-recomp-plugin-check` |
 
-After final documentation, test formatting and rebase, the x86_64 check passed again. ARM derivation evaluation also passed and still selects the exact verified engine above. Repeating the ARM check after those final changes was blocked by SSH timeouts to `fuji`; its successful package/check paths above refer to the earlier run. No engine or launcher behavior changed in those final edits.
+After final documentation, test formatting and rebase, both architecture checks passed again. The ARM rerun used repository snapshot `387a96f108d7ab954c715e15243367052836da1b`, which contains the unchanged Fable II implementation from `3e8e350`. It reused the exact verified engine above and built only the final plugin package and check.
+
+The ARM rerun first waited for other builds on `fuji` to finish. Its last 90 seconds before launch recorded no build processes and CPU use of 4.50%, 5.22% and 4.37%. The package/check command then passed in six seconds. Evidence is `/tmp/fable2-final-arm-recheck.log` locally and `/tmp/fable2-final-check-387a96f/final-check.log` on `fuji`. No device installation, game launch, signature change or public publication ran.
 
 A separate graphical test executed the actual corrected x86_64 Nix engine. Process mappings confirmed its packaged executable, runtime, GPU plugin and Tracy library, without raw development binaries. Continue loaded a copied save into Bowerstone Old Town. A three-second stick input moved the hero along the street. The original save files remained unchanged, and all test processes were stopped.
 
