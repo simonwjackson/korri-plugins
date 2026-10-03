@@ -1,14 +1,13 @@
 # Dr. Mario NES Recomp on Mini V2
 
-Verified on 2026-10-03: the signed ARM64 plugin is installed and enabled on the
-Retroid Pocket Mini V2. Normal Korri launch runs the native executable as the
-unprivileged runtime user. A compositor capture shows the game on screen.
-The owner subsequently reported that the game works but feels faster than
-expected. The package recorded below has an NTSC timing bug. It is installation
-evidence, not proof of correct Europe playback speed. The PAL correction needs
-separate device deployment approval.
+Verified on 2026-10-03: the signed PAL correction is installed and running on the
+Retroid Pocket Mini V2. Live frame-counter readings measured 49.98 to 50.33
+frames/second with turbo off. The audio bridge runs near 44.1 kHz with no observed
+underrun, overflow or concealment growth. A capture shows the game board in the
+focused fullscreen window. Audible quality and the owner's sense of speed still
+need acceptance. The initial NTSC-timed installation is retained below as history.
 
-## Installation and preservation
+## Initial installation and preservation
 
 The owner approved device testing and stopping the existing game. The existing
 ZQuest Classic session entered `stop-sigterm` and briefly returned
@@ -45,7 +44,7 @@ is `/var/lib/korri/roms/Dr. Mario (Europe).nes` and retains SHA-256
 It was not placed in a Nix output or binary cache. Launch selected the native
 runner explicitly and did not change persistent runner preferences.
 
-## Runtime observations
+## Initial runtime observations
 
 | Check | Result |
 |---|---|
@@ -69,9 +68,9 @@ new schema. Native `keybinds.ini` was generated. Back up this account directory
 separately from the ROM.
 
 A game-board capture is not proof of user input, completed play, or save
-correctness. No frame-rate or audible-quality claim is made.
+correctness. The initial launch did not measure frame rate or audible quality.
 
-## PAL correction, not yet installed
+## PAL correction and approved update
 
 The owner approved correcting PAL clocks and rebuilding privately on `fuji`.
 The corrected x86_64 and native aarch64 engines passed owned-ROM tests off-device.
@@ -87,10 +86,34 @@ Earlier smoke and save checks did not measure playback speed. SDL's dummy audio
 driver also supplied an inaccurate test clock. The final audio check uses a
 private virtual sink and isolates both server and client state.
 
-No PAL package replacement or game interruption is approved yet. The device
-still has the package recorded above. No handheld PAL frame-rate, physical audio,
-or restored-gameplay result exists. Deployment must retain existing account
-files, catalog entries, plugin selections, signatures and publisher trust.
+The owner then approved the signed update and launch. The prior session already
+reported `SessionCompleted`, so this update stopped no game. Normal
+`korri-plugin update` replaced only this plugin through its existing cache
+binding. Exact-package approval and recursive signature verification passed.
+No build, flake evaluation, system activation or trust change ran on the device.
+
+| PAL update item | Verified value |
+|---|---|
+| Code on main | `ff31cad` |
+| Package | `/nix/store/pgvpzgfk1p8pxmavqxzy7qp3zh5qqgyc-korri-plugin` |
+| Approval | `4239dd68abf2a958d648be2bffa1ccf679fdee0a5615267631fbb273f019077f` |
+| Native executable | `/nix/store/0qqik5nvnsismv73sfwp8bbj8xsgyv93-drmario-nes-recomp-0-unstable-a234728/bin/DrMarioRecomp` |
+| Launch unit | `korri-game-c4d5005df4edc23cc6176751853b465c.service` |
+| Sandbox | UID/GID 1000, zero effective capabilities, `NoNewPrivileges=yes`. |
+| Frame rate | Three three-second intervals measured 49.984, 50.331 and 49.996 frames/second. Turbo remained off. |
+| Audio clocks | Producer measured 44067.7 to 44073.8 samples/second. Consumer measured 44006.1 to 44011.8. Both configured rates are 44100 Hz. |
+| Audio bridge | All underrun, overflow and concealment counters remained zero across the observed nine-second interval after warm-up. |
+| Display and routing | Visible, focused fullscreen window; running DrMarioRecomp stream with two links to the speaker. |
+| Preservation | All 35 other plugin selections, 2334 games, 2334 releases, device configuration and the two existing account files remain unchanged. No catalog re-import occurred. |
+| System | Same generation, publisher trust, build prohibition and ROM hash; no failed units. |
+
+Timing probes read only known globals from the exact packaged ELF through
+`/proc/<pid>/mem`. They verified the executable identity before reading. They
+sent no input, paused no process and wrote no game state. The source header and
+exact ELF symbol size ground the audio-counter layout. A running stream and
+matched digital clocks do not prove audible quality. Device save/load and
+restored gameplay remain untested. Existing account files have a private backup.
+The owner still needs to confirm the changed speed and sound.
 
 ## Evidence
 
@@ -101,4 +124,12 @@ The device stage retains `inspection.json`, `preservation.json`,
 `installed-selection.json`, `before-catalog-import/`, `catalog-preservation.json`,
 `routes.json`, `launch.json`, `sway-tree.json`, `dr-mario-running.png`,
 `audio-nodes.json`, `audio-links.json`, and `final-verification.txt`.
-The local capture is `/tmp/dr-mario-miniv2-running.png`.
+The initial local capture is `/tmp/dr-mario-miniv2-running.png`.
+
+PAL device stage: `/var/tmp/dr-mario-miniv2-deploy-iuzk29oo`.
+PAL signed build-host export: `/tmp/dr-mario-miniv2-deploy-iuzk29oo`.
+The stage retains exact inspection and installed-selection records,
+`previous-selection.json`, `account-before/`, `data-preservation.json`,
+`catalog-preservation.json`, `launch.json`, `sway-tree.json`, `audio-nodes.json`,
+`audio-links.json`, `live-timing.json`, `live-audio-clock.json` and
+`final-verification.txt`. The PAL capture is `/tmp/dr-mario-pal-miniv2-running.png`.
