@@ -4,6 +4,8 @@ Research date: 2026-10-03 UTC.
 
 **Word Breaker is the strongest licensing lead. This audit did not establish three finished quests with resolved asset permissions for commercial redistribution.** 3D Tic-Tac-Toe has one unresolved bitmap. CastleSolarus needs additional permissions and completion evidence. The Solarus Sample Quest has the clearest standard-license asset coverage, but it is explicitly unfinished.
 
+[Follow-up repository research](solarus-additional-quest-candidates.md) adds Perlshaw's Problems as a positive licensing candidate, plus Blue Isle and Vegan on a Desert Island as further leads. It does not establish three finished, accepted games.
+
 The audit found concrete reasons to exclude the inspected Children of Solarus, Closed Circle, and The Epic of Den versions. Do not turn their general GPL or CC descriptions into an all-assets permission claim.
 
 No quest was installed, executed, modified, built, or published. No device was accessed. Downloads and comparison media remain private under `/tmp/solarus-quest-research/`. This is an engineering permissions audit, not a legal determination about infringement or copyright protection.
