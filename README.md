@@ -265,8 +265,12 @@ install packages.
 [Zelda3](plugins/zelda3/README.md) launches the supported US A Link to the Past
 ROM through a native engine on both Linux architectures. First launch extracts
 assets locally. Configuration and saves remain in account-owned storage.
-The package contains no ROM or extracted game data. Build machines compile the
-engine; devices receive it prebuilt. Python asset extraction is not compilation.
+The package contains no ROM or runtime-extracted asset bundle. It does embed
+opening-scene tilemap tables that match the original ROM. The upstream MIT license
+does not establish Nintendo clearance. [The publication audit](docs/research/zelda3-publication-audit.md)
+records the exact binary comparison and limits. Keep the current binaries private
+pending a publication decision. Build machines compile the engine; devices receive
+it prebuilt. Python asset extraction is not compilation.
 
 ```sh
 nix build --no-link .#korri-plugin-zelda3
