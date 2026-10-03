@@ -5,8 +5,10 @@ Korri. Host gameplay and save/reload passed. Device rendering passed after a
 manual focus correction. The owner verified gameplay with the left stick, A rolling, and B attacking.
 The owner reported all four D-pad directions inverted. The native SDL lookup
 check reproduced that inversion in the engine's bundled controller database.
-The correction passes checks on both architectures. Physical acceptance of
-the correction, audible sound, and device save/reload remain unverified.
+The correction passes native checks and CI on both architectures and is
+installed on the Mini V2. The original direction trace now passes native SDL
+lookup against the updated device database. Physical acceptance of the
+correction, audible sound, and device save/reload remain unverified.
 
 The owner authorized choosing any Solarus quest and required an `ask_user`
 decision before device work. The owner then chose idle-only installation and
@@ -184,7 +186,9 @@ compatibility, and the D-pad correction does not repair this quest error.
 
 The owner explicitly permitted stopping and restarting the current quest for
 diagnosis. A restart loads a saved checkpoint, not unsaved gameplay progress.
-Physical acceptance after deployment remains required.
+The [signed D-pad update](../deployments/2026-10-03-solarus-dpad-miniv2.md)
+records the corrected output, approval, normal close, preserved saves, restart,
+and native device verification. Physical acceptance remains required.
 
 The private device stage is `/var/tmp/solarus-yarntown-c78t8ahk`.
 It contains `before-library-import/`, `import-summary.json`, `library-import.log`,
