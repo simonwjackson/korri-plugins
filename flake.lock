@@ -158,17 +158,17 @@
     "nocturne-encore": {
       "flake": false,
       "locked": {
-        "lastModified": 1791080631,
-        "narHash": "sha256-ScqUhOuL+aRcHI/XkN+ZOGgqCPbTaA49kWbnX6Zc7UI=",
+        "lastModified": 1791094606,
+        "narHash": "sha256-McyMrajnFnVrG7Edn4cRUlRXDqC+6/8vsmNv6O88fpg=",
         "owner": "simonwjackson",
         "repo": "nocturne-encore",
-        "rev": "c0e341e908b8b3568c633c673edf94a7dc1d3428",
+        "rev": "eb7045d04f3f2435ffd902a3cbb65b21e66a6b16",
         "type": "github"
       },
       "original": {
         "owner": "simonwjackson",
         "repo": "nocturne-encore",
-        "rev": "c0e341e908b8b3568c633c673edf94a7dc1d3428",
+        "rev": "eb7045d04f3f2435ffd902a3cbb65b21e66a6b16",
         "type": "github"
       }
     },
