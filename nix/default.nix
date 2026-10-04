@@ -368,6 +368,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           ${fablePlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
+    zquestMidiProof = import ./zquest-midi-proof.nix { inherit pkgs; };
     help = pkgs.writeShellApplication {
       name = "korri-plugins-help";
       text = ''
@@ -393,6 +394,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-zquest-classic-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-zquest-classic-plugin' \
           '  nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state' \
+          'Private quest editing proof, not a complete sanitizer or rights clearance:' \
+          '  nix run .#zquest-midi-proof -- --help' \
+          '  nix run .#zquest-midi-proof-test -- --help' \
+          '  nix run .#zquest-midi-proof-runtime -- --help' \
+          'Keep quest inputs and outputs outside Git and public caches. No device work.' \
           'Fallout CE engines support x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-fallout1-ce .#korri-plugin-fallout2-ce' \
           '  nix build --no-link .#checks.x86_64-linux.korri-fallout1-ce-plugin .#checks.x86_64-linux.korri-fallout2-ce-plugin' \
@@ -595,6 +601,21 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     };
     formatter = pkgs.nixfmt;
     apps = {
+      zquest-midi-proof = {
+        type = "app";
+        program = "${zquestMidiProof.proof}/bin/zquest-midi-proof";
+        meta.description = "Privately prove unchanged QST save/reload and one MIDI-slot removal.";
+      };
+      zquest-midi-proof-test = {
+        type = "app";
+        program = "${zquestMidiProof.test}/bin/zquest-midi-proof-test";
+        meta.description = "Run editing-proof and timeout-cleanup checks against a privately supplied quest.";
+      };
+      zquest-midi-proof-runtime = {
+        type = "app";
+        program = "${zquestMidiProof.runtime}/bin/zquest-midi-proof-runtime";
+        meta.description = "Compare three private QSTs off-device with network isolation and null audio.";
+      };
       verify-melee = {
         type = "app";
         program = "${verifyMelee}/bin/verify-melee";
