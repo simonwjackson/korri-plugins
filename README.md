@@ -26,7 +26,7 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-drmario64` | `@simonwjackson:drmario64`, private owned-ROM build | x86_64 and aarch64 Linux build targets |
 | `drmario64` | Native Dr. Mario 64 launcher with account-owned state | x86_64 and aarch64 Linux build targets |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
-| `korri-plugin-signs-of-rain` | `@simonwjackson:signs-of-rain`, exact packaged PCK | x86_64 checked; aarch64 Linux build target |
+| `korri-plugin-signs-of-rain` | `@simonwjackson:signs-of-rain`, exact packaged PCK | x86_64 and aarch64 Linux checked |
 | `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
 | `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
 | `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
@@ -41,11 +41,12 @@ flake package and generates an exact-PCK release hash at build time. Register
 that PCK manually in the existing library. No general Godot discovery or
 automatic game tile is added. Native data uses the supplied Korri account root.
 
-The game input pins published `a5a3206`. The x86 package, TypeScript checks,
-actual Core admission and sandbox launch checks pass. The ARM game runtime
-builds off-device. ARM plugin packaging still needs an approved ARM builder;
-the current x86 host reports a platform mismatch. There is no hardware or
-60 FPS acceptance, device installation, trust change, or Core schema change.
+The game input pins published `a5a3206`. Both architectures pass package,
+TypeScript, actual Core admission and sandbox launch checks. The ARM package
+and checks ran on the owner-approved fuji builder. The actual ARM Godot engine
+also loaded a copied pack in private storage and rejected a missing pack.
+There is no RG353M graphics, controller or 60 FPS acceptance, device installation,
+trust change, or Core schema change.
 
 ## Fable II
 

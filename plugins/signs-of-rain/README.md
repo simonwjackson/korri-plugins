@@ -105,9 +105,22 @@ unsupported input rejection, and removal of host XDG storage overrides.
 There are no Mock/Stub Core adapters. The observer is not the game engine;
 these checks do not prove native rendering, saving, audio, controller input,
 handheld performance, or hardware acceptance. No physical controller acceptance is
-claimed. The x86 package and real Core admission/launch checks pass. The ARM64
-game package also builds off-device and its engine ELF identifies AArch64.
-ARM plugin execution and device acceptance require a separate approved test.
+claimed. Both native packages and real Core admission/launch checks pass. On
+2026-10-03, the owner approved fuji for ARM builds. The ARM plugin and checks
+built there from published plugin revision `4440bfe` and game revision `a5a3206`.
+Its ARM Godot engine loaded a copied pack from private storage for 30 headless
+frames and rejected a missing pack. This is actual ARM execution, not Mali
+rendering, device audio, physical controller acceptance or a performance test.
+
+Fuji rebuilt the resource pack through its existing x86 emulation after rejecting
+an unsigned transfer. Signature checks stayed enabled. We changed no trusted
+keys or device permission. The resulting outputs remain on fuji:
+
+- `/nix/store/ckfrb09yyf0k3z8smi7rknaai152sw5v-korri-plugin`
+- `/nix/store/xmczx513fb681khzn5s1fli4kiq9gxry-korri-signs-of-rain-plugin-check`
+
+Device installation and sustained 60 FPS still need a separate owner-approved
+session and normal signed delivery.
 
 Source publication and passing checks are not signing, cache publication,
 device installation, a trust change, or device acceptance. The RG353M was offline
