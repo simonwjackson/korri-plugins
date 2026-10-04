@@ -25,6 +25,9 @@ PRIVATE_ENVIRONMENT = {
     "REX_METADATA_ROOT",
     "REX_LOG_FILE",
     "REX_AUTO_UPDATE_ENABLED",
+    # Turns on the Scene Expansion research controls (scripted pad, command
+    # file). Never inherit it into a normal launch.
+    "SCENE_PROBE_DIR",
 }
 
 
@@ -34,6 +37,43 @@ def check_xex(path: Path) -> None:
             raise ValueError(
                 "Unsupported default.xex. Nocturne requires the supported XBLA release."
             )
+
+
+def link_bundled_mods(mods: Path) -> list[str]:
+    """Link each mod shipped in the package into the account's mods folder.
+
+    The SDK finds mods as folders under mods_data_root and enables a folder it
+    has not seen before. A player who disables a mod in the F1 mod manager
+    keeps that choice in mods.toml. Links into another package version are
+    replaced; links for mods this package no longer ships are removed.
+    """
+    bundled = RESOURCES / "mods"
+    names = (
+        sorted(p.name for p in bundled.iterdir() if p.is_dir())
+        if bundled.is_dir()
+        else []
+    )
+    mods.mkdir(mode=0o700, exist_ok=True)
+    for entry in mods.iterdir():
+        if (
+            entry.is_symlink()
+            and str(entry.readlink()).startswith("/nix/store/")
+            and entry.name not in names
+        ):
+            entry.unlink()
+    for name in names:
+        destination = mods / name
+        target = bundled / name
+        if destination.is_symlink():
+            if destination.readlink() == target:
+                continue
+            destination.unlink()
+        elif destination.exists():
+            raise ValueError(
+                f"Refusing to replace an unmanaged mod with the bundled one: {destination}"
+            )
+        destination.symlink_to(target)
+    return names
 
 
 def validate_settings(directory: Path) -> None:
@@ -164,6 +204,8 @@ def launch(xex: Path, directory: Path) -> None:
                 )
             destination.symlink_to(target)
 
+        bundled_mods = link_bundled_mods(directory / "mods")
+
         os.chdir(directory)
         os.set_inheritable(lock, True)
         env = {
@@ -186,6 +228,9 @@ def launch(xex: Path, directory: Path) -> None:
                 f"--mods_data_root={directory / 'mods'}",
                 f"--update_data_root={directory / 'update'}",
                 "--auto_update_enabled=false",
+                # Read only while mods.toml does not exist yet; then the
+                # sidecar, and the player's choices in it, take over.
+                f"--enabled_mods={','.join(bundled_mods)}",
             ],
             env,
         )

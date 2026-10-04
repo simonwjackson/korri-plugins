@@ -153,6 +153,8 @@ environment = {
     "REX_CACHE_ROOT": str(outside),
     "REX_LOG_FILE": str(marker),
     "REX_AUTO_UPDATE_ENABLED": "true",
+    # The bundled Scene Expansion mod must not enter research mode.
+    "SCENE_PROBE_DIR": str(work / "probe"),
 }
 
 
@@ -219,11 +221,13 @@ def session(name, competing=False):
                 "REX_CACHE_ROOT",
                 "REX_LOG_FILE",
                 "REX_AUTO_UPDATE_ENABLED",
+                "SCENE_PROBE_DIR",
             ):
                 assert not any(
                     item.startswith(key.encode() + b"=") for item in native_environment
                 )
             assert not (work / "wrong-user").exists()
+            assert not (work / "probe").exists()
             if competing:
                 conflict = subprocess.run(
                     command, env=environment, capture_output=True, text=True, timeout=20
@@ -254,6 +258,15 @@ def session(name, competing=False):
 
 
 session("cold", competing=True)
+# The bundled Scene Expansion mod is linked from the package and loads in
+# normal mode: expansion installed, no research controls.
+mod_link = state / "mods/scene_expansion"
+assert mod_link.is_symlink(), mod_link
+assert str(mod_link.readlink()).startswith("/nix/store/"), mod_link.readlink()
+native_logs = "\n".join(p.read_text() for p in sorted((state / "logs").glob("*.log*")))
+assert "Mod code plugin 'scene_expansion' loaded" in native_logs
+assert "[scene_expansion] expand install ok" in native_logs
+assert "[scene_expansion] scripted pad added" not in native_logs
 assert (state / "assets/default.xex").read_bytes() == xex.read_bytes()
 cache = hashes(state / "assets")
 # The base game can remove default.xexp from its private copy only.
@@ -290,7 +303,7 @@ assert hashes(xex.parent) == original
 assert marker.read_bytes() == b"disposable escape-detection marker"
 assert list(outside.iterdir()) == [marker]
 print(
-    "PASS: sandboxed native launch, private assets, concurrent-launch refusal, cached launch, config/data preservation, original files unchanged"
+    "PASS: sandboxed native launch, bundled Scene Expansion mod loaded, private assets, concurrent-launch refusal, cached launch, config/data preservation, original files unchanged"
 )
 print(
     "LIMIT: screenshots require inspection; no claim of controller/audio, save/load, or full-game acceptance."

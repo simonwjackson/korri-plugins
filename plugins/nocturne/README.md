@@ -78,6 +78,26 @@ cache/log locations are unsupported. Startup disables upstream self-update check
 or a native mod with the same account permissions. Core's existing publisher,
 signature, and permission checks remain required.
 
+## Bundled mods
+
+The package ships the Scene Expansion mod from
+[simonwjackson/nocturne-encore](https://github.com/simonwjackson/nocturne-encore),
+a fork of birabittoh/NocturneRecomp-Mods. The `nocturne-encore` flake input
+pins one commit. `scene-expansion.nix` builds the mod against the ReXGlue SDK
+nightly that v1.4.5 pins, so it links the same `librexruntime.so` ABI.
+
+On every launch the launcher links each bundled mod folder into
+`accountRoot/nocturnerecomp/mods/`. It replaces links into older package
+versions and removes links for mods the package no longer ships. It refuses
+to replace a real folder with the same name. The SDK enables a mod folder it
+has not seen before. A player who disables the mod in the F1 mod manager keeps
+that choice in `mods.toml`.
+
+The launcher strips `SCENE_PROBE_DIR`, so the mod never starts in research mode.
+
+To update the mod, change the `nocturne-encore` commit in `flake.nix`, then
+run `nix flake lock` and the checks below.
+
 ## Build and verification
 
 Run on build machines, never target devices:

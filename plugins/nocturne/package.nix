@@ -1,4 +1,7 @@
-{ pkgs }:
+{
+  pkgs,
+  mods ? [ ],
+}:
 let
   inherit (pkgs) lib;
   release =
@@ -63,6 +66,9 @@ pkgs.stdenv.mkDerivation (finalAttrs: {
     install -m755 nocturnerecomp "$out/libexec/nocturnerecomp/nocturnerecomp"
     install -m644 *.so "$out/libexec/nocturnerecomp/"
     cp -r shaders "$out/libexec/nocturnerecomp/"
+    # Bundled mods. The launcher links each one into the account's mods folder.
+    mkdir -p "$out/libexec/nocturnerecomp/mods"
+    ${lib.concatMapStringsSep "\n" (mod: ''cp -r ${mod}/. "$out/libexec/nocturnerecomp/mods/"'') mods}
     install -m644 README.md "$out/share/doc/nocturnerecomp/UPSTREAM-README.md"
     install -m644 ${./UPSTREAM-LICENSE} "$out/share/doc/nocturnerecomp/HOST-SOURCE-LICENSE"
     substitute ${./launcher.py} "$out/bin/nocturne" \

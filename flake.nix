@@ -7,6 +7,11 @@
     flake-utils.url = "github:numtide/flake-utils";
     skate3.url = "github:simonwjackson/skate-3-flake/4e58e784407326d4da9dab5ab2b44fd32eb03c22";
     signs-of-rain.url = "github:simonwjackson/signs-of-rain/a5a320681fa0688a618b0894d04de1a00b1ad537";
+    # Mod source for the Nocturne plugin (fork of birabittoh/NocturneRecomp-Mods).
+    nocturne-encore = {
+      url = "github:simonwjackson/nocturne-encore/c0e341e908b8b3568c633c673edf94a7dc1d3428";
+      flake = false;
+    };
   };
 
   outputs =
@@ -16,6 +21,7 @@
       flake-utils,
       skate3,
       signs-of-rain,
+      nocturne-encore,
       ...
     }:
     import ./nix {
@@ -25,6 +31,7 @@
         flake-utils
         skate3
         signs-of-rain
+        nocturne-encore
         ;
     };
 }

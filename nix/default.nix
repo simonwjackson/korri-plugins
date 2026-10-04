@@ -4,6 +4,7 @@
   flake-utils,
   skate3,
   signs-of-rain,
+  nocturne-encore,
 }:
 flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   system:
@@ -166,7 +167,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       source = ../plugins/melee-pc;
       plugin = _: import ../plugins/melee-pc/plugin.nix { inherit meleePackage; };
     };
-    nocturnePackage = import ../plugins/nocturne/package.nix { inherit pkgs; };
+    nocturneSceneExpansion = import ../plugins/nocturne/scene-expansion.nix {
+      inherit pkgs;
+      src = nocturne-encore;
+    };
+    nocturnePackage = import ../plugins/nocturne/package.nix {
+      inherit pkgs;
+      mods = [ nocturneSceneExpansion ];
+    };
     nocturnePlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
       source = ../plugins/nocturne;
@@ -485,6 +493,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-melee-pc = meleePlugin;
       verify-melee = verifyMelee;
       nocturne = nocturnePackage;
+      nocturne-scene-expansion = nocturneSceneExpansion;
       korri-plugin-nocturne = nocturnePlugin;
       verify-nocturne = verifyNocturne;
       verify-opengoal = verifyOpengoal;
