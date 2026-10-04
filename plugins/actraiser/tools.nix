@@ -5,7 +5,7 @@ in
 {
   snesbuild = pkgs.buildGoModule {
     pname = "actraiser-snesbuild";
-    version = "0-unstable-cdd7608";
+    version = "0-unstable-546ba47";
     inherit src;
     modRoot = "snesrecomp-go";
     subPackages = [ "cmd/snesbuild" ];
@@ -14,7 +14,7 @@ in
   };
   builder = pkgs.buildGoModule {
     pname = "actraiser-builder";
-    version = "0-unstable-cdd7608";
+    version = "0-unstable-546ba47";
     inherit src;
     modRoot = "installer";
     subPackages = [ "cmd/actraiser-builder" ];

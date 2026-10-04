@@ -18,9 +18,8 @@ let
 in
 pkgs.stdenv.mkDerivation {
   pname = "actraiser";
-  version = "0-unstable-cdd7608";
+  version = "0-unstable-546ba47";
   inherit src;
-  patches = [ ./auto-viewport.patch ];
   nativeBuildInputs = [
     pkgs.cmake
     pkgs.ninja
@@ -46,8 +45,9 @@ pkgs.stdenv.mkDerivation {
     # invokes Go with a network-dependent module cache inside the C build.
     "-DACTRAISER_GO_EXECUTABLE=ACTRAISER_GO_EXECUTABLE-NOTFOUND"
   ];
-  # Build and run only this patch's native regression targets, not the whole
-  # upstream suite. Their binaries stay in the private build directory.
+  # Build and run only the upstream Auto canvas, presentation and capture
+  # regression targets, not the whole upstream suite. Their binaries stay in
+  # the private build directory.
   ninjaFlags = [
     "ActRaiserRecomp"
     "actraiser_ui_catalog_test"
@@ -62,8 +62,10 @@ pkgs.stdenv.mkDerivation {
     "actraiser_settings_overlay_test"
     "actraiser_auto_canvas_test"
     "actraiser_action_sprites_test"
-    "actraiser_host_viewport_trace_test"
     "actraiser_dev_tools_capture_trace_test"
+    "actraiser_scene_inspector_test"
+    "actraiser_present_world_nav_test"
+    "actraiser_present_sim3d_project_test"
     "actraiser_present_frame_order_test"
     "actraiser_ppu_render_pipeline_test"
   ];
@@ -71,7 +73,7 @@ pkgs.stdenv.mkDerivation {
   checkPhase = ''
     runHook preCheck
     SDL_VIDEODRIVER=dummy SDL_AUDIODRIVER=dummy ctest --output-on-failure \
-      -R '^actraiser_(ui_catalog|hud_layout|action_bg|action_effect_render|present_hud|present_action_effects|diorama_camera|diorama_projection|settings|settings_overlay|auto_canvas|action_sprites_(activation|priority|empty)|host_viewport_trace|dev_tools_capture_trace|present_frame_order|ppu_render_pipeline|runner_private_boundary|render_backend_boundary|render_backend_boundary_negative)$'
+      -R '^actraiser_(ui_catalog|hud_layout|action_bg|action_effect_render|present_hud|present_action_effects|diorama_camera|diorama_projection|settings|settings_overlay|auto_canvas|action_sprites_(activation|priority|empty)|dev_tools_capture_trace|scene_inspector|present_world_nav|present_sim3d_project|present_frame_order|ppu_render_pipeline|runner_private_boundary|render_backend_boundary|render_backend_boundary_negative)$'
     runHook postCheck
   '';
   installPhase = ''

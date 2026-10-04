@@ -1,5 +1,11 @@
 # ActRaiser Auto viewport scope
 
+> **Superseded on 2026-10-03.** Upstream adapted this patch in
+> `d15004e1` and extended Auto in `f296d44b`. The plugin now builds
+> upstream `546ba473` without a patch. This record keeps the original
+> design and its verification against `cdd76085`; the patch and its
+> capture diagnostics are no longer in this repository.
+
 The owner chose Auto viewport expansion for both flat and Diorama action
 stages on 2026-10-02. Auto uses the drawable window dimensions, not a device
 name or another fixed aspect-ratio list. It must reveal more of the scene,

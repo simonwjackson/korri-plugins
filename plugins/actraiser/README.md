@@ -80,19 +80,22 @@ it does not silently accept a CPU framebuffer instead.
 
 ## Screen ratio Auto
 
-`auto-viewport.patch` adds `Auto` to the game's native Screen ratio setting
-(`extended_aspect`). It contains only hand-written upstream source and tests,
-against the pinned revision. Auto sizes the view from the actual drawable:
-a wider window shows more columns, a taller window shows more rows. It applies
-to flat and Diorama action stages. The 256x224 view, the selected pixel aspect,
-the gameplay camera, and per-layer room bounds do not change. Towns, Mode 7
-and other non-action screens keep their native frame. The limits stay at
-120 columns and 64 rows per side; past them, or past a room edge, the frame
-keeps borders instead of stretching. Auto is not a default. Existing manual
-ratios and the manual Diorama vertical extension keep their behaviour.
+Upstream ships `Auto` in the game's native Screen ratio setting
+(`extended_aspect`). The plugin applies no source patch. Upstream adapted
+Auto from this repository's earlier patch in
+[`d15004e1`](https://github.com/DerrickGold/ar-recomp/commit/d15004e15adf69bf00725143dd428d423995f7db)
+and extended it to towns and world navigation in
+[`f296d44b`](https://github.com/DerrickGold/ar-recomp/commit/f296d44b6c1546ba15f5bec73c23dff1782b45b5).
+Auto sizes the view from the actual drawable: a wider window shows more
+columns, a taller window shows more rows, up to 120 columns or 64 rows per
+side. Action stages expand in flat and Diorama modes. Enhanced 3D towns and
+world navigation can also expand; classic flat towns, Mode 7 and the Sky
+Palace expand only horizontally. Title screens and cutscenes keep their
+native frame. Auto is not a default.
 
-The engine build runs the patch's 21 targeted native tests. The private GPU
-acceptance needs an X11 display you own, `xdotool`, and a Vulkan driver:
+The engine build runs upstream's targeted Auto, presentation and capture
+tests. The private GPU acceptance needs an X11 display you own, `xdotool`,
+and a Vulkan driver:
 
 ```sh
 NIXPKGS_ALLOW_UNFREE=1 nix run --impure \
@@ -102,11 +105,12 @@ NIXPKGS_ALLOW_UNFREE=1 nix run --impure \
 ```
 
 It persists Auto through the native settings path, replays upstream's Aitos
-fixture in four isolated accounts (flat/Diorama, square/CRT pixels), resizes
-the game's own window through square, Mini V2 (1240x1080), wide, tall and
-capped shapes, and checks native capture diagnostics against the real
-final composite. The relocated HUD and the projected native Diorama planes
-are excluded before extra rows or columns count as scene content. The
+fixture in four isolated accounts (flat/Diorama, square/CRT pixels), and
+resizes the game's own window through square, Mini V2 (1240x1080), wide, tall
+and capped shapes. It checks upstream's `[video-geometry]` canvas against
+worked examples, and checks that screenshot pixels fill the area a 4:3 frame
+leaves black. For flat mode that area is the expansion itself. For Diorama
+it does not prove where native content ends; see the script's docstring. The
 artifacts directory holds owned game captures; keep it private.
 
 ## Runtime data
@@ -134,7 +138,7 @@ Korri configuration override and rejects either instead of ignoring it.
 
 ## Source and integration grounding
 
-- [Upstream at the pinned commit](https://github.com/DerrickGold/ar-recomp/tree/cdd76085a00e8beb090a7f0a07fcbc09a0e20670) defines ROM validation, regeneration, runtime files, and licensing.
+- [Upstream at the pinned commit](https://github.com/DerrickGold/ar-recomp/tree/546ba473f42efe128c8034bf0290273a64b445c1) defines ROM validation, regeneration, runtime files, and licensing.
 - `CMakeLists.txt` and `snesbuild.ini` remain the build/source lists. Korri does not copy their source enumeration.
 - `installer/packaging/CMakeLists.txt` defines stock defaults and fonts. `installer/internal/appdata/path.go` defines the Linux data namespace. `src/app/application.c` implements `AR_USER_DATA_DIR`.
 - `snesrecomp-go/internal/toolchain/sdl_pins.go` pins SDL 3.4.12. `sdl.nix` applies that version only here because the repository lock has SDL 3.2.26. Its updated Zenity source path and XTest dependency account for SDL's packaging changes. ARM tests retain their workload with a larger timeout after `testrwlock` exceeded its 20-second limit on the shared builder.
