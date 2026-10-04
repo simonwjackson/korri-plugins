@@ -1,6 +1,6 @@
 # Signs of Rain on Odin, 2026-10-04
 
-## Verified installation; not yet launched
+## Verified installation and library registration; not yet launched
 
 The owner requested Odin after RG353M at `192.168.1.239` was unreachable.
 USB reported `Odin 2 Portal NixOS`; the actual device tree confirmed
@@ -68,6 +68,8 @@ builder, not the handheld. The native source still pins game `a5a3206`.
 | Game package | `/nix/store/97nckav385lcmp3myk4lcjmnmf2kyc8s-signs-of-rain` |
 | Delivered PCK SHA-256 | `02d21b4f97879f4106d7446a707d36434315d18089d05366bbda07d5a3111479` |
 | Current desired state | `Enabled` |
+| Game ID | `01M42PSR05XPRACH49J8309YVX` |
+| Release system label | `linux` |
 
 Normal `korri-plugin inspect`, exact-digest `install` and `enable` succeeded.
 The inspected package declared no native units, services, ports or plugin
@@ -92,18 +94,35 @@ unchanged committed package. This operator did not repair Fable or run
 `restore-all`. A retry of only Signs of Rain enablement passed. All 25 prior
 selection-file SHA-256 values remained unchanged throughout delivery.
 
+## Verified library registration
+
+The owner explicitly selected `register_linux` to reuse Mini's existing
+`linux` label for Odin's first native Linux-tagged release. The operation added
+one exact-PCK game/release and one storage/file-location entry. It added no
+system definition, discovery rule, Core schema or API.
+
+The three prior games and releases remained semantically unchanged, including
+the two `xbox-360` releases and one `snes` release. All other device sections
+and existing plugin selection bytes remained unchanged. Original catalog and
+device file bytes were backed up at
+`/var/tmp/signs-odin-fullscreen/before-signs-library/`. Owner, mode and existing
+ACL/xattrs were preserved during complete-file replacement. No service restarted.
+
+The actual Core `app.local-games.routes` response selected exactly
+`@simonwjackson:signs-of-rain/signs-of-rain`, with the `linux` label and package
+`qp5pgxkl0bzbq91nfzq748mcq0100i21-korri-plugin`. It returned no warnings. The
+actual `app.catalog.snapshot` response included the Signs of Rain entry.
+Read-only session checks found no active launch. Registration did not launch a
+game or touch saves. Actual portal pixels have not yet been checked.
+
+Cost: the native reader has no multi-file transaction. The operator checked for
+concurrent edits, retained exact backups and verified both real consumers after
+publication. A consumer rejection would restore the original bytes rather than
+restart the daemon.
+
 ## Remaining gates
 
-Read-only Core session status reported `NoActiveSession`. Odin has three
-authored releases: two tagged `xbox-360` and one `snes`. It has no authored
-Linux release or authored system definition. The existing `linux` label is
-established on Mini, not yet in Odin's authored releases. No catalog, device
-storage, game location or save file was changed here.
-
-Library registration and actual launch remain pending. Do not reuse a console
-label for the native PCK or invent a Core system definition to make it match.
-Use the normal exact release and literal file location after the owner resolves
-the native classification. Preserve the three existing game/release records.
+Actual launch remains pending.
 
 Obtain current Odin readiness before launch, display, sound, physical-control
 or timed testing. Mini readiness does not authorize Odin tests. No Odin GPU

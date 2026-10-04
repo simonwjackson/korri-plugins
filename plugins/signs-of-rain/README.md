@@ -130,8 +130,11 @@ unverified. See [the Mini deployment record](../../docs/deployments/2026-10-04-s
 
 The owner approved the existing personal publisher on Odin. The fullscreen
 package passed normal signed inspection, installation, enablement and recursive
-signature verification there. Its library classification and first launch still
-need the owner gates. No Odin rendering or hardware acceptance is claimed.
+signature verification there. After explicit owner approval, its first native
+Linux-tagged release was registered with the existing library schema. Actual
+Core routes and catalog responses verified the exact package route and entry.
+The first launch still needs current Odin readiness. No Odin rendering or
+hardware acceptance is claimed.
 See [the Odin deployment record](../../docs/deployments/2026-10-04-signs-of-rain-odin.md).
 
 Two off-device exports produced different PCK bytes under the same Nix output
