@@ -4,8 +4,9 @@ Verified on 2026-10-03: the signed PAL correction is installed and running on th
 Retroid Pocket Mini V2. Live frame-counter readings measured 49.98 to 50.33
 frames/second with turbo off. The audio bridge runs near 44.1 kHz with no observed
 underrun, overflow or concealment growth. A capture shows the game board in the
-focused fullscreen window. Audible quality and the owner's sense of speed still
-need acceptance. The initial NTSC-timed installation is retained below as history.
+focused fullscreen window. The owner accepted playback after the update:
+"Feels good." This is owner feedback, not an instrumented sound-quality test.
+The initial NTSC-timed installation is retained below as history.
 
 ## Initial installation and preservation
 
@@ -113,7 +114,24 @@ sent no input, paused no process and wrote no game state. The source header and
 exact ELF symbol size ground the audio-counter layout. A running stream and
 matched digital clocks do not prove audible quality. Device save/load and
 restored gameplay remain untested. Existing account files have a private backup.
-The owner still needs to confirm the changed speed and sound.
+The owner subsequently accepted playback: "Feels good." Device save/load,
+physical button mapping and complete gameplay remain unverified.
+
+## Maintained source forks
+
+After accepting playback, the owner approved source forks under `simonwjackson`.
+The plugin now pins game commit `f814fda8da7fcbeb863e48bdc632cb3527761474` and
+framework commit `e3d9f1944661e9afe2a8ccf42e39b9af82410968`. Both use the
+`korri-dr-mario-eu` maintenance branch. The framework owns the existing storage,
+literal-path and PAL fixes; the plugin removes the three duplicate patches.
+CMake defaults to Europe and rejects other regions. The UI pin, generated game
+files and all runtime source files remain unchanged from the tested patched
+sources. Verification compared the source archives fetched from GitHub, not just local
+worktrees. GitHub Actions are disabled; no native binary was published.
+
+This source-ownership change did not update or interrupt the device. The installed
+package remains the signed PAL package recorded above, with the same runtime
+source. Its measurements do not represent a new build from the fork pins.
 
 ## Evidence
 
