@@ -90,6 +90,47 @@ Five duplicate-cvar registration errors in the current log also appear in the
 Odin's earlier logs without Scene Expansion. No recovery record was deleted or
 rewritten by the agent.
 
+## Correction: the owner was playing during the stop
+
+The stop above was not an idle test shutdown. The owner picked up the Odin
+and played this launch into the opening stage. The native log started the
+`STAGE01` music at 03:14:39. Korri's input daemon logged volume buttons at
+03:14:10 and 03:14:12.
+
+The agent's stop request at 03:14:15 ended the session while the owner was
+playing. The game ignored SIGTERM and kept rendering and playing audio. The
+owner reported that controls stopped working at the boss. That is consistent
+with the session being in the `stopping` phase; the exact input cut-off point
+was not measured. The owner's kill combination at 03:15:18, 03:15:24 and
+03:15:25 returned `already-stopping`. Systemd killed the process at 03:15:45.
+The owner saw this as a crash.
+
+The agent caused both symptoms. It did not tell the owner that the test game
+was running, and it stopped the game without checking whether anyone was
+playing. Before stopping a launch on a handheld, ask the owner.
+
+The one-byte profile change happened during this play session. It can come
+from normal play rather than from shutdown.
+
+The 90-second SIGTERM hang is older than Scene Expansion. Launch
+`3e585de98d0f8663b9faf0dc0db5897c` used the previous package without the mod.
+It also timed out in `stop-sigterm` at 2026-10-03 18:03:20.
+
+## CPU load
+
+Systemd CPU accounting shows the same load with and without the mod:
+
+| Launch | Package | Wall time | CPU time | Average cores busy |
+|---|---|---:|---:|---:|
+| `c9c2080…` | Without mod | 81 s | 166.7 s | 2.06 |
+| `3e585de…` | Without mod | 4,599 s | 10,296.3 s | 2.24 |
+| `4ea7860…` | With Scene Expansion | 223 s | 501.7 s | 2.25 |
+
+The Odin has eight CPU cores. These figures exclude GPU load, which was not
+measured. The fan read 0 RPM at 03:25, after the game stopped, so its speed
+during play was not recorded. The cause of the steady 2.2-core load is not
+identified.
+
 ## Limits and rollback
 
 Expanded rooms, HUD docking during gameplay, tearing, physical controls, audible
