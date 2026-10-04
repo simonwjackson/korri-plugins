@@ -2,8 +2,9 @@
 
 This plugin adds a native route for the owner's supported Europe NES ROM on
 x86_64 and aarch64 Linux. Both native builds and owned-ROM checks passed.
-It uses [mstan/DrMarioNesRecomp](https://github.com/mstan/DrMarioNesRecomp), not
-Dr. Mario 64 or the Turbo ROM hack.
+It uses the maintained
+[simonwjackson/DrMarioNesRecomp](https://github.com/simonwjackson/DrMarioNesRecomp)
+Europe-only fork, not Dr. Mario 64 or the Turbo ROM hack.
 
 Upstream calls this a playable preview. It reports one-player virus clearing,
 but leaves two-player mode and endings untested. Package checks are not proof
@@ -41,25 +42,25 @@ The launcher locks that directory across execution to prevent concurrent writes.
 Back up this directory separately from the ROM. Core currently supplies its
 existing account root; this plugin adds no account selector.
 
-`account-storage.patch` redirects native writable paths to that working
+The maintained framework redirects native writable paths to that working
 directory. It preserves `config.ini`, `keybinds.ini`, `savestates/slotNN.sav`, and
 native save formats. It removes executable-directory state lookup, not a second
 fallback. Existing files are not rewritten by the wrapper. Launcher artwork
 remains in the immutable package. No new Korri configuration language is added.
-`literal-rom-path.patch` preserves positional ROM paths longer than upstream's
+The maintained launcher preserves positional ROM paths longer than upstream's
 512-byte picker buffer. The verifier exercises such a path.
 
-`pal-timing.patch` corrects a speed bug in the pinned Europe runner. Region
+The maintained PAL runner corrects a speed bug in the pinned Europe build. Region
 selection previously chose Europe game code but retained NTSC hardware clocks.
 The owner reported fast gameplay. Local measurements confirmed 60 frames/second
 and 29780.5 CPU cycles/frame instead of PAL's 50.007 frames/second and 33247.5
 CPU cycles/frame. Earlier smoke and save tests did not check playback speed.
 
-The patch derives game, CPU and sample timing from one PAL master clock. It
+The runner derives game, CPU and sample timing from one PAL master clock. It
 uses 312 scanlines, the 16:5 PPU-to-CPU ratio, PAL APU tables and sequencer
 periods, and fractional CPU/sample budgets. An accumulated host deadline avoids
 integer sleep drift and includes time already spent waiting for vsync. It keeps
-upstream vsync, turbo, source pins, generated game code and save format unchanged.
+upstream vsync, turbo, generated game code and save format unchanged.
 This is a Europe-only correction, not a generic region selector.
 
 The hardware values come from NESdev's [cycle chart](https://www.nesdev.org/wiki/Cycle_reference_chart),
@@ -83,19 +84,29 @@ The pinned source differs from the upstream README's old hotkey table:
 
 The native `config.ini` owns controller routing. The upstream default assigns
 player one to keyboard, not a gamepad. This plugin does not silently replace
-that default. Physical controller and audio acceptance require device testing.
+that default. Physical controller mapping still needs device testing. The owner
+accepted playback after the Mini V2 PAL update.
 Korri launch overrides and emulator-core arguments are rejected rather than
 silently ignored.
 
 ## Sources and build policy
 
-| Component | Pinned source |
-|---|---|
-| DrMarioNesRecomp | `a23472870e0a86dc0c94d88ac1ee3be5a7ea80f9` |
-| nesrecomp | Upstream gitlink `7f6377b74f2c1e9d1171f707dc003f71c2dc236f`. |
-| recomp-ui | Upstream gitlink `44f549c0f159df343cba9d8c3842dbc7e592eb08`. |
+| Component | Pinned source | Upstream baseline |
+|---|---|---|
+| [DrMarioNesRecomp](https://github.com/simonwjackson/DrMarioNesRecomp) | `f814fda8da7fcbeb863e48bdc632cb3527761474` | `a23472870e0a86dc0c94d88ac1ee3be5a7ea80f9` |
+| [nesrecomp](https://github.com/simonwjackson/nesrecomp) | `e3d9f1944661e9afe2a8ccf42e39b9af82410968` | `7f6377b74f2c1e9d1171f707dc003f71c2dc236f` |
+| recomp-ui | `mstan/recomp-ui` at `44f549c0f159df343cba9d8c3842dbc7e592eb08` | Unchanged. |
 
-`engine.nix` compiles upstream's committed generated Europe C sources. No ROM,
+The owner approved creating both source forks and moving the tested fixes on
+2026-10-03. Both default to `korri-dr-mario-eu`. The framework owns the former
+account-storage, literal-ROM-path and PAL patches; packaging no longer applies
+or duplicates them. CMake defaults to Europe and rejects other regions. The
+fetched runtime files exactly match the tested patched sources, and all
+committed generated game files remain unchanged. The UI stays upstream. This
+requires maintaining two repositories, not a general PAL/NTSC framework.
+GitHub Actions are disabled on both forks to prevent binary publication.
+
+`engine.nix` compiles the committed generated Europe C sources. No ROM,
 recompiler, compiler, or on-device build step is shipped. NES PPU/APU/mapper
 simulation remains part of the native runtime; this is not a claim of zero
 emulation. The developer TCP server and optional netplay are disabled at build
@@ -114,6 +125,21 @@ Integration follows the existing SMW launch treaty and personal publisher
 namespace. The `nes` identity and title come from the publisher's
 `plugins/libretro/cores.nix`, including FCEUmm and Nestopia. No core schema changes
 or imported legacy runtime are needed.
+
+## Fork-pin verification
+
+The fresh x86_64 package and owned-ROM run passed on 2026-10-03. It measured
+33247.497 CPU cycles/frame and 881.877 samples/frame, with zero downstream
+underrun, overflow or concealment growth after warm-up. All six 600-frame
+framebuffer hashes match the earlier builds; there were zero dispatch misses.
+CMake's unsupported-region refusal also passed. Formatting and Git whitespace
+checks passed. The source archives fetched from GitHub matched the tested
+runtime source, not just the local worktrees. The ARM package was not rebuilt,
+and the device was not updated. This changes source ownership only. The ARM
+results below belong to the earlier package, not a rebuilt fork-pin artifact.
+
+Private evidence: `/tmp/dr-mario-fork-x86_64-outputs.txt`,
+`/tmp/dr-mario-fork-x86_64-runtime.log` and `/tmp/dr-mario-fork-receipt.json`.
 
 ## Build and verify
 
@@ -155,10 +181,10 @@ or ending.
 
 | Check | x86_64 Linux | aarch64 Linux |
 |---|---|---|
-| Native engine build | Passed on `zao`. | Passed natively on `fuji`. |
-| Strict contract, packaged manifest, host admission and invalid-ROM rejection | Passed on `zao`. | Passed on `fuji`. |
-| Owned-ROM runtime check | Passed with PAL CPU/frame/audio timing, long paths and inherited-diagnostic suppression. | Passed the same PAL verifier on `fuji`, including native save-file loading and account isolation. |
-| Physical device installation and gameplay | Not run. | Signed PAL update running on Mini V2. Live cadence measured 49.98 to 50.33 frames/second. Digital audio clocks and speaker routing passed. Owner speed and sound acceptance pending. |
+| Native engine build | Rebuilt from the fork pins on `zao`. | Passed on `fuji` before the fork repin. No new fork-pin ARM build. |
+| Strict contract, packaged manifest, host admission and invalid-ROM rejection | Passed again from the fork pins on `zao`. | Passed on `fuji` before the fork repin. |
+| Owned-ROM runtime check | Fork-pin build passed PAL CPU/frame/audio timing, long paths and inherited-diagnostic suppression. | Same runtime source passed the PAL verifier on `fuji` before the repin, including native save-file loading and account isolation. |
+| Physical device installation and gameplay | Not run. | Signed PAL update running on Mini V2. Live cadence measured 49.98 to 50.33 frames/second. Digital audio clocks and speaker routing passed. Owner accepted playback: "Feels good." |
 
 The 2026-10-03 local verification also passed Nix formatting, Ruff formatting and
 lint, strict TypeScript checking, and Git whitespace checks. The long-path test
@@ -181,10 +207,11 @@ PAL runtime logs are `/tmp/dr-mario-pal-x86_64-linux-runtime.log` and
 copy, temporary GC root, and test directory were removed after each test. The
 engine builds need no ROM. Neither architecture's native output was published
 publicly. [Device evidence](../../docs/deployments/2026-10-03-dr-mario-miniv2.md)
-records the earlier signed installation and the remaining physical acceptance
-checks. The owner approved the PAL package update and launch. The Mini V2 now
-runs the corrected native engine. Live readings confirm approximately 50
+records the signed installations, device measurements and owner acceptance.
+The owner approved the PAL package update and launch. The Mini V2 now runs the
+corrected native engine. Live readings confirm approximately 50
 frames/second with turbo off and audio near 44.1 kHz without observed bridge
 counter growth. All 35 other plugin selections, 2334 catalog games/releases and
-the existing account files remain unchanged. Device save/load, audible quality
-and the owner's sense of speed still need acceptance.
+the existing account files remain unchanged. The owner accepted playback:
+"Feels good." Device save/load, physical button mapping and complete gameplay
+remain unverified.

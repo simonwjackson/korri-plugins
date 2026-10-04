@@ -1,10 +1,10 @@
 { pkgs }:
 let
   framework = pkgs.fetchFromGitHub {
-    owner = "mstan";
+    owner = "simonwjackson";
     repo = "nesrecomp";
-    rev = "7f6377b74f2c1e9d1171f707dc003f71c2dc236f";
-    hash = "sha256-IO9C+HpUVJ+gEzjwwN5eHIQF0ox8f2BEB2ETP30WZ3k=";
+    rev = "e3d9f1944661e9afe2a8ccf42e39b9af82410968";
+    hash = "sha256-Xp2oPmzjG0z3EKL9wD9mTp8SuhQ7nBuW5JV2YhLseWY=";
   };
   launcherUi = pkgs.fetchFromGitHub {
     owner = "mstan";
@@ -15,27 +15,21 @@ let
 in
 pkgs.stdenv.mkDerivation {
   pname = "drmario-nes-recomp";
-  version = "0-unstable-a234728";
+  version = "0-unstable-f814fda";
   src = pkgs.fetchFromGitHub {
-    owner = "mstan";
+    owner = "simonwjackson";
     repo = "DrMarioNesRecomp";
-    rev = "a23472870e0a86dc0c94d88ac1ee3be5a7ea80f9";
-    hash = "sha256-0G4PKkWeSr1ceTyXrEGUOTgzJz5+RfGc3HDaSkv5aRk=";
+    rev = "f814fda8da7fcbeb863e48bdc632cb3527761474";
+    hash = "sha256-VLH1umijNGn1X0tkL03sgEGIDiO3zWpXYaBb5jF32wU=";
   };
 
-  # These are the upstream gitlinks. Netplay is disabled and needs no nested
-  # recomp-net checkout. The committed generated C builds without a retail ROM.
+  # These are the maintained game's gitlinks; the UI remains upstream.
+  # Netplay needs no nested recomp-net checkout. Generated C needs no ROM.
   postUnpack = ''
     cp -R ${framework}/. "$sourceRoot/nesrecomp/"
     cp -R ${launcherUi}/. "$sourceRoot/recomp-ui/"
     chmod -R u+w "$sourceRoot"
   '';
-  patches = [
-    ./account-storage.patch
-    ./literal-rom-path.patch
-    # Europe-only runner: derive video, CPU and audio from PAL hardware clocks.
-    ./pal-timing.patch
-  ];
   nativeBuildInputs = [ pkgs.cmake ];
   buildInputs = [
     pkgs.SDL2
@@ -64,7 +58,7 @@ pkgs.stdenv.mkDerivation {
 
   meta = {
     description = "Dr. Mario NES static recompilation for the owned Europe ROM";
-    homepage = "https://github.com/mstan/DrMarioNesRecomp";
+    homepage = "https://github.com/simonwjackson/DrMarioNesRecomp";
     # Upstream PolyForm Noncommercial 1.0.0, with translated retail game code.
     # This is not permission to publish native binaries or retail data.
     license = pkgs.lib.licenses.unfree;
