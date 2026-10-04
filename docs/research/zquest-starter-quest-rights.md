@@ -176,8 +176,10 @@ The English files were only inventoried. Island Adventure English SHA-256 is `91
 
 An independent evidence review found no blockers to the zero-candidate decision. It verified 11 ZIPs, 14 archive members, page receipts, counts, hashes, and the bounded runtime observations. The report records its runtime notes. It did not access devices or establish rights for any candidate.
 
-## Decision and next permission request
+## Decision and no-contact follow-up
 
 Keep the public starter pack unchanged. Cost: this pass supplies none of the requested three to five games. It does not prove that permissions are unavailable.
 
-Author contact needs approval. The narrow useful request is permission for an exact quest release plus a complete contributor/media inventory. Any cleaned replacement also needs modification permission and a new binary audit, including unused resources. New original content from licensed assets is another route, but it requires game development and does not satisfy this ready-made quest search.
+Author contact is excluded from follow-up work by the user's subsequent decision. Use existing published grants only. Any cleaned replacement needs a usable modification and redistribution basis plus a new binary audit, including unused resources. New original content from licensed assets is another route, but it requires game development and does not satisfy this ready-made quest search.
+
+The [no-contact editing proof](zquest-no-contact-cleanup-proof.md) records stronger public Block Smasher permission evidence and a verified single-MIDI-slot edit. It does not clear a whole quest.
