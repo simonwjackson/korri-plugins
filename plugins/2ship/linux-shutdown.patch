@@ -1,29 +1,18 @@
 From: Korri plugin packaging
 Subject: [PATCH] Stop the Linux main loop before destroying audio synchronization
 
-libultraship's SIGINT/SIGTERM ShutdownHandler calls exit(1). With the
-2 Ship audio worker still waiting, the main thread blocks in
-pthread_cond_destroy during static destruction. Install flag-only handlers
-before audio initialization and request a normal main-loop exit instead.
-main.c then reaches DeinitOTR and OTRAudio_Exit joins the worker. No logging,
-allocation, SDL calls or teardown run in the signal handler.
+libultraship's SIGINT/SIGTERM ShutdownHandler still calls exit(1) in 5.0.1.
+With the 2 Ship audio worker waiting, static destruction can deadlock in
+pthread_cond_destroy. Install flag-only handlers before audio initialization
+and request a normal main-loop exit. DeinitOTR then joins the audio worker.
+No logging, allocation, SDL calls or teardown run in the signal handler.
 
-Also return an explicit successful status from the native entry point.
-Upstream maps void SDL_main to void main on Linux; normal cleanup produced
-exit status 32 on aarch64 despite completing successfully.
+5.0.1 already has an int native entry point, but add an explicit zero return
+so successful cleanup has a defined exit status on both architectures.
 
 --- a/mm/src/code/main.c
 +++ b/mm/src/code/main.c
-@@ -52,7 +52,7 @@
- #define SDL_main main
- #endif
- 
--void SDL_main(int argc, char** argv /* void* arg*/) {
-+int SDL_main(int argc, char** argv /* void* arg*/) {
-     intptr_t fb;
-     intptr_t sysHeap;
-     s32 exit;
-@@ -149,4 +149,5 @@
+@@ -151,4 +151,5 @@
      FreeConsole();
  #endif
      Heaps_Free();
@@ -39,7 +28,7 @@ exit status 32 on aarch64 despite completing successfully.
  
  // Variables are put before most headers as a hacky way to bypass bss reordering
  FaultAddrConvClient sGraphFaultAddrConvClient;
-@@ -439,8 +440,24 @@
+@@ -426,8 +427,24 @@
      Graph_Destroy(&runFrameContext.gfxCtx);
  }
  
@@ -67,7 +56,7 @@ exit status 32 on aarch64 despite completing successfully.
  }
 --- a/mm/2s2h/BenPort.cpp
 +++ b/mm/2s2h/BenPort.cpp
-@@ -114,6 +114,7 @@
+@@ -120,6 +120,7 @@
  GameInteractor* GameInteractor::Instance;
  AudioCollection* AudioCollection::Instance;
  
@@ -75,12 +64,12 @@ exit status 32 on aarch64 despite completing successfully.
  extern "C" char** cameraStrings;
  bool prevAltAssets = false;
  std::vector<std::shared_ptr<std::string>> cameraStdStrings;
-@@ -187,6 +188,8 @@
-     context->InitControlDeck(controlDeck);
+@@ -636,6 +637,8 @@
+     context->GetResourceManager()->SetAltAssetsEnabled(prevAltAssets);
  
      context->InitCrashHandler();
 +    // Override immediate-exit shutdown handlers before any audio worker starts.
 +    Graph_InstallShutdownHandlers();
-     context->InitConsole();
  
-     auto benInputEditorWindow = std::make_shared<BenInputEditorWindow>("gWindows.BenInputEditor", "2S2H Input Editor");
+     context->GetWindow()->SetAutoCaptureMouse(CVarGetInteger("gSettings.EnableMouse", 0) &&
+                                               CVarGetInteger("gSettings.AutoCaptureMouse", 1));

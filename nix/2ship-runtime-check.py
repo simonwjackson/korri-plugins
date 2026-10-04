@@ -127,10 +127,12 @@ def run_game(command, env, root, first):
         try:
             window = wait_for(lambda: window_for(game), game, log)
             wait_for(
-                lambda: "Starting 2 Ship 2 Harkinian version" in log.read_text(),
+                lambda: "Starting 2 Ship 2 Harkinian version Battler Bravo (5.0.1)"
+                in log.read_text(),
                 game,
                 log,
             )
+            assert "Commit: 8a24047)" in log.read_text(), log.read_text()[-4000:]
             time.sleep(7)
             assert game.poll() is None, log.read_text()[-4000:]
             subprocess.run(["xdotool", "windowfocus", "--sync", window], check=True)
@@ -239,11 +241,13 @@ def main():
             version_records = {
                 name: data.read(name) for name in ["version", "portVersion"]
             }
+            assert version_records["portVersion"] == bytes.fromhex("01000500000001")
             entries = len(data.namelist())
         initial_archive = archive.stat()
         save_path = directory / "saves/file1.json"
         saved = save_path.read_bytes()
         assert json.loads(saved)["type"] == "2S2H_SAVE"
+        assert json.loads(saved)["version"] == 7
         assert (directory / "2ship2harkinian.json").is_file()
         assert rom.read_bytes() == original
         print(
@@ -269,6 +273,31 @@ def main():
         stop_at_first_window(command, env, root)
         assert save_path.read_bytes() == saved
         print("SIGTERM at the first visible window passed", flush=True)
+
+        # A full archive marked 3.0.1 must regenerate, not enter 5.0.1's
+        # interactive upgrade flow. Change only the real archive's native record.
+        with zipfile.ZipFile(archive) as old, zipfile.ZipFile(
+            root / "old-version.o2r", "w"
+        ) as stale:
+            for entry in old.infolist():
+                stale.writestr(
+                    entry,
+                    bytes.fromhex("01000300000001")
+                    if entry.filename == "portVersion"
+                    else old.read(entry),
+                )
+        os.replace(root / "old-version.o2r", archive)
+        config_before = (directory / "2ship2harkinian.json").read_bytes()
+        stop_at_first_window(command, env, root)
+        with zipfile.ZipFile(archive) as upgraded:
+            assert upgraded.read("portVersion") == version_records["portVersion"]
+            assert len(upgraded.namelist()) == entries and upgraded.testzip() is None
+        assert save_path.read_bytes() == saved
+        assert (directory / "2ship2harkinian.json").read_bytes() == config_before
+        print(
+            "Full archive marked 3.0.1 regenerated for 5.0.1; config/saves retained",
+            flush=True,
+        )
 
         # Regression: CRC-valid version records alone are not game assets.
         with zipfile.ZipFile(archive, "w") as incomplete:

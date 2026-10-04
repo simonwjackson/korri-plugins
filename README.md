@@ -219,7 +219,7 @@ actual build and runtime coverage. Target declarations alone do not prove ARM su
 ## 2 Ship 2 Harkinian
 
 [2 Ship 2 Harkinian](plugins/2ship/README.md) adds a native Majora's Mask runner
-for the measured NTSC-U 1.0 ROM. The plugin packages engine 3.0.1 without retail
+for the measured NTSC-U 1.0 ROM. The plugin packages stable engine 5.0.1 without retail
 data, extracts owned assets at launch, and preserves native configuration and saves.
 Its Linux shutdown fix is covered by the opt-in owned-ROM test.
 

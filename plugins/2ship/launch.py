@@ -22,7 +22,7 @@ def read_rom(content: Path) -> bytes:
         normalized = bytearray(rom)
         normalized[0::2], normalized[1::2] = rom[1::2], rom[0::2]
         rom = bytes(normalized)
-    # This is upstream 3.0.1's supportedHashes.json identity, not a filename test.
+    # This is upstream 5.0.1's supportedHashes.json identity, not a filename test.
     if hashlib.sha1(rom).hexdigest() != "d6133ace5afaa0882cf214cf88daba39e266c078":
         raise ValueError(
             "ROM does not match the supported Majora's Mask NTSC-U 1.0 release"
