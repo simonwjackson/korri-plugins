@@ -155,6 +155,23 @@
         "type": "github"
       }
     },
+    "nocturne-encore": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1791080631,
+        "narHash": "sha256-ScqUhOuL+aRcHI/XkN+ZOGgqCPbTaA49kWbnX6Zc7UI=",
+        "owner": "simonwjackson",
+        "repo": "nocturne-encore",
+        "rev": "c0e341e908b8b3568c633c673edf94a7dc1d3428",
+        "type": "github"
+      },
+      "original": {
+        "owner": "simonwjackson",
+        "repo": "nocturne-encore",
+        "rev": "c0e341e908b8b3568c633c673edf94a7dc1d3428",
+        "type": "github"
+      }
+    },
     "proseql": {
       "flake": false,
       "locked": {
@@ -177,6 +194,7 @@
         "flake-utils": "flake-utils",
         "korri": "korri",
         "nixpkgs": "nixpkgs_2",
+        "nocturne-encore": "nocturne-encore",
         "signs-of-rain": "signs-of-rain",
         "skate3": "skate3"
       }
