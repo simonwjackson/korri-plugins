@@ -128,6 +128,12 @@ route without restarting Korri services. Its actual game created a Freedreno
 FD650 GLES 3.2 context. Physical controls, audio and sustained 60 FPS remain
 unverified. See [the Mini deployment record](../../docs/deployments/2026-10-04-signs-of-rain-miniv2.md).
 
+The owner approved the existing personal publisher on Odin. The fullscreen
+package passed normal signed inspection, installation, enablement and recursive
+signature verification there. Its library classification and first launch still
+need the owner gates. No Odin rendering or hardware acceptance is claimed.
+See [the Odin deployment record](../../docs/deployments/2026-10-04-signs-of-rain-odin.md).
+
 Two off-device exports produced different PCK bytes under the same Nix output
 path. The exact fuji pack and its matching generated plugin were delivered
 without mixing workstation exports. Byte-for-byte export repeatability remains
