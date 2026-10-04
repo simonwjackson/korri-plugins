@@ -183,3 +183,5 @@ Keep the public starter pack unchanged. Cost: this pass supplies none of the req
 Author contact is excluded from follow-up work by the user's subsequent decision. Use existing published grants only. Any cleaned replacement needs a usable modification and redistribution basis plus a new binary audit, including unused resources. New original content from licensed assets is another route, but it requires game development and does not satisfy this ready-made quest search.
 
 The [no-contact editing proof](zquest-no-contact-cleanup-proof.md) records stronger public Block Smasher permission evidence and a verified single-MIDI-slot edit. It does not clear a whole quest.
+
+The [later permission-first discovery](zquest-published-permission-discovery.md) found Mitsukara's explicit CC0 grant for the author's contributions to three completed quests, plus the creator's AGPLv3 repository containing the exact audited Pagan Invaders file. The listing-only Pagan permission gap did not describe all available evidence. These new grants do not clear excluded third-party media. This eleven-package audit cannot establish catalog-wide absence.
