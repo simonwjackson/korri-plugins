@@ -55,8 +55,11 @@ identity; this plugin does not rehash content during launch.
 ## Launch and account storage
 
 The launch plan calls the selected immutable native program with
-`--main-pack contentPath --rendering-method gl_compatibility --rendering-driver
-opengl3_es -- --handheld --graphics=fast`. Core executes these as literal
+`--main-pack contentPath --fullscreen --rendering-method gl_compatibility
+--rendering-driver opengl3_es -- --handheld --graphics=fast`.
+Godot requests fullscreen for this handheld runner. The first Mini launch
+needed manual fullscreen and focus; automatic visibility still requires a
+target check. Desktop and Android launch defaults do not change. Core executes these as literal
 arguments, not shell text. The profile removes glow, shortens sun-shadow
 coverage and lowers 3D resolution. It preserves all 24 people and simulation.
 Cost: less sharpness and less distant lighting detail. Mesa's conformant G52
@@ -119,8 +122,16 @@ keys or device permission. The resulting outputs remain on fuji:
 - `/nix/store/ckfrb09yyf0k3z8smi7rknaai152sw5v-korri-plugin`
 - `/nix/store/xmczx513fb681khzn5s1fli4kiq9gxry-korri-signs-of-rain-plugin-check`
 
-Device installation and sustained 60 FPS still need a separate owner-approved
-session and normal signed delivery.
+On 2026-10-04, the Mini V2 received a signed package through normal inspection,
+exact approval, installation and enablement. Core loaded its exact-PCK library
+route without restarting Korri services. Its actual game created a Freedreno
+FD650 GLES 3.2 context. Physical controls, audio and sustained 60 FPS remain
+unverified. See [the Mini deployment record](../../docs/deployments/2026-10-04-signs-of-rain-miniv2.md).
+
+Two off-device exports produced different PCK bytes under the same Nix output
+path. The exact fuji pack and its matching generated plugin were delivered
+without mixing workstation exports. Byte-for-byte export repeatability remains
+unresolved; each accepted release must use the actual delivered pack hash.
 
 Source publication and passing checks are not signing, cache publication,
 device installation, a trust change, or device acceptance. The RG353M was offline

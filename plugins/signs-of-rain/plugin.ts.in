@@ -40,7 +40,8 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   }
   return {
     command: input.program,
-    args: ["--main-pack", input.contentPath,
+    // Request fullscreen from Godot for the handheld session.
+    args: ["--main-pack", input.contentPath, "--fullscreen",
       "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3_es",
       "--", "--handheld", "--graphics=fast"],
     // project.godot uses Godot's custom user directory "signs-of-rain".
