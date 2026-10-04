@@ -200,9 +200,10 @@ ROM-derived code. Keep its inputs, helper, and output closures out of public
 caches and release assets. Read the plugin instructions before building.
 No publication or installation workflow is added.
 
-The private build adds `Auto` to the game's native Screen ratio setting. It
-fits flat and Diorama action stages to the window shape. The plugin README
-describes its limits and the private GPU acceptance test.
+Upstream's native Screen ratio setting includes `Auto`, which fits action
+stages, towns and world navigation to the window shape. The plugin builds
+upstream without a patch. The plugin README describes Auto's limits and the
+private GPU acceptance test.
 
 ## Dr. Mario 64 Recompiled
 
