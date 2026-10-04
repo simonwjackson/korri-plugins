@@ -68,7 +68,7 @@ try {
       }
       const expected = {
         command: recordArguments,
-        args: ["--main-pack", contentPath,
+        args: ["--main-pack", contentPath, "--fullscreen",
           "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3_es",
           "--", "--handheld", "--graphics=fast"],
         env: { HOME: accountRoot },
