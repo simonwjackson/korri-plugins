@@ -45,5 +45,6 @@ pkgs.runCommand "korri-2ship-plugin-check"
     bun nix/2ship-check.ts ${package} \
       ${hostPackage}/bin/korri-plugin \
       ${korridPackage}/bin/korrid ${probe}
+    ${pkgs.python3}/bin/python3 ${./2ship-launch-check.py} ${package}
     touch "$out"
   ''

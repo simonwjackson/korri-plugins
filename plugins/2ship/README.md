@@ -23,13 +23,16 @@ measurements and upstream contracts.
 
 ## Native package and launch
 
-The plugin reuses the pinned nixpkgs 2 Ship 3.0.1 package and dependencies.
-`native-package.nix` pins source commit
-`f45acdd794712fefa0fae0bca86dcac22e040f09`, fixes its source-fetch reproducibility,
-and enables the aarch64 build. This is not a claim to package the latest release.
-It also applies `linux-shutdown.patch` so SIGINT/SIGTERM request normal game
-teardown rather than deadlocking in static audio destruction. The patch fixes
-the native entry point's undefined return status on ARM.
+The plugin packages stable **5.0.1 (Battler Bravo)**, verified as the official
+latest release on 2026-10-03. `native-package.nix` pins canonical source commit
+`8a24047fbce8915993804e7819f4df4fa591551f` with all submodules and a fixed tree
+hash. It reuses nixpkgs' dependency packaging, updates Prism to the pinned
+upstream revision, and adds upstream's pinned Monocypher dependency. Runtime
+scripting stays disabled, as in upstream's default build.
+
+`linux-shutdown.patch` still makes SIGINT/SIGTERM request normal game teardown
+rather than deadlocking in static audio destruction. Upstream now declares an
+`int` native entry point; the patch retains the explicit successful return.
 
 `plugin.ts` contains declarations only. Core creates the writable directory and
 starts the approved native wrapper with the literal ROM path. The wrapper
@@ -49,8 +52,14 @@ concurrent sessions from overwriting the same native saves.
 | `saves/` | The game owns its JSON saves and backups. The wrapper does not migrate emulator saves. |
 | `mods/`, `logs/`, `imgui.ini` | Upstream owns these runtime files. |
 
-First extraction took about 18 seconds on the tested x86 build machine. Runtime
-checksums add work to each launch. An invalid ROM or failed extraction leaves
+An existing 3.0.1 `mm.o2r` regenerates from the same owned ROM on first launch;
+the wrapper installs the new archive only after successful validation. The
+wrapper does not migrate saves or configuration. Upstream 5.0.1 owns save
+migration from version 6 to 7. Back up the account directory before a real
+upgrade; do not assume migrated saves can be opened by 3.0.1. No device migration
+or MM Reloaded texture installation is part of these build-machine checks.
+
+Runtime checksums add work to each launch. An invalid ROM or failed extraction leaves
 existing archives, configuration and saves unchanged. A failed game startup can
 leave a successfully extracted archive for the next attempt.
 
@@ -72,7 +81,9 @@ nix build --no-link .#checks.aarch64-linux.korri-2ship-plugin
 The package gate checks the actual packaged TypeScript against Core's generated
 contract, generated metadata, host admission, sandboxed launch preparation,
 paths containing shell syntax, and invalid-ROM rejection without data changes.
-CI runs that gate for both architectures without retail assets.
+CI runs that gate for both architectures without retail assets. The archive
+gate also checks the packaged 5.0.1 version, rejects 3.0.1 and other version
+records, and rejects missing resources and corrupt ZIP payloads.
 
 The optional runtime test needs your measured bare ROM:
 
@@ -83,9 +94,11 @@ nix run .#verify-2ship -- /path/to/owned/USA-ROM.n64
 It uses temporary account data, Xvfb software rendering, and dummy audio. It tests
 first extraction, keyboard-driven save creation, archive reuse with both ROM byte
 orders, concurrent-launch refusal, save retention, SIGINT/SIGTERM shutdown, and
-regeneration of an archive containing version records but no game resources.
-Both x86_64 and aarch64 passed this test on 2026-10-02. The ARM run used the
-exact prebuilt test program on the configured ARM build machine.
+regeneration of a full archive marked 3.0.1 and of an archive containing version records
+but no game resources. **5.0.1 passed on both architectures on 2026-10-03**,
+including the exact native startup version/commit and version-7 save record.
+The ARM run used the exact prebuilt program on the configured `fuji` build
+machine. [UPSTREAM.md](UPSTREAM.md) records the source and test evidence.
 It deletes its temporary game data. It does not establish physical-display,
 audio, gamepad, full-game completion, or signed-device installation acceptance.
 

@@ -1,9 +1,104 @@
 # 2 Ship 2 Harkinian integration evidence
 
-Checked 2026-10-02. x86_64 and aarch64 runtime checks passed;
-physical-device acceptance remains unverified.
+## Stable 5.0.1 upgrade — checked 2026-10-03
 
-## Source and package
+The official [latest-release API](https://api.github.com/repos/HarbourMasters/2ship2harkinian/releases/latest)
+redirects to the canonical `2ship2harkinian/2ship2harkinian` repository. It returned
+[**Battler Bravo 5.0.1**](https://github.com/2ship2harkinian/2ship2harkinian/releases/tag/5.0.1),
+published `2026-08-25T17:54:43Z`, with `draft: false` and `prerelease: false`.
+A fresh clone and `git ls-remote` independently resolved tag `5.0.1` to
+`8a24047fbce8915993804e7819f4df4fa591551f`. The original 3.0.1 inspection clone
+was not changed.
+
+| Pinned source | Commit / tree hash |
+|---|---|
+| 2 Ship 5.0.1 | `8a24047fbce8915993804e7819f4df4fa591551f` |
+| Complete fetched source, including submodules and deterministic metadata | `sha256-6ekHPC12xcz0emn4wLTXQ/lCRn+WIMRG9CZKiPifKiM=` |
+| OTRExporter | `32e088e28c8cdd055d4bb8f3f219d33ad37963f3` |
+| ZAPDTR | `ee3397a365c5f350a60538c88f0643f155944836` |
+| libultraship | `7cb10226e7875ec48ceec2f841d00afd84eef964` |
+| Prism | `1de054450e7b3c5f777d2e3dfcb228ad120c329d` / `sha256-5MlscqbKlUm4nYW+Obf5KlnUdtHK/xlDUc4wxr52ySM=` |
+| Monocypher | `0d85f98c9d9b0227e42cf795cb527dff372b40a4` / `sha256-RrM8Ep/CM7U5Q4+4FAHfBknb6b0upohoiqy4f7eMye0=` |
+
+The pinned Nix source matches all **6,673 files** in the separate clean clone,
+excluding Git internals and `GIT_BRANCH`, `GIT_COMMIT_HASH`, `GIT_COMMIT_TAG`.
+Those three records are deterministic: empty branch, `8a24047`, and `5.0.1`.
+The package version and upstream `CMakeLists.txt` both select `5.0.1`.
+
+The existing nixpkgs recipe remains the dependency/install base, not the engine
+version. Inspection of the actual pinned
+[common.cmake](https://github.com/kenix3/libultraship/blob/7cb10226e7875ec48ceec2f841d00afd84eef964/cmake/dependencies/common.cmake)
+found two required changes: update Prism's revision and add Monocypher. Other
+Linux FetchContent revisions still match the recipe. Both new dependencies have
+fixed hashes; build-time fetching is not used. The package retains the Prism
+MIT notice and Monocypher's dual BSD-2-Clause/CC0 notice. It retains nixpkgs'
+unfree classification. `ENABLE_SCRIPTING` remains off, matching upstream's
+default; the new runtime compiler/library-loader sources are not enabled.
+
+The actual 5.0.1 [ROM identity file](https://github.com/2ship2harkinian/2ship2harkinian/blob/5.0.1/docs/supportedHashes.json)
+retains NTSC-U 1.0 SHA-1 `d6133ace5afaa0882cf214cf88daba39e266c078`.
+Korri's two SHA-256 runner identities, native `2ship` account directory,
+`2ship2harkinian.json`, `saves/`, `mods/`, effect-free TypeScript handler,
+host contract, and signature/admission paths are unchanged. The wrapper still
+uses the packaged standalone exporter and native ZIP records. For 5.0.1,
+`portVersion` is `01000500000001`; the NTSC-U `version` stays `015354631c`.
+It rejects 3.0.1's record and stages archive regeneration before replacement.
+
+The pinned [CrashHandler.cpp](https://github.com/kenix3/libultraship/blob/7cb10226e7875ec48ceec2f841d00afd84eef964/src/ship/debug/CrashHandler.cpp)
+still uses `exit(1)` for SIGINT/SIGTERM. The rebased shutdown patch still installs
+flag-only handlers immediately after `InitCrashHandler` in
+[BenPort.cpp](https://github.com/2ship2harkinian/2ship2harkinian/blob/5.0.1/mm/2s2h/BenPort.cpp).
+Normal graph-loop exit still reaches `DeinitOTR` and `OTRAudio_Exit`.
+Upstream now declares `int SDL_main`; the patch no longer changes that type,
+but retains an explicit zero return. `git apply --check` passes on clean 5.0.1.
+
+[SaveManager.cpp](https://github.com/2ship2harkinian/2ship2harkinian/blob/5.0.1/mm/2s2h/SaveManager/SaveManager.cpp)
+increases upstream's save version from 6 to 7. Its
+[migration 7](https://github.com/2ship2harkinian/2ship2harkinian/blob/5.0.1/mm/2s2h/SaveManager/Migrations/7.cpp)
+adds native playtime and respawn data to version-6 saves.
+The wrapper does not rewrite or migrate saves. Real-device backups, migration,
+full-resolution MM Reloaded assets and hardware checks belong to the separate
+device step. No owned ROM, extracted game archive, texture pack or save enters
+Git or a Nix output. No target device was contacted for this upgrade.
+
+### 5.0.1 validation results
+
+| Architecture | Build and package gate | Owned-ROM runtime |
+|---|---|---|
+| x86_64 Linux | Passed locally. Game and extractor are x86-64 ELF files. | Passed on the local build machine with Xvfb/llvmpipe and dummy audio. |
+| aarch64 Linux | Passed on the configured `ssh-ng://simonwjackson@fuji` builder from `/etc/nix/machines`. Game and extractor are aarch64 ELF files. | Passed on that build machine using its exact prebuilt `verify-2ship` program. No device build or run. |
+
+The package gates checked the actual packaged TypeScript, generated manifest,
+host admission, sandboxed launch preparation, literal paths, and invalid-ROM
+preservation. The added asset-free archive gate checked the packaged wrapper's
+5.0.1 version, rejection of 3.0.1 and other native versions, required nonempty
+resources, and CRC failure. Packaged `plugin.ts` is byte-identical to original
+commit `c2637a3`; no handler, permission, signature or ROM identity was changed.
+Both native bundles have CRC-valid `2ship.o2r` with `portVersion`
+`01000500000001`, extractor resources and dependency notices; neither output
+contains an owned ROM or `mm.o2r`.
+
+Both owned-ROM tests verified the actual startup log reports
+`Battler Bravo (5.0.1)` and commit `8a24047`. Each extracted **50,496 entries**,
+created a version-7 native save through keyboard input, reused the archive with
+the normalized ROM, refused concurrent launch, retained saves after restart,
+and exited successfully on SIGINT, SIGTERM and termination at the first visible
+window. Each regenerated a complete game archive whose native version record
+was changed to 3.0.1. This is an old-version gate fixture, not a claim to test
+all genuine 3.0.1 asset differences or old saves. Tests also covered failed
+staging without data changes and incomplete-archive regeneration.
+
+The tests removed all temporary retail data and kept the input ROM unchanged.
+Physical display, audio, gamepad, real save migration, full-game completion and
+full-resolution MM Reloaded performance remain outside this off-device proof.
+
+## Historical 3.0.1 baseline — checked 2026-10-02
+
+The evidence below describes the original integration, not the current engine.
+x86_64 and aarch64 baseline runtime checks passed; physical-device acceptance
+remained unverified.
+
+### Source and package
 
 The repository's pinned nixpkgs packages 2 Ship 3.0.1 in
 `pkgs/by-name/_2/_2ship2harkinian/package.nix`. It builds the native program,
@@ -33,7 +128,7 @@ The pinned Nix source matches all 6,286 files in the separate upstream clone,
 excluding Git directories and the three deterministic metadata files.
 This selects the existing package version, not a claim that 3.0.1 is latest.
 
-## ROM inputs and launch
+### ROM inputs and launch
 
 The [3.0.1 README](https://github.com/HarbourMasters/2ship2harkinian/blob/3.0.1/README.md)
 requires user-supplied game data. The actual
@@ -74,7 +169,7 @@ The plugin must not assume a positional ROM argument reaches this code.
 has a positional ROM input and `--non-interactive`, but it is a separate tool.
 Its complete runtime packaging and error behavior still need verification.
 
-## Persistence and rendering
+### Persistence and rendering
 
 [libultraship Context.cpp](https://github.com/kenix3/libultraship/blob/5d498e780f25dc3c05804b0328db683121d96a2d/src/ship/Context.cpp)
 separates install resources from writable data. With `NON_PORTABLE`, resources
@@ -123,7 +218,7 @@ llvmpipe OpenGL 4.5. The test now uses Xvfb `-displayfd`, Xauthority, and owned
 process cleanup, matching `nix/nocturne-owned-check.py`. No production graphics
 library or renderer change was needed.
 
-## Boundaries and outstanding work
+### Boundaries and outstanding work
 
 The nixpkgs package classifies the closure with CC0, MIT, and unfree licenses.
 Do not infer public redistribution permission from the root license alone.
