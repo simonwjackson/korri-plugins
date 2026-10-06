@@ -45,12 +45,26 @@ uses the packaged standalone exporter and native ZIP records. For 5.0.1,
 It rejects 3.0.1's record and stages archive regeneration before replacement.
 
 The pinned [CrashHandler.cpp](https://github.com/kenix3/libultraship/blob/7cb10226e7875ec48ceec2f841d00afd84eef964/src/ship/debug/CrashHandler.cpp)
-still uses `exit(1)` for SIGINT/SIGTERM. The rebased shutdown patch still installs
-flag-only handlers immediately after `InitCrashHandler` in
+still uses `exit(1)` for SIGINT/SIGTERM. The rebased shutdown patch installs
+flag-only handlers before the constructor creates the visible startup window,
+then restores them immediately after `InitCrashHandler` in
 [BenPort.cpp](https://github.com/2ship2harkinian/2ship2harkinian/blob/5.0.1/mm/2s2h/BenPort.cpp).
 Normal graph-loop exit still reaches `DeinitOTR` and `OTRAudio_Exit`.
 Upstream now declares `int SDL_main`; the patch no longer changes that type,
 but retains an explicit zero return. `git apply --check` passes on clean 5.0.1.
+The first upgrade patch installed handlers only in `Initialize`, after the
+constructor's visible startup window. Review identified that uncovered signal
+window. The fix installs handlers before `InitWindow` too; reinstalling them
+does not clear a shutdown flag set before `Initialize`.
+
+The owned-ROM runtime test uses a test-only SDL interposer to pause the real
+process just after `SDL_CreateWindow` returns. It verifies that the visible
+window exists and the native startup log has not yet appeared, queues SIGINT
+or SIGTERM while the process is stopped, then resumes it. Successful exit
+checks the pending request survives `InitCrashHandler` and reaches normal
+audio teardown. This closes the timing gap in the original first-window poll.
+The interposer belongs only to `verify-2ship`; the production plugin closure
+does not include it or preload any library.
 
 [SaveManager.cpp](https://github.com/2ship2harkinian/2ship2harkinian/blob/5.0.1/mm/2s2h/SaveManager/SaveManager.cpp)
 increases upstream's save version from 6 to 7. Its

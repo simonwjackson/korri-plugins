@@ -177,6 +177,41 @@ def run_game(command, env, root, first):
                 game.wait()
 
 
+def stop_before_initialization(command, env, root, shutdown_signal):
+    # The test-only SDL interposer stops the real process immediately after
+    # window creation. This makes the pre-Initialize race deterministic instead
+    # of hoping xdotool polls before InitCrashHandler has already run.
+    probe = os.environ["KORRI_2SHIP_EARLY_WINDOW_PROBE"]
+    log = root / f"early-stop-{shutdown_signal.name}.log"
+    with log.open("w") as output:
+        game = subprocess.Popen(
+            command,
+            env=dict(env, LD_PRELOAD=probe, KORRI_2SHIP_PAUSE_FIRST_WINDOW="1"),
+            stdout=output,
+            stderr=subprocess.STDOUT,
+        )
+        try:
+            wait_for(
+                lambda: "2 Ship early-window test paused before Initialize"
+                in log.read_text()
+                and "State:\tT" in Path(f"/proc/{game.pid}/status").read_text(),
+                game,
+                log,
+            )
+            wait_for(lambda: window_for(game), game, log)
+            assert "Starting 2 Ship 2 Harkinian version" not in log.read_text()
+            game.send_signal(shutdown_signal)
+            game.send_signal(signal.SIGCONT)
+            game.wait(timeout=30)
+            assert game.returncode == 0, (game.returncode, log.read_text()[-4000:])
+            assert "Starting 2 Ship 2 Harkinian version Battler Bravo (5.0.1)" in log.read_text()
+            assert "Commit: 8a24047)" in log.read_text()
+        finally:
+            if game.poll() is None:
+                game.kill()
+                game.wait()
+
+
 def stop_at_first_window(command, env, root):
     log = root / "early-stop.log"
     with log.open("w") as output:
@@ -270,6 +305,13 @@ def main():
             flush=True,
         )
 
+        for shutdown_signal in (signal.SIGINT, signal.SIGTERM):
+            stop_before_initialization(command, env, root, shutdown_signal)
+            assert save_path.read_bytes() == saved
+        print(
+            "SIGINT/SIGTERM queued at first visible window before Initialize passed",
+            flush=True,
+        )
         stop_at_first_window(command, env, root)
         assert save_path.read_bytes() == saved
         print("SIGTERM at the first visible window passed", flush=True)

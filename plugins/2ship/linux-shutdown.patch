@@ -3,8 +3,9 @@ Subject: [PATCH] Stop the Linux main loop before destroying audio synchronizatio
 
 libultraship's SIGINT/SIGTERM ShutdownHandler still calls exit(1) in 5.0.1.
 With the 2 Ship audio worker waiting, static destruction can deadlock in
-pthread_cond_destroy. Install flag-only handlers before audio initialization
-and request a normal main-loop exit. DeinitOTR then joins the audio worker.
+pthread_cond_destroy. Install flag-only handlers before the early startup
+window is created, then restore them after InitCrashHandler without clearing
+pending requests. Request a normal main-loop exit; DeinitOTR joins the worker.
 No logging, allocation, SDL calls or teardown run in the signal handler.
 
 5.0.1 already has an int native entry point, but add an explicit zero return
@@ -64,11 +65,20 @@ so successful cleanup has a defined exit status on both architectures.
  extern "C" char** cameraStrings;
  bool prevAltAssets = false;
  std::vector<std::shared_ptr<std::string>> cameraStdStrings;
-@@ -636,6 +637,8 @@
+@@ -174,4 +175,7 @@
+     auto benInputEditorWindow = std::make_shared<BenInputEditorWindow>("gWindows.BenInputEditor", "2S2H Input Editor");
+     benFast3dWindow =
+         std::make_shared<Fast::Fast3dWindow>(std::vector<std::shared_ptr<Ship::GuiWindow>>({ benInputEditorWindow }));
++    // The extraction/startup window is visible before Initialize installs the
++    // crash handler. Record early shutdown requests before creating that window.
++    Graph_InstallShutdownHandlers();
+     context->InitWindow(benFast3dWindow);
+@@ -636,6 +640,9 @@
      context->GetResourceManager()->SetAltAssetsEnabled(prevAltAssets);
  
      context->InitCrashHandler();
-+    // Override immediate-exit shutdown handlers before any audio worker starts.
++    // Restore flag-only handlers after the crash handler overrides them.
++    // Do not clear any shutdown request received during early window creation.
 +    Graph_InstallShutdownHandlers();
  
      context->GetWindow()->SetAutoCaptureMouse(CVarGetInteger("gSettings.EnableMouse", 0) &&
