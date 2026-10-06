@@ -99,6 +99,9 @@ but no game resources. **5.0.1 passed on both architectures on 2026-10-03**,
 including the exact native startup version/commit and version-7 save record.
 The ARM run used the exact prebuilt program on the configured `fuji` build
 machine. [UPSTREAM.md](UPSTREAM.md) records the source and test evidence.
+The early-window regression test pauses immediately after real SDL window
+creation and queues each shutdown signal before native initialization. Its
+test-only interposer is not part of the production plugin.
 It deletes its temporary game data. It does not establish physical-display,
 audio, gamepad, full-game completion, or signed-device installation acceptance.
 

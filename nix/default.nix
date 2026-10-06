@@ -334,6 +334,11 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           ${drmario64Plugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
+    twoShipEarlyWindow = pkgs.runCommandCC "2ship-early-window" { } ''
+      mkdir -p "$out/lib"
+      $CC -Wall -Wextra -Werror -shared -fPIC ${./2ship-early-window.c} \
+        -ldl -o "$out/lib/2ship-early-window.so"
+    '';
     verifyTwoShip = pkgs.writeShellApplication {
       name = "verify-2ship";
       runtimeInputs = [
@@ -346,6 +351,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         export LD_LIBRARY_PATH=${pkgs.lib.makeLibraryPath [ pkgs.mesa ]}
         export __GLX_VENDOR_LIBRARY_NAME=mesa
         export SDL_VIDEODRIVER=x11
+        export KORRI_2SHIP_EARLY_WINDOW_PROBE=${twoShipEarlyWindow}/lib/2ship-early-window.so
         exec ${pkgs.python3}/bin/python3 ${./2ship-runtime-check.py} \
           ${twoShipPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
