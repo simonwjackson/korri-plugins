@@ -27,10 +27,8 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `drmario64` | Native Dr. Mario 64 launcher with account-owned state | x86_64 and aarch64 Linux build targets |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-signs-of-rain` | `@simonwjackson:signs-of-rain`, exact packaged PCK | x86_64 and aarch64 Linux checked |
-| `korri-plugin-zelda3` | `@simonwjackson:zelda3` | x86_64 and aarch64 Linux |
 | `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
 | `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
-| `zelda3` | Standalone native engine and owned-ROM launcher | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout1-ce` | `@simonwjackson:fallout1-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
 
@@ -195,7 +193,7 @@ nix run .#verify-opengoal -- /path/to/prepared-data --game jak2
 supported owned USA cartridge on a private build machine. Devices receive
 prebuilt packages. The Arcade/Nintendo Super System dump is not supported.
 
-Unlike SMW and Zelda3, this build needs the ROM and produces copyrighted
+Unlike SMW, this build needs the ROM and produces copyrighted
 ROM-derived code. Keep its inputs, helper, and output closures out of public
 caches and release assets. Read the plugin instructions before building.
 No publication or installation workflow is added.
@@ -259,31 +257,6 @@ establish physical-device gameplay, signed publication, or installation approval
 Solarus has moved to the official [korri-os/plugins](https://github.com/korri-os/plugins/tree/main/plugins/solarus)
 repository. See that source for build instructions. This personal flake no longer
 provides Solarus.
-
-## Zelda3
-
-[Zelda3](plugins/zelda3/README.md) launches the supported US A Link to the Past
-ROM through a native engine on both Linux architectures. First launch extracts
-assets locally. Configuration and saves remain in account-owned storage.
-The package contains no ROM or runtime-extracted asset bundle. It does embed
-opening-scene tilemap tables that match the original ROM. The upstream MIT license
-does not establish Nintendo clearance. [The publication audit](docs/research/zelda3-publication-audit.md)
-records the exact binary comparison and limits. Keep the current binaries private
-pending a publication decision. Build machines compile the engine; devices receive
-it prebuilt. Python asset extraction is not compilation.
-
-```sh
-nix build --no-link .#korri-plugin-zelda3
-nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin
-nix build --no-link .#checks.aarch64-linux.korri-zelda3-plugin
-nix run .#verify-zelda3 -- '/path/to/owned/USA-ROM.sfc'
-```
-
-The ROM-free checks cover packaging, native startup, host admission, launch
-arguments, and invalid-ROM rejection. The opt-in `verify-zelda3` test uses an
-owned ROM to test extraction, cached launch, and snapshot save/reload through
-Core's launch executor. It does not establish physical-device gameplay.
-Its separate check-only workflow does not publish or install it.
 
 ## ZQuest Classic
 

@@ -121,12 +121,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       };
       plugin = _: import ../plugins/zquest-classic/plugin.nix { launcher = zquestLauncher; };
     };
-    zelda3Package = import ../plugins/zelda3/package.nix { inherit pkgs; };
-    zelda3Plugin = mkPlugin {
-      publisher.namespace = "@simonwjackson";
-      source = ../plugins/zelda3;
-      plugin = _: import ../plugins/zelda3/plugin.nix { inherit zelda3Package; };
-    };
     # The engines use the Sustainable Use License. Keep permission scoped to
     # these two packages instead of enabling every unfree dependency.
     falloutPkgs = import nixpkgs {
@@ -286,13 +280,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           ${smwPlugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
       '';
     };
-    verifyZelda3 = pkgs.writeShellApplication {
-      name = "verify-zelda3";
-      text = ''
-        exec ${pkgs.python3}/bin/python3 ${./zelda3-owned-rom-check.py} \
-          ${zelda3Plugin} ${korri.packages.${system}.korrid}/bin/korrid "$@"
-      '';
-    };
     verifyNocturne = pkgs.writeShellApplication {
       name = "verify-nocturne";
       runtimeInputs = [
@@ -394,11 +381,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link --option builders "" --option post-build-hook "" .#checks.${system}.korri-signs-of-rain-plugin' \
           'Signs of Rain ARM plugin builds need an approved ARM builder; see plugins/signs-of-rain/README.md.' \
           'Register its exact packaged PCK in the existing library; no general PCK discovery is added.' \
-          'Zelda3 supports x86_64-linux and aarch64-linux:' \
-          '  nix build --no-link .#korri-plugin-zelda3' \
-          '  nix build --no-link .#checks.x86_64-linux.korri-zelda3-plugin' \
-          '  nix build --no-link .#checks.aarch64-linux.korri-zelda3-plugin' \
-          '  nix run .#verify-zelda3 -- /path/to/owned/USA-ROM.sfc' \
           'ZQuest Classic supports x86_64 and aarch64 Linux:' \
           '  nix build --no-link .#korri-plugin-zquest-classic' \
           '  nix build --no-link .#zquest-classic-source' \
@@ -439,7 +421,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-skate3-plugin' \
           'Skate 3 ARM64 builds need two owned XEX files in the builder store; see plugins/skate-3/README.md.' \
-          'SMW/Zelda3 builds need no ROM. Their verify apps explicitly use owned ROMs.' \
+          'SMW builds need no ROM. Its verify app explicitly uses an owned ROM.' \
           'ActRaiser private builds support x86_64-linux and aarch64-linux:' \
           '  NIXPKGS_ALLOW_UNFREE=1 nix build --impure --option builders "" --option post-build-hook "" .#korri-plugin-actraiser' \
           '  NIXPKGS_ALLOW_UNFREE=1 nix build --impure --option builders "" --option post-build-hook "" .#checks.${system}.korri-actraiser-plugin' \
@@ -479,8 +461,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       verify-dr-mario = verifyDrMario;
       korri-plugin-super-mario-world = smwPlugin;
       korri-plugin-signs-of-rain = signsOfRainPlugin;
-      korri-plugin-zelda3 = zelda3Plugin;
-      zelda3 = zelda3Package;
       zquest-classic = zquestLauncher;
       zquest-classic-source = import ./zquest-source-release.nix {
         inherit pkgs;
@@ -591,13 +571,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
       };
-      korri-zelda3-plugin = import ./zelda3-check.nix {
-        inherit pkgs;
-        package = zelda3Plugin;
-        contract = korri.lib.${system}.pluginContract;
-        hostPackage = korri.packages.${system}.korri-plugin-host;
-        korridPackage = korri.packages.${system}.korrid;
-      };
       korri-skate3-plugin = import ./skate3-check.nix {
         inherit pkgs;
         package = packages.korri-plugin-skate-3;
@@ -665,11 +638,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         type = "app";
         program = "${verifySmw}/bin/verify-smw";
         meta.description = "Test SMW startup and snapshot reload with an owned ROM on a build machine.";
-      };
-      verify-zelda3 = {
-        type = "app";
-        program = "${verifyZelda3}/bin/verify-zelda3";
-        meta.description = "Test Zelda3 extraction, native startup and snapshot reload with an owned ROM on a build machine.";
       };
       verify-fable-ii = {
         type = "app";
