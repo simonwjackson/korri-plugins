@@ -23,8 +23,6 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 | `korri-plugin-the-simpsons-game` | `@simonwjackson:the-simpsons-game` | x86_64 with AVX2 and aarch64 Linux build targets |
 | `korri-plugin-2ship` | `@simonwjackson:2ship` | x86_64 and aarch64 Linux |
 | `korri-plugin-fable-ii-recomp` | `@simonwjackson:fable-ii-recomp`, private owned-XEX build | x86_64 and aarch64 Linux build targets |
-| `korri-plugin-drmario64` | `@simonwjackson:drmario64`, private owned-ROM build | x86_64 and aarch64 Linux build targets |
-| `drmario64` | Native Dr. Mario 64 launcher with account-owned state | x86_64 and aarch64 Linux build targets |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-signs-of-rain` | `@simonwjackson:signs-of-rain`, exact packaged PCK | x86_64 and aarch64 Linux checked |
 | `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
@@ -202,19 +200,6 @@ Upstream's native Screen ratio setting includes `Auto`, which fits action
 stages, towns and world navigation to the window shape. The plugin builds
 upstream without a patch. The plugin README describes Auto's limits and the
 private GPU acceptance test.
-
-## Dr. Mario 64 Recompiled
-
-[Dr. Mario 64](plugins/drmario64/README.md) packages
-`theboy181/drmario64_recomp_plus` from the owned US ROM. It adds a native,
-hash-specific runner and keeps the original ROM unchanged. Native settings
-and saves stay under the account root supplied by Core.
-
-This is a private build. Keep retail inputs, generated code, and binary closures
-out of public caches and releases. Run the documented commands with remote
-builders, post-build hooks, and automatic signing disabled. Ask the owner before
-sending files or build jobs to `fuji`. Read the plugin's acceptance table for
-actual build and runtime coverage. Target declarations alone do not prove ARM support.
 
 ## 2 Ship 2 Harkinian
 

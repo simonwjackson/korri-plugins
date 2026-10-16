@@ -1,5 +1,9 @@
 # Dr. Mario 64 on the Mini V2
 
+Historical record: the native `@simonwjackson:drmario64` source plugin and
+flake outputs have been removed. Device uninstallation has not been verified;
+this source removal does not remove installed packages, ROMs, or saves.
+
 The owner authorized private signing and installation on the Retroid Pocket
 Mini V2. The owner requires an Ask Questions approval before any game launch.
 The signed ARM64 plugin is installed and enabled. Library registration and
