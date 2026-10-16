@@ -171,8 +171,13 @@ exact removed paths and input hashes. Library code and notices are preserved.
 The retained demo/example code cannot build or run its media-dependent targets.
 The standalone player recipe disables those targets. No original Nintendo
 soundtrack, default font datafile, sound bank, or quest is included in this
-bundle. The generated font bank is a licensed ProggyVector
-derivative; keep its notices. See ASSET-LICENSES.md and engine/LICENSE.
+bundle. Common game glyphs use Tiny5 fitted to the existing slot metrics.
+Uncovered Unicode/symbol glyphs use the licensed ProggyVector input, which
+also remains for the debugger. The Tiny5 glyph source and complete OFL 1.1
+notice are in tiny5.glyphs.txt and tiny5-OFL.txt, both at the root and in
+recipe/. Keep Tiny5 and ProggyVector notices with their derivatives.
+See ASSET-LICENSES.md, engine/resources/public-assets-font-license.txt and
+engine/LICENSE.
 
 Build on a Linux build machine with Nix, not a target handheld:
   nix-build default.nix --no-out-link --option extra-experimental-features flakes
@@ -186,7 +191,10 @@ No promise of byte-identical store paths after extracting a source archive is
 made; the source and build instructions are provided to rebuild and modify it.
 
 To regenerate resources with the pinned Pillow/FreeType toolchain, use the
-public-assets.nix/public-assets.py files and engine/resources/ProggyVector-Regular.ttf.
+public-assets.nix/public-assets.py files, tiny5.glyphs.txt, tiny5-OFL.txt and
+engine/resources/ProggyVector-Regular.ttf. public-assets.nix copies the
+vendored glyph table and OFL notice beside the generator before running it.
+The regenerated assets must match engine/resources/ byte for byte.
 The files in recipe/ preserve the original repository recipe and patch inputs.
 The root package.nix is derived from it to use bundled sources, disable
 media-dependent demo/test targets, and forbid CMake FetchContent downloads.

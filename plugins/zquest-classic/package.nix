@@ -55,7 +55,7 @@ let
 in
 pkgs.stdenv.mkDerivation {
   pname = "zquest-classic";
-  version = "unstable-2026-06-18-public1";
+  version = "unstable-2026-06-18-public2";
   src = publicSource;
   passthru = {
     inherit publicSource assets;

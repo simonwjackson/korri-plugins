@@ -3,8 +3,8 @@
 
 Format references: pinned third_party/allegro_legacy/src/{datafile,file}.c.
 Only public-assets-metrics.json (numeric advances), the two slot headers, zdefs.h,
-and the explicitly licensed TTF are read. No upstream bitmap/sample/datafile is
-read. Outputs use uncompressed Allegro packfiles with uncompressed object chunks.
+the pinned licensed Tiny5 glyph table, and licensed ProggyVector TTF are read.
+No upstream bitmap/sample/datafile is read. Outputs use uncompressed Allegro packfiles with uncompressed object chunks.
 """
 
 import argparse
@@ -20,6 +20,10 @@ from PIL import features
 
 REVISION = "882c906b17e35b4105188e6305ae2929aeba30e3"
 FONT_SHA256 = "dae80a9b9bb23a37f60465dd93de9365a8ddd43300adc304d96f91ce54c28dd5"
+TINY5_SHA256 = "38d7d58a644a3cc03d49e1c59ffab3be8eb0ea91c7e4a256983d8b487f849e6d"
+TINY5_LICENSE_SHA256 = (
+    "6fe7d64407c69d187748206265977654747d3e2fe9e38e45a62cd03ec4770df6"
+)
 HERE = Path(__file__).resolve().parent
 MIDIS = ("dungeon", "ending", "gameover", "level9", "overworld", "title", "triforce")
 RATE = 22050
@@ -178,9 +182,63 @@ def font_notices(data):
     return result
 
 
+def tiny5_glyphs():
+    """Read Pico's pinned, OFL-licensed seven-row bitmap producer format."""
+    data = (HERE / "tiny5.glyphs.txt").read_bytes()
+    if digest(data) != TINY5_SHA256:
+        raise ValueError("Tiny5 glyph input is not the audited Pico table")
+    license_data = (HERE / "tiny5-OFL.txt").read_bytes()
+    if digest(license_data) != TINY5_LICENSE_SHA256:
+        raise ValueError("Tiny5 license input is not the complete audited OFL")
+    text = data.decode("utf-8")
+    assert "\nmetrics ascent 6 descent 1\n" in text
+    glyphs = {}
+    for code, bitmap in re.findall(
+        r"(?m)^([0-9A-F]{4,5}) [^\n]+\n((?:[.#]+\n){7})", text
+    ):
+        code = int(code, 16)
+        rows = tuple(bitmap.splitlines())
+        assert code not in glyphs and len({len(row) for row in rows}) == 1
+        glyphs[code] = rows
+    assert all(code in glyphs for code in range(32, 127))
+    assert all(any("#" in row for row in glyphs[code]) for code in range(33, 127))
+    return glyphs
+
+
+def bitmap_glyph(rows, width, height):
+    # Remove horizontal padding only. The seven-row canvas keeps the common
+    # baseline and descenders; common 8px cells contain exact, unscaled pixels.
+    ink = [
+        (x, y)
+        for y, row in enumerate(rows)
+        for x, value in enumerate(row)
+        if value == "#"
+    ]
+    cell = Image.new("1", (width, height))
+    if ink:
+        left = min(x for x, _ in ink)
+        ink_width = max(x for x, _ in ink) - left + 1
+        fitted_width, fitted_height = min(width, ink_width), min(height, len(rows))
+        xoff, yoff = (width - fitted_width) // 2, (height - fitted_height) // 2
+        # Truly undersized legacy cells use integer ink projection. OR every
+        # source pixel into its destination, so a short punctuation stroke can
+        # never disappear. This reduces detail but never changes the metrics.
+        for x, y in ink:
+            cell.putpixel(
+                (
+                    xoff + (x - left) * fitted_width // ink_width,
+                    yoff + y * fitted_height // len(rows),
+                ),
+                1,
+            )
+    return cell.tobytes()
+
+
 def make_fonts(font_path, metrics, names):
-    # Keep the source's common baseline, but fit each glyph within the measured
-    # legacy advance and height. Never sample or trace legacy bitmap pixels.
+    tiny5 = tiny5_glyphs()
+
+    # Keep the existing licensed raster path only for characters Tiny5 lacks.
+    # Its baseline and metric fitting are unchanged.
     @lru_cache(maxsize=None)
     def raster_face(height):
         face = ImageFont.truetype(
@@ -245,9 +303,12 @@ def make_fonts(font_path, metrics, names):
                 # rather than invent proprietary pictograph/script mappings.
                 if 127 <= rendered < 160:
                     rendered = 0xFFFD
-                body += struct.pack(">HH", width, height) + glyph(
-                    rendered, width, height
+                pixels = (
+                    bitmap_glyph(tiny5[rendered], width, height)
+                    if rendered in tiny5
+                    else glyph(rendered, width, height)
                 )
+                body += struct.pack(">HH", width, height) + pixels
         objects.append((name, b"FONT", body))
     # ZQuest's load_datafile_count (src/core/zdefs.cpp) subtracts one callback
     # for the grabber metadata object, not for the DAT_END array terminator.
@@ -310,7 +371,13 @@ def main():
     font_data = args.font.read_bytes()
     if digest(font_data) != FONT_SHA256:
         parser.error("font input is not the audited ProggyVector TTF")
-    font_license = font_notices(font_data)
+    tiny5_glyphs()  # Fail before creating any output if either pinned input changed.
+    font_license = (
+        "Tiny5 bitmap fonts\n\n"
+        + (HERE / "tiny5-OFL.txt").read_text()
+        + "\nProggyVector: uncovered Unicode/symbol glyphs and debugger TTF\n\n"
+        + font_notices(font_data)
+    )
     sound_names = slots(args.source, "sfx.h", "SAMP")
     font_names = slots(args.source, "fontsdat.h", "FONT")
     if list(sorted(sound_names)) != list(range(1, 62)) or list(
@@ -367,9 +434,17 @@ def main():
         "format_version": 1,
         "compatibility_source_revision": REVISION,
         "font": {
-            "source": "ProggyVector-Regular.ttf",
-            "sha256": FONT_SHA256,
-            "output_family": "Korri Compatibility Raster",
+            "source": "tiny5.glyphs.txt",
+            "sha256": TINY5_SHA256,
+            "output_family": "Tiny5 compatibility raster",
+            "license_source": "tiny5-OFL.txt",
+            "license_sha256": TINY5_LICENSE_SHA256,
+            "fitting": "Exact pixels with a common seven-row baseline; ink projection only in undersized legacy cells; unchanged advances and heights.",
+            "fallback": {
+                "source": "ProggyVector-Regular.ttf",
+                "sha256": FONT_SHA256,
+                "usage": "Only Unicode/symbol glyphs absent from Tiny5; unmodified TTF retained for the debugger.",
+            },
         },
         "generator_sha256": digest(Path(__file__).read_bytes()),
         "metrics_sha256": digest(metrics_data),

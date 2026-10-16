@@ -46,7 +46,7 @@ exposed stalls that the original muted checks did not cover.
 
 ## Public resource build
 
-The `public1` package contains no bundled quest, NSF soundtrack, original
+The public package contains no bundled quest, NSF soundtrack, original
 sound bank, or original bitmap-font collection. It does not clear the rights
 to quests supplied by users. The publication audit is in
 [docs/research/zquest-publication-audit.md](../../docs/research/zquest-publication-audit.md).
@@ -55,19 +55,22 @@ to quests supplied by users. The publication audit is in
 |---|---|
 | Default sound effects | 61 original generated cues keep the existing numeric sound slots. They do not imitate the original game recordings. |
 | Default MIDI music | Seven valid silent tracks satisfy the native loader. Quest-provided music still plays. |
-| Runtime fonts | ProggyVector-derived raster fonts retain measured character widths and line heights. Special game alphabets are not reproduced. |
+| Runtime fonts | Common game glyphs use Tiny5 fitted to the existing character widths and line heights. Uncovered Unicode/symbol glyphs use ProggyVector. Special game alphabets are not reproduced. |
 | Native menus and ending | Original geometric markers and neutral completion text replace the stock presentation. User quest content is not changed. |
 | Old quests without embedded tiles | Rejected with a missing-default-tiles explanation instead of loading stock artwork or displaying broken graphics. |
 | Optional editor/example material | Not included in the runtime resources. |
 
 The separately licensed ZQuest Commons logo, icon and theme music remain with
-their terms and credits. ProggyVector remains for the debugger with its font
-license. FreePats remains the software MIDI instrument bank. Resource generation,
+their terms and credits. Tiny5 derivatives retain the complete SIL OFL 1.1
+notice. ProggyVector remains for the debugger and uncovered glyphs with its
+font license. FreePats remains the software MIDI instrument bank. Resource generation,
 format requirements and notices are in [ASSET-LICENSES.md](ASSET-LICENSES.md).
 
-The player sounds and looks different from upstream. Unusual script glyphs can
-lose meaning when replaced with licensed generic glyphs. The resource checks
-validate their format and origin inputs, not every community quest's layout.
+The player sounds and looks different from upstream. Tiny5 changes common
+glyph shapes; it is not a larger-text setting. Very small or narrow cells can
+lose detail when fitted. Unusual script glyphs can lose meaning when replaced
+with licensed generic glyphs. The resource checks validate their format and
+origin inputs, not every community quest's layout.
 
 ## Saves and configuration
 
@@ -156,8 +159,8 @@ preservation of local files. Test accounts do not answer the upload question,
 so a launcher regression stops the run at upstream's modal. The checks assert
 the exact handheld-settings edits and that the player keeps them on exit.
 They also assert upstream's `auto_scopes.zplay` against the pinned interpreter.
-Only 26 graphics hashes change for the public fonts. All upstream script
-traces, RNG, controls and timing remain exact. Its Git LFS files are fetched
+Static graphics expectations account for the replacement font pixels.
+All upstream script traces, RNG, controls and timing must remain exact. Its Git LFS files are fetched
 by hash for tests only and are absent from the plugin closure.
 The native asset reader checks all 61 samples, 101 font slots/metrics, seven
 silent MIDI tracks and two bitmaps. It exercises the real MIDI timer at each
@@ -166,8 +169,8 @@ acknowledgement, save write, backup and return to the quest.
 A private PulseAudio null sink exercises real sound initialization without
 hardware or an ALSA sequencer. These checks do not establish audible output,
 physical-controller support, all-quest compatibility, or device acceptance.
-The cleaned public player checks passed on native x86_64 and aarch64 build
-machines on 2026-10-03.
+The initial `public1` player checks passed on native x86_64 and aarch64 build
+machines on 2026-10-03. Later font revisions need their own acceptance checks.
 The check-only GitHub workflow runs both architectures and publishes nothing.
 
 For an interactive run with separate test state:
@@ -180,7 +183,7 @@ nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state
 
 The output contains the reviewed and generated runtime resources described
 above, plus license notices. It omits the editor and all bundled quests.
-Upstream declares GPLv3 for the project. The `public1` recipe selects
+Upstream declares GPLv3 for the project. The public recipe selects
 reviewed runtime resources before compilation and provides generated replacements. A successful build alone does not prove
 asset rights. The publication gate checks the final resource inventory and
 compares every generated file with its source derivation. The release process
@@ -195,8 +198,12 @@ nix build --no-link .#packages.aarch64-linux.zquest-classic-source
 
 These outputs contain architecture-specific source archives with the cleaned
 engine, explicit CMake dependency sources, generator inputs/notices, and a
-standalone Nix recipe. They exclude upstream quest/media collections and
-unneeded dependency demo/test media. `BUILDING.txt` explains rebuilding from
+standalone Nix recipe. The exact Tiny5 glyph source and complete OFL notice
+are included beside the generator and in the original recipe directory.
+The runtime font notice retains Tiny5 and ProggyVector terms. These inputs
+must regenerate byte-identical resources with the pinned toolchain.
+The archives exclude upstream quest/media collections and unneeded dependency
+demo/test media. `BUILDING.txt` explains rebuilding from
 the extracted source. Source archives and exact `revision.txt`/architecture
 path lists accompany the binary release. The original integration recipes are
 also in this repository at that revision.
@@ -205,7 +212,9 @@ also in this repository at that revision.
 
 [Public release and verification record](../../docs/deployments/2026-10-03-zquest-public-release.md)
 identifies the exact published outputs, corresponding source and device-test
-limits. Both source archives and signed payloads are public.
+limits for the initial `public1` release. Both source archives and signed
+payloads for that release are public. That record does not establish publication
+or device acceptance of later font revisions.
 
 Public destination: `https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
 Publish only the exact checked ZQuest plugin outputs, never all flake packages,

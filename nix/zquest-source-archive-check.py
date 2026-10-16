@@ -15,7 +15,8 @@ import sys
 import tempfile
 
 # These pinned files are the retained licensed inputs, not demo/test assets.
-# ZC Commons credits/license and the TTF's extracted license remain mandatory.
+# ZC Commons credits/license, Tiny5 source/OFL and the TTF's extracted license
+# remain mandatory.
 RETAINED = {
     "engine/resources/ProggyVector-Regular.ttf": "dae80a9b9bb23a37f60465dd93de9365a8ddd43300adc304d96f91ce54c28dd5",
     "engine/resources/assets/zc/ZC_Forever_HD.mp3": "2fca988abe5cb97def6acc241e755a7b42414b8958e2ec0a2b66b1bbc2f0bda9",
@@ -23,6 +24,13 @@ RETAINED = {
     "engine/resources/assets/zc/ZC_Logo.png": "8ececb2b6b9768d2856a7579a2622b274364f06d71550530ac79f67572d772b7",
     "engine/resources/assets/zc/LICENSE.txt": "b69b172adb87f9674cfb541ae50f71dc0135fcf855f4349012d499c485350c1b",
     "engine/resources/assets/zc/CREDITS.txt": "42660e42827262432cba8f91d68caf3bf3c91c2fbff81330ce393626b5ca736e",
+    # Exact text inputs vendored from Korri Pico's Tiny5 producer. These are
+    # not new binary/media exceptions. Both standalone and original recipes
+    # must carry the glyph source and its complete OFL notice.
+    "tiny5.glyphs.txt": "38d7d58a644a3cc03d49e1c59ffab3be8eb0ea91c7e4a256983d8b487f849e6d",
+    "recipe/tiny5.glyphs.txt": "38d7d58a644a3cc03d49e1c59ffab3be8eb0ea91c7e4a256983d8b487f849e6d",
+    "tiny5-OFL.txt": "6fe7d64407c69d187748206265977654747d3e2fe9e38e45a62cd03ec4770df6",
+    "recipe/tiny5-OFL.txt": "6fe7d64407c69d187748206265977654747d3e2fe9e38e45a62cd03ec4770df6",
 }
 # Allegro's library configuration data, icon and reference manual diagrams.
 # Its giftware/zlib notices are retained. These are not the demo soundtrack.
@@ -118,6 +126,10 @@ def audit(root: Path) -> str:
             entries.append(f"{digest}  {relative}\n")
         elif is_media(path, data):
             raise ValueError(f"Unreviewed source binary/media: {relative}")
+    font_notices = (resources / "public-assets-font-license.txt").read_text()
+    tiny5_notice = (root / "tiny5-OFL.txt").read_text().strip()
+    if tiny5_notice not in font_notices:
+        raise ValueError("Generated font notice omits the complete Tiny5 OFL")
     # Check the actual generated bank structure too, not just a self-reported
     # manifest. The validator expects only generated resources in its directory.
     with tempfile.TemporaryDirectory(prefix="zquest-source-assets-") as temporary:

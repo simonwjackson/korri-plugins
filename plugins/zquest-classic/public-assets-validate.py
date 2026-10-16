@@ -19,6 +19,13 @@ import time
 
 HERE = Path(__file__).resolve().parent
 MIDIS = ("dungeon", "ending", "gameover", "level9", "overworld", "title", "triforce")
+# Exact 8x8 cells derived from Pico's pinned Tiny5 table, not the generator.
+# Capitals, a descender and the dotted i expose stretching/baseline regressions.
+TINY5_NES_PIXELS = {
+    ord("A"): bytes.fromhex("0018243c24240000"),
+    ord("g"): bytes.fromhex("0000182828183000"),
+    ord("i"): bytes.fromhex("1000101010100000"),
+}
 
 
 def read_objects(path, password=b""):
@@ -52,6 +59,36 @@ def read_objects(path, password=b""):
 
 def structural(root, metrics):
     provenance = json.loads((root / "public-assets-provenance.json").read_text())
+    assert (
+        provenance["metrics_sha256"]
+        == hashlib.sha256(
+            (HERE / "public-assets-metrics.json").read_bytes()
+        ).hexdigest()
+    )
+    assert provenance["font"]["source"] == "tiny5.glyphs.txt"
+    assert (
+        provenance["font"]["sha256"]
+        == "38d7d58a644a3cc03d49e1c59ffab3be8eb0ea91c7e4a256983d8b487f849e6d"
+    )
+    assert provenance["font"]["license_source"] == "tiny5-OFL.txt"
+    assert (
+        provenance["font"]["license_sha256"]
+        == "6fe7d64407c69d187748206265977654747d3e2fe9e38e45a62cd03ec4770df6"
+    )
+    assert provenance["font"]["fallback"] == {
+        "source": "ProggyVector-Regular.ttf",
+        "sha256": "dae80a9b9bb23a37f60465dd93de9365a8ddd43300adc304d96f91ce54c28dd5",
+        "usage": "Only Unicode/symbol glyphs absent from Tiny5; unmodified TTF retained for the debugger.",
+    }
+    font_license = (root / "public-assets-font-license.txt").read_text()
+    tiny5_license = font_license.split("Tiny5 bitmap fonts\n\n", 1)[1].split(
+        "\nProggyVector: uncovered Unicode/symbol glyphs and debugger TTF\n\n", 1
+    )[0]
+    assert (
+        hashlib.sha256(tiny5_license.encode()).hexdigest()
+        == provenance["font"]["license_sha256"]
+    )
+    assert "BITSTREAM VERA LICENSE" in font_license and "MIT LICENSE" in font_license
     actual_files = {str(p.relative_to(root)) for p in root.rglob("*") if p.is_file()}
     assert actual_files == set(provenance["files"]) | {"public-assets-provenance.json"}
     for name, expected in provenance["files"].items():
@@ -102,6 +139,13 @@ def structural(root, metrics):
                 assert len(pixels) == size
                 if 33 <= code <= 126:
                     assert any(pixels), (slot, code, "blank printable ASCII")
+                if name == "FONT_NES" and code in TINY5_NES_PIXELS:
+                    assert (width, height) == (8, 8)
+                    assert pixels == TINY5_NES_PIXELS[code], (
+                        slot,
+                        code,
+                        "not exact Tiny5 pixels",
+                    )
                 pos += size
         assert pos == len(body)
     for name in MIDIS:
@@ -121,7 +165,7 @@ def structural(root, metrics):
         assert struct.unpack_from("<ii", data, 18) == size
         assert struct.unpack_from("<H", data, 28)[0] == 8
     print(
-        "Verified hashes, 61 audible PCM slots, 101 font slots/metrics, seven silent MIDI files and two indexed BMPs."
+        "Verified hashes, Tiny5 license/provenance/exact pixels, 61 audible PCM slots, 101 font slots/metrics, seven silent MIDI files and two indexed BMPs."
     )
 
 
