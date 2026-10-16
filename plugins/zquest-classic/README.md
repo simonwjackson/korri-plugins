@@ -159,9 +159,11 @@ preservation of local files. Test accounts do not answer the upload question,
 so a launcher regression stops the run at upstream's modal. The checks assert
 the exact handheld-settings edits and that the player keeps them on exit.
 They also assert upstream's `auto_scopes.zplay` against the pinned interpreter.
-Static graphics expectations account for the replacement font pixels.
-All upstream script traces, RNG, controls and timing must remain exact. Its Git LFS files are fetched
-by hash for tests only and are absent from the plugin closure.
+Only 26 graphics hashes differ from upstream for the replacement fonts.
+All 100 non-graphics events, including script traces, RNG, controls and timing,
+remain exact. Its Git LFS files are fetched by hash for tests only and are absent
+from the plugin closure. The Tiny5 test checks deterministic generation, exact
+fitting pixels, unchanged metrics and rejection of altered glyph/license inputs.
 The native asset reader checks all 61 samples, 101 font slots/metrics, seven
 silent MIDI tracks and two bitmaps. It exercises the real MIDI timer at each
 default loop boundary. The original win-room variant exercises the ending,
@@ -169,8 +171,9 @@ acknowledgement, save write, backup and return to the quest.
 A private PulseAudio null sink exercises real sound initialization without
 hardware or an ALSA sequencer. These checks do not establish audible output,
 physical-controller support, all-quest compatibility, or device acceptance.
-The initial `public1` player checks passed on native x86_64 and aarch64 build
-machines on 2026-10-03. Later font revisions need their own acceptance checks.
+The `public2` Tiny5 player checks passed on native x86_64 and aarch64 build
+machines on 2026-10-16. The [off-device validation record](../../docs/deployments/2026-10-16-zquest-tiny5-validation.md)
+lists exact outputs, source archive hashes and acceptance limits.
 The check-only GitHub workflow runs both architectures and publishes nothing.
 
 For an interactive run with separate test state:
