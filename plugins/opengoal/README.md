@@ -39,7 +39,27 @@ Transfer the complete prepared directory to the device, not only `GAME.CGO`. Kee
 
 The library input is upstream's `out/<game>/iso/GAME.CGO` inside that prepared directory. This is a real game file emitted by each upstream `goal_src/<game>/game.gp`, not a Korri marker or manifest. The existing Fallout plugins use the same regular-file input pattern with `MASTER.DAT`.
 
-Register the measured `sha256:` identity and file location through Core's existing library records. The plugin adds a runner to that release. It does not create game entries or claim `.iso`, `.cgo`, or any other extension. Scanning a folder alone does not register these games. The pinned Core cannot route directly to a directory, and broad `.iso` discovery conflicts with Skate 3's existing claim.
+The plugin declares three games through `games`: Jak and Daxter, Jak II, and
+Jak 3. Renegade is a second release of Jak II and uses the same runner. Each
+prepared release has its architecture-specific `GAME.CGO` hash and one fixed
+file path relative to the Korri account root. No prepared-game system or broad
+`.iso` or `.cgo` content rule is added.
+
+Place the complete prepared trees at these locations. The migration must move
+the whole tree, not only the hashed file. For the default account, the account
+root is `<root>/users/default`.
+
+| Release | Prepared tree, relative to account root | Declared file, relative to account root |
+|---|---|---|
+| Jak 1 | `opengoal/jak1` | `opengoal/jak1/out/jak1/iso/GAME.CGO` |
+| Jak II USA | `opengoal/jak2` | `opengoal/jak2/out/jak2/iso/GAME.CGO` |
+| Jak II: Renegade | `opengoal/jak2-renegade` | `opengoal/jak2-renegade/out/jak2/iso/GAME.CGO` |
+| Jak 3 | `opengoal/jak3` | `opengoal/jak3/out/jak3/iso/GAME.CGO` |
+
+Discovery v2 checks these exact files when the plugin is enabled. Matching
+files become available releases of the declared games. Discovery never walks
+the surrounding build trees. A hash mismatch goes to the attention list.
+This requires the discovery v2 Core; this repository's pinned Core predates it.
 
 The launch callback selects the game from its runner ID, checks the upstream file-path suffix, and returns:
 
@@ -134,4 +154,6 @@ sudo korri-plugin install "$CACHE_URL" "$PACKAGE" "$APPROVAL"
 sudo korri-plugin enable @simonwjackson:opengoal
 ```
 
-These commands do not register game data. Do not use the test-only `seed` command for live installation.
+These commands do not transfer game data. Place complete prepared trees at the
+account-relative paths above. Do not use the test-only `seed` command for live
+installation.

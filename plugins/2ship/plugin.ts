@@ -9,7 +9,11 @@ export const description =
   "Runs Majora's Mask natively from your own supported Nintendo 64 ROM."
 
 export const systems = {
-  n64: { id: "n64", title: "Nintendo 64" },
+  n64: {
+    id: "n64",
+    title: "Nintendo 64",
+    content: { extensions: ["n64", "z64", "v64"] },
+  },
 }
 
 export const runners = {
@@ -24,14 +28,14 @@ export const runners = {
   },
 }
 
-export const discovery = {
-  fileReleases: {
-    "n64-roms": {
-      id: "@simonwjackson:2ship/n64-roms",
-      title: "Nintendo 64 ROMs",
-      extensions: ["n64", "z64", "v64"],
-      system: "n64",
-      runners: ["@simonwjackson:2ship/2ship"],
+export const games = {
+  "majoras-mask": {
+    title: "The Legend of Zelda: Majora's Mask",
+    releases: {
+      original: {
+        system: "n64",
+        hashes: runners["2ship"].releases,
+      },
     },
   },
 }

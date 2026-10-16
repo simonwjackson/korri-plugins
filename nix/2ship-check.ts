@@ -15,7 +15,7 @@ import { join } from "node:path"
 import process from "node:process"
 import type { PluginLaunchInput } from "../contracts/generated/korrid"
 import {
-  discovery,
+  games,
   handlers,
   name,
   runners,
@@ -48,13 +48,23 @@ assert.deepEqual(runners["2ship"].releases, [
   "sha256:8dc31559174f958a938ab7eccb25dd310a4167f98cb68a521181f4653b684431",
   "sha256:efb1365b3ae362604514c0f9a1a2d11f5dc8688ba5be660a37debf5e3be43f2b",
 ])
-assert.deepEqual(systems, { n64: { id: "n64", title: "Nintendo 64" } })
-assert.deepEqual(discovery.fileReleases["n64-roms"], {
-  id: "@simonwjackson:2ship/n64-roms",
-  title: "Nintendo 64 ROMs",
-  extensions: ["n64", "z64", "v64"],
-  system: "n64",
-  runners: [runners["2ship"].id],
+assert.deepEqual(systems, {
+  n64: {
+    id: "n64",
+    title: "Nintendo 64",
+    content: { extensions: ["n64", "z64", "v64"] },
+  },
+})
+assert.deepEqual(games, {
+  "majoras-mask": {
+    title: "The Legend of Zelda: Majora's Mask",
+    releases: {
+      original: {
+        system: "n64",
+        hashes: runners["2ship"].releases,
+      },
+    },
+  },
 })
 assert.deepEqual(Object.keys(handlers), ["launch.prepare"])
 const admission = spawnSync(

@@ -9,7 +9,11 @@ export const description =
   "Runs the native Super Mario World reimplementation with your own USA ROM."
 
 export const systems = {
-  snes: { id: "snes", title: "Super Nintendo" },
+  snes: {
+    id: "snes",
+    title: "Super Nintendo",
+    content: { extensions: ["smc", "sfc"] },
+  },
 }
 
 export const runners = {
@@ -25,14 +29,14 @@ export const runners = {
   },
 }
 
-export const discovery = {
-  fileReleases: {
-    "snes-files": {
-      id: "@simonwjackson:super-mario-world/snes-files",
-      title: "Super Nintendo files",
-      extensions: ["smc", "sfc"],
-      system: "snes",
-      runners: [runners.smw.id],
+export const games = {
+  "super-mario-world": {
+    title: "Super Mario World",
+    releases: {
+      original: {
+        system: "snes",
+        hashes: runners.smw.releases,
+      },
     },
   },
 }

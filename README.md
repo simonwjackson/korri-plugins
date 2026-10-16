@@ -4,6 +4,28 @@ This is `simonwjackson/korri-plugins`, built separately from Korri OS.
 The publisher namespace is `@simonwjackson`, following the existing personal
 PICO-8 producer. A namespace declaration does not grant device trust.
 
+## Discovery v2
+
+System file rules now live in `systems.<id>.content`. Discovery scans only
+folders paired with a system or group. It does not scan plugin data.
+Measured original-content hashes also declare games for 2 Ship 2 Harkinian,
+ActRaiser, Fable II, Melee, Nocturne, Skate 3, Super Mario World and The Simpsons
+Game. These declarations have no fixed `file`: a matching discovered release
+joins the declared game. The runners keep their hash gates.
+
+OpenGOAL and Fallout CE declare exact prepared-file paths relative to each
+account root. Their READMEs list the paths and complete-tree move requirements.
+Prepared releases have no invented system. None of these plugins declares
+session controls. The contract names that optional export `controls`.
+
+The pinned Korri input predates discovery v2. Admission and sandbox package
+checks must run against the integrated Core before deployment. The focused
+source check needs Node 24, no game data and no display:
+
+```sh
+node nix/discovery-check.ts
+```
+
 ## Packages
 
 | Output | Plugin or contents | Platforms |
@@ -151,8 +173,10 @@ Build machines compile the Linux ARM runtime from pinned source with a Linux pat
 x86_64 uses the upstream release binary. Disc preparation runs explicitly on an
 x86 build machine and selects `--instruction-set x86` or `arm64`. Transfer the
 complete prepared tree afterwards. The runner matches only its architecture's
-measured `out/<game>/iso/GAME.CGO` files in registered library releases. It does
-not claim ISO files or create library entries. Signed publication and live
+measured `out/<game>/iso/GAME.CGO` files. The plugin declares three games;
+Renegade is a second release of Jak II. Discovery v2 checks the fixed
+account-relative paths in the plugin README. It does not scan prepared trees
+or claim ISO files. Signed publication and live
 installation remain separate steps. Mini V2 validation requires owner readiness
 approval before deployment.
 
@@ -257,8 +281,10 @@ See the plugin README for limitations, licenses and the publication procedure.
 [Fallout 2 CE](plugins/fallout2-ce/README.md) provide separate native runners.
 They match the measured `MASTER.DAT` hashes from the owner's installations.
 They launch from the writable installation folder and preserve native config and
-save behavior. There is no archive extraction, automatic library registration,
-per-account save isolation, or `.dat` extension claim.
+save behavior. Discovery v2 checks the declared account-relative files
+`fallout1/MASTER.DAT` and `fallout2/MASTER.DAT`. Move each complete installation,
+not only that file. There is no archive extraction or `.dat` content rule.
+Native saves stay with the installation.
 
 Both architectures have package checks for native ELF, license notices, manifest,
 strict launch types, real host admission and the production callback executor.

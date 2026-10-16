@@ -19,6 +19,18 @@ export const runners = {
   },
 }
 
+export const games = {
+  fallout1: {
+    title: "Fallout",
+    releases: {
+      prepared: {
+        hashes: runners["fallout-ce"].releases,
+        file: "fallout1/MASTER.DAT",
+      },
+    },
+  },
+}
+
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   if (input.runnerId !== runners["fallout-ce"].id) {
     throw new Error("Unknown Fallout runner")

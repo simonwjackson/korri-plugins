@@ -5,7 +5,6 @@ import { join } from "node:path"
 import process from "node:process"
 import type { PluginLaunchInput } from "../contracts/generated/korrid"
 import {
-  discovery,
   handlers,
   name,
   runners,
@@ -29,7 +28,11 @@ assert.deepEqual(manifest.ports, {})
 accessSync(manifest.files.zplayer, constants.X_OK)
 assert.equal(name, "zquest-classic")
 assert.deepEqual(systems, {
-  "zelda-classic": { id: "zelda-classic", title: "Zelda Classic Quest" },
+  "zelda-classic": {
+    id: "zelda-classic",
+    title: "Zelda Classic Quest",
+    content: { extensions: ["qst"] },
+  },
 })
 assert.deepEqual(runners, {
   zplayer: {
@@ -37,13 +40,6 @@ assert.deepEqual(runners, {
     program: "zplayer",
     systems: ["zelda-classic"],
   },
-})
-assert.deepEqual(discovery.fileReleases["quest-files"], {
-  id: "@simonwjackson:zquest-classic/quest-files",
-  title: "ZQuest Classic quest files",
-  extensions: ["qst"],
-  system: "zelda-classic",
-  runners: [runners.zplayer.id],
 })
 assert.deepEqual(Object.keys(handlers), ["launch.prepare"])
 const admission = spawnSync(

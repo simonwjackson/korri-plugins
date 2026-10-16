@@ -31,6 +31,32 @@ const armHashes = [
   ["sha256:7280fce6003568d10b36cc26cb7cac13a545959e44353b7bbe1bd1a73eadb58a"],
 ]
 const hashes = system === "aarch64-linux" ? armHashes : x86Hashes
+assert.deepEqual(plugin.games, {
+  jak1: {
+    title: "Jak and Daxter: The Precursor Legacy",
+    releases: {
+      prepared: { hashes: hashes[0], file: "opengoal/jak1/out/jak1/iso/GAME.CGO" },
+    },
+  },
+  jak2: {
+    title: "Jak II",
+    releases: {
+      prepared: { hashes: [hashes[1][0]], file: "opengoal/jak2/out/jak2/iso/GAME.CGO" },
+      renegade: { hashes: [hashes[1][1]], file: "opengoal/jak2-renegade/out/jak2/iso/GAME.CGO" },
+    },
+  },
+  jak3: {
+    title: "Jak 3",
+    releases: {
+      prepared: { hashes: hashes[2], file: "opengoal/jak3/out/jak3/iso/GAME.CGO" },
+    },
+  },
+})
+for (const game of Object.values(plugin.games) as Array<{ releases: Record<string, object> }>) {
+  for (const release of Object.values(game.releases)) {
+    assert.equal("system" in release, false, "No invented prepared-game system")
+  }
+}
 const otherHashes = system === "aarch64-linux" ? x86Hashes : armHashes
 const elf = readFileSync(manifest.files.opengoal)
 assert.equal(elf.subarray(0, 4).toString("hex"), "7f454c46")

@@ -52,6 +52,16 @@ assert.deepEqual(plugin.runners, {
 // No extension guess, platform invention, or claim that any DAT file is Fallout.
 assert.equal(plugin.discovery, undefined)
 assert.equal(plugin.systems, undefined)
+const game = name === "fallout1-ce" ? "fallout1" : "fallout2"
+assert.deepEqual(plugin.games, {
+  [game]: {
+    title: name === "fallout1-ce" ? "Fallout" : "Fallout 2",
+    releases: {
+      prepared: { hashes: [expectedHash], file: `${game}/MASTER.DAT` },
+    },
+  },
+})
+assert.equal("system" in plugin.games[game].releases.prepared, false, "No invented prepared-game system")
 assert.deepEqual(Object.keys(plugin.handlers), ["launch.prepare"])
 
 const admission = spawnSync(hostCli, ["seed", packagePath, "https://cache.example.invalid"], {

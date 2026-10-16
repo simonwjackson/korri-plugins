@@ -16,7 +16,7 @@ import { join } from "node:path"
 import process from "node:process"
 import type { PluginLaunchInput } from "../contracts/generated/korrid"
 import {
-  discovery,
+  games,
   handlers,
   name,
   runners,
@@ -45,13 +45,21 @@ assert.deepEqual(runners.smw.releases, [
   "sha256:d70c9c7716ad12c674fc7dd744736aa48d4d7b4237f58066be620fda26024872",
   "sha256:0838e531fe22c077528febe14cb3ff7c492f1f5fa8de354192bdff7137c27f5b",
 ])
-assert.deepEqual(systems.snes, { id: "snes", title: "Super Nintendo" })
-assert.deepEqual(discovery.fileReleases["snes-files"], {
-  id: "@simonwjackson:super-mario-world/snes-files",
-  title: "Super Nintendo files",
-  extensions: ["smc", "sfc"],
-  system: "snes",
-  runners: [runners.smw.id],
+assert.deepEqual(systems.snes, {
+  id: "snes",
+  title: "Super Nintendo",
+  content: { extensions: ["smc", "sfc"] },
+})
+assert.deepEqual(games, {
+  "super-mario-world": {
+    title: "Super Mario World",
+    releases: {
+      original: {
+        system: "snes",
+        hashes: runners.smw.releases,
+      },
+    },
+  },
 })
 assert.deepEqual(Object.keys(handlers), ["launch.prepare"])
 
