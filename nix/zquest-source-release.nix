@@ -17,6 +17,8 @@ let
       ../plugins/zquest-classic/public-assets.py
       ../plugins/zquest-classic/public-assets-validate.py
       ../plugins/zquest-classic/public-assets-metrics.json
+      ../plugins/zquest-classic/tiny5.glyphs.txt
+      ../plugins/zquest-classic/tiny5-OFL.txt
       ../plugins/zquest-classic/ASSET-LICENSES.md
       ../plugins/zquest-classic/PUBLIC-CHANGES.txt
       ../plugins/zquest-classic/public-source.nix

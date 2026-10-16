@@ -10,13 +10,24 @@ They do not establish rights to user-supplied quests, music or graphics.
 | --- | --- |
 | `sfx.dat` | 61 original procedural cues from `public-assets.py`, one per required sample slot. Integer triangle-wave sweeps and seeded filtered noise; no recordings, transcriptions, melodies or upstream sample bytes. MIT terms below. |
 | `assets/{dungeon,ending,gameover,level9,overworld,title,triforce}.mid` | Generated format-0 MIDI: tempo 120 BPM, all-notes-off controller, 255 quarter-note-spaced markers and end-of-track at beat 256. No note events. The timeline covers the engine's ending loop (129–225) and overworld loop (17–EOF); a one-beat empty track cannot safely use those loop points. MIT terms below. Only engine defaults are silent; quest-provided music is not changed. |
-| `modules/classic/classic_fonts.dat` | **Korri Compatibility Raster**, a pixel-rasterized, resized derivative of the licensed ProggyVector TTF. The full embedded copyright and license entries are in `public-assets-font-license.txt`. MIT, public-domain DejaVu contributions, and Bitstream Vera font terms apply as described there. Do not sell these fonts by themselves. |
+| `modules/classic/classic_fonts.dat` | Common game glyphs are Tiny5 derivatives fitted to the existing font-slot metrics. Uncovered Unicode/symbol glyphs use the licensed ProggyVector input. Tiny5 remains under SIL OFL 1.1. ProggyVector's MIT, public-domain DejaVu contributions and Bitstream Vera terms remain applicable to its glyphs. Complete copyright and license notices are in `public-assets-font-license.txt`. Do not sell these fonts by themselves. |
 | `assets/cursor.bmp` | Original generic outlined pointer, generated geometrically. MIT terms below. |
 | `assets/gui_pal.bmp` | Generated grayscale and RGB-cube palette with required engine black/white indices. MIT terms below. |
 | `public-assets-provenance.json` | Generator/input hashes, renderer versions, slot inventory and output hashes. Generated without absolute source/store paths or timestamps. MIT terms below. |
 
-The TTF input is `resources/ProggyVector-Regular.ttf` from the pinned source,
-SHA-256 `dae80a9b9bb23a37f60465dd93de9365a8ddd43300adc304d96f91ce54c28dd5`.
+Tiny5 is by The Tiny5 Project Authors (Gissio), copyright 2022-2024.
+The input `tiny5.glyphs.txt` is vendored from Korri Pico's extracted font table,
+whose upstream source is [Tiny5 in Google Fonts](https://github.com/google/fonts/tree/main/ofl/tiny5).
+Its SHA-256 is `38d7d58a644a3cc03d49e1c59ffab3be8eb0ea91c7e4a256983d8b487f849e6d`.
+The complete SIL Open Font License 1.1 is in `tiny5-OFL.txt`, SHA-256
+`6fe7d64407c69d187748206265977654747d3e2fe9e38e45a62cd03ec4770df6`.
+The corresponding-source archive includes both exact files beside the generator
+and in the original recipe directory. The runtime font notice includes the
+complete Tiny5 copyright and OFL text. Tiny5 derivatives retain OFL terms.
+
+The additional TTF input is `resources/ProggyVector-Regular.ttf` from the pinned
+engine source, SHA-256
+`dae80a9b9bb23a37f60465dd93de9365a8ddd43300adc304d96f91ce54c28dd5`.
 The generator refuses other font inputs. It does not modify or emit the
 original TTF. The player package retains that TTF separately for its debugger,
 and the corresponding-source archive includes it with its embedded notices.
@@ -27,8 +38,10 @@ heights and byte-character advance widths, obtained with the pinned Allegro
 reader from `classic_fonts.dat` (SHA-256
 `e1008c6ea910a67071ef5825a9dfe5324fbacd15af2e050d0a5325e13f880958`).
 It contains no glyph pixels. Rebuilding does not read the original datafile.
-ASCII text keeps the measured advances and line heights; glyph appearance
-changes. Accents and narrow cells can lose detail at six/eight-pixel sizes.
+Common game text uses Tiny5 fitted to the measured advances and line heights;
+this is a glyph change, not a larger-text setting. Accents and very small or
+narrow cells can lose detail when fitted. Preserving metrics does not establish
+that text fits in every user quest's custom layout.
 Byte 132/133 in `FONT_NES` map to left/right arrows as required by `title.cpp`.
 Other C1 control slots show a replacement character. Latin slots use Unicode;
 custom symbolic, fictional and non-Latin legacy alphabets are not reproduced.
@@ -38,12 +51,13 @@ This is not full compatibility with quests that use those decorative symbols.
 
 `public-assets.py --output DIR --source SOURCE --font TTF` requires an empty
 output directory and Python with Pillow/FreeType. It reads only the explicit
-TTF, source slot/version headers, numeric metrics and this notice. It performs
-no network access, device access or upstream-media fallback. `public-assets.nix`
+TTF, vendored Tiny5 glyph table and OFL notice, source slot/version headers,
+numeric metrics and this notice. It performs no network access, device access
+or upstream-media fallback. `public-assets.nix`
 provides the dependencies and writes a flat resource tree directly to `$out`.
 Import it with `{ pkgs, source = pinnedSource; }`.
-Use the locked Nix inputs for repeatable font rasterization; different
-Pillow/FreeType versions can produce different pixels.
+Use the locked Nix inputs for repeatable font generation; different
+Pillow/FreeType versions can change the ProggyVector-derived glyph pixels.
 
 The datafile/packfile encoder follows the pinned Allegro reader in
 `third_party/allegro_legacy/src/datafile.c` and `file.c`. It writes uncompressed

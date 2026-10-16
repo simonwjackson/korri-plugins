@@ -62,6 +62,14 @@ keys. Package/resource changes are separate.
 No `title_gfx.dat`, replacement quest-format menu resource, `190_tiles.qst`,
 or player `default.qst` is required.
 
+The current generator fits Tiny5's common game glyphs to the existing slot
+advances and heights. This does not enlarge text or change this patch's
+font-loading interface. Uncovered Unicode/symbol glyphs use ProggyVector,
+which also remains for the debugger. Keep the complete Tiny5 OFL and
+ProggyVector notices with generated fonts. The corresponding-source recipe
+includes the Tiny5 glyph table and OFL notice as regeneration inputs.
+Preserved metrics do not prove that every user quest's custom text layout fits.
+
 ## Verified checks
 
 - Read the pinned source directly; `tiles.h` exports `newtilebuf`,
