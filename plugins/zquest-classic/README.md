@@ -220,8 +220,9 @@ payloads for that release are public. That record does not establish publication
 or device acceptance of later font revisions.
 
 The [public2 publication record](../../docs/deployments/2026-10-16-zquest-tiny5-publication.md)
-records public corresponding source and a signature-conflict blocker before any
-public2 binary upload. It does not establish public2 device acceptance.
+records public corresponding source, both signed packages, native signature
+preservation and anonymous download verification. It does not establish public2
+device acceptance.
 
 Public destination: `https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
 Publish only the exact checked ZQuest plugin outputs, never all flake packages,
