@@ -10,7 +10,11 @@ export const description =
 
 // Existing SNES identity, shared with SMW, Zelda3 and Snes9x.
 export const systems = {
-  snes: { id: "snes", title: "Super Nintendo" },
+  snes: {
+    id: "snes",
+    title: "Super Nintendo",
+    content: { extensions: ["sfc", "smc"] },
+  },
 }
 
 export const runners = {
@@ -24,14 +28,14 @@ export const runners = {
   },
 }
 
-export const discovery = {
-  fileReleases: {
-    "snes-files": {
-      id: "@simonwjackson:actraiser/snes-files",
-      title: "Super Nintendo files",
-      extensions: ["sfc", "smc"],
-      system: "snes",
-      runners: [runners.actraiser.id],
+export const games = {
+  actraiser: {
+    title: "ActRaiser",
+    releases: {
+      original: {
+        system: "snes",
+        hashes: runners.actraiser.releases,
+      },
     },
   },
 }

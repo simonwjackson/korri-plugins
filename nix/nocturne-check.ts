@@ -4,7 +4,7 @@ import { accessSync, constants, readFileSync } from "node:fs"
 import { join } from "node:path"
 import process from "node:process"
 import type { PluginLaunchInput } from "../contracts/generated/korrid"
-import { discovery, handlers, name, runners, systems } from "../plugins/nocturne/plugin"
+import { games, handlers, name, runners, systems } from "../plugins/nocturne/plugin"
 
 const [packagePath, hostCli, korridCli, recordArguments] = process.argv.slice(2)
 assert(packagePath && hostCli && korridCli && recordArguments)
@@ -18,18 +18,28 @@ assert.deepEqual(manifest.services, {})
 assert.deepEqual(manifest.ports, {})
 accessSync(manifest.files.nocturne, constants.X_OK)
 assert.equal(name, "nocturne")
-assert.deepEqual(systems, { "xbox-360": { id: "xbox-360", title: "Xbox 360" } })
+assert.deepEqual(systems, {
+  "xbox-360": {
+    id: "xbox-360",
+    title: "Xbox 360",
+    content: { extensions: ["xex"] },
+  },
+})
 assert.equal(runners.nocturne.id, "@simonwjackson:nocturne/nocturne")
 assert.equal(runners.nocturne.program, "nocturne")
 assert.deepEqual(runners.nocturne.releases, [
   "sha256:26a58b074c5dd6185b77a8111a0012866d11cba674b4b0810d79dbf07ad68aa6",
 ])
-assert.deepEqual(discovery.fileReleases["xbox-360-executables"], {
-  id: "@simonwjackson:nocturne/xbox-360-executables",
-  title: "Xbox 360 executables",
-  extensions: ["xex"],
-  system: "xbox-360",
-  runners: [runners.nocturne.id],
+assert.deepEqual(games, {
+  "symphony-of-the-night": {
+    title: "Castlevania: Symphony of the Night",
+    releases: {
+      original: {
+        system: "xbox-360",
+        hashes: runners.nocturne.releases,
+      },
+    },
+  },
 })
 
 const admission = spawnSync(hostCli, ["seed", packagePath, "https://cache.example.invalid"], { encoding: "utf8" })

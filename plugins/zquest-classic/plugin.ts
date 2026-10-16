@@ -8,26 +8,19 @@ export const title = "ZQuest Classic"
 export const description =
   "Plays Zelda Classic .qst quests with account-owned saves."
 
-// Retain the system, runner and discovery names from Korri legacy's producer.
+// Retain the system and runner names from Korri legacy's producer.
 export const systems = {
-  "zelda-classic": { id: "zelda-classic", title: "Zelda Classic Quest" },
+  "zelda-classic": {
+    id: "zelda-classic",
+    title: "Zelda Classic Quest",
+    content: { extensions: ["qst"] },
+  },
 }
 export const runners = {
   zplayer: {
     id: "@simonwjackson:zquest-classic/zplayer",
     program: "zplayer",
     systems: ["zelda-classic"],
-  },
-}
-export const discovery = {
-  fileReleases: {
-    "quest-files": {
-      id: "@simonwjackson:zquest-classic/quest-files",
-      title: "ZQuest Classic quest files",
-      extensions: ["qst"],
-      system: "zelda-classic",
-      runners: [runners.zplayer.id],
-    },
   },
 }
 

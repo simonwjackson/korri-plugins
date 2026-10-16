@@ -12,7 +12,7 @@ import { join } from "node:path"
 import process from "node:process"
 import type { PluginLaunchInput } from "../contracts/generated/korrid"
 import {
-  discovery,
+  games,
   handlers,
   name,
   runners,
@@ -44,13 +44,23 @@ assert.deepEqual(runners.simpsons, {
     "sha256:fd794e7a3025c3fd1340d25301658bac8c829a65d5e5e47d2663b431f869531b",
   ],
 })
-assert.deepEqual(systems, { "xbox-360": { id: "xbox-360", title: "Xbox 360" } })
-assert.deepEqual(discovery.fileReleases["xbox-360-discs"], {
-  id: "@simonwjackson:the-simpsons-game/xbox-360-discs",
-  title: "Xbox 360 disc images",
-  extensions: ["iso"],
-  system: "xbox-360",
-  runners: [runners.simpsons.id],
+assert.deepEqual(systems, {
+  "xbox-360": {
+    id: "xbox-360",
+    title: "Xbox 360",
+    content: { extensions: ["iso"] },
+  },
+})
+assert.deepEqual(games, {
+  "the-simpsons-game": {
+    title: "The Simpsons Game",
+    releases: {
+      original: {
+        system: "xbox-360",
+        hashes: runners.simpsons.releases,
+      },
+    },
+  },
 })
 assert.deepEqual(Object.keys(handlers), ["launch.prepare"])
 

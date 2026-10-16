@@ -5,7 +5,7 @@ import { join } from "node:path"
 import process from "node:process"
 import type { PluginLaunchInput } from "../contracts/generated/korrid"
 import {
-  discovery,
+  games,
   handlers,
   name,
   runners,
@@ -27,7 +27,13 @@ assert.deepEqual(manifest.services, {})
 assert.deepEqual(manifest.ports, {})
 accessSync(manifest.files.actraiser, constants.X_OK)
 assert.equal(name, "actraiser")
-assert.deepEqual(systems, { snes: { id: "snes", title: "Super Nintendo" } })
+assert.deepEqual(systems, {
+  snes: {
+    id: "snes",
+    title: "Super Nintendo",
+    content: { extensions: ["sfc", "smc"] },
+  },
+})
 assert.deepEqual(Object.keys(runners), ["actraiser"])
 assert.equal(runners.actraiser.id, "@simonwjackson:actraiser/actraiser")
 assert.equal(runners.actraiser.program, "actraiser")
@@ -35,12 +41,16 @@ assert(!("systems" in runners.actraiser))
 assert.deepEqual(runners.actraiser.releases, [
   "sha256:b8055844825653210d252d29a2229f9a3e7e512004e83940620173c57d8723f0",
 ])
-assert.deepEqual(discovery.fileReleases["snes-files"], {
-  id: "@simonwjackson:actraiser/snes-files",
-  title: "Super Nintendo files",
-  extensions: ["sfc", "smc"],
-  system: "snes",
-  runners: [runners.actraiser.id],
+assert.deepEqual(games, {
+  actraiser: {
+    title: "ActRaiser",
+    releases: {
+      original: {
+        system: "snes",
+        hashes: runners.actraiser.releases,
+      },
+    },
+  },
 })
 assert.deepEqual(Object.keys(handlers), ["launch.prepare"])
 

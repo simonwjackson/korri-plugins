@@ -10,7 +10,11 @@ export const description =
   "Runs the experimental native Fable II recompilation with your USA/Europe GOTY ISO."
 
 export const systems = {
-  "xbox-360": { id: "xbox-360", title: "Xbox 360" },
+  "xbox-360": {
+    id: "xbox-360",
+    title: "Xbox 360",
+    content: { extensions: ["iso"] },
+  },
 }
 
 export const runners = {
@@ -24,14 +28,14 @@ export const runners = {
   },
 }
 
-export const discovery = {
-  fileReleases: {
-    "xbox-360-discs": {
-      id: "@simonwjackson:fable-ii-recomp/xbox-360-discs",
-      title: "Xbox 360 disc images",
-      extensions: ["iso"],
-      system: "xbox-360",
-      runners: [runners.fable_ii.id],
+export const games = {
+  "fable-ii": {
+    title: "Fable II",
+    releases: {
+      original: {
+        system: "xbox-360",
+        hashes: runners.fable_ii.releases,
+      },
     },
   },
 }

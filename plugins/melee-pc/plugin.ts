@@ -19,6 +19,17 @@ export const runners = {
   },
 }
 
+export const games = {
+  melee: {
+    title: "Super Smash Bros. Melee",
+    releases: {
+      original: {
+        hashes: runners["melee-pc"].releases,
+      },
+    },
+  },
+}
+
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   if (input.corePath !== undefined) {
     throw new Error("Melee PC is a standalone game and loads no core")

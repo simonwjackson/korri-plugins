@@ -38,11 +38,11 @@ The measurement streamed the ISO from the owner's `The Simpsons Game X360.rar`
 on myoko. This is not the RAR hash or an XEX hash. Upstream targets the USA
 release, title ID `45410809`. Other regions and dumps are not admitted.
 
-Add the bare ISO to an existing library folder. The scanner does not unpack
-RAR or ZIP files. The existing `RunnerRecord.releases` contract matches its
-whole-file hash. The discovery claim follows the existing Skate 3 producer,
-assigning `.iso` to `xbox-360`. A different system claiming `.iso` still causes
-Core's `ClaimConflict`.
+Pair the folder containing the bare ISO with `xbox-360`. The scanner does not
+unpack RAR or ZIP files. The system's `content.extensions` includes `iso`.
+The declared `the-simpsons-game` game's `original` release names its measured
+whole-file hash, with no fixed file path. A matching discovered ISO joins that
+game. The existing runner hash list still selects the launch route.
 
 The native launcher checks the ISO hash on every launch. This reads about
 7.84 GB even when the game is already installed. It avoids a new verification

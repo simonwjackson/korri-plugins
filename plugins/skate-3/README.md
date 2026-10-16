@@ -60,11 +60,12 @@ logs, first-run windowing, and library paths. The game needs internet for its
 first title-update download and a working Vulkan driver at
 `/run/opengl-driver`. Later launches reuse the installed game files.
 
-Discovery needs the bare `.iso` in an existing library folder. The ZIP is
-not discoverable through this claim. The claim assigns `.iso` to `xbox-360`;
-a different system claiming `.iso` still causes Core's `ClaimConflict`.
-The plugin adds no archive extraction, hash-based discovery, or launch-time
-rehashing. Both architectures use the same hash gate and launch callback.
+Pair the folder containing the bare `.iso` with `xbox-360`. The system's
+`content.extensions` includes `iso`; discovery does not inspect ZIP archives.
+The declared `skate-3` game's `original` release names the measured whole-file
+hash, with no fixed file path. A matching discovered ISO joins that game.
+Both architectures retain the same runner hash gate and launch callback.
+No archive extraction or launch-time rehashing is added by the declaration.
 
 On the Mini V2, the pinned native build passed a 227-second intro movie run
 without a new GPU fault. Keep native FMV enabled. Forced emulated movie

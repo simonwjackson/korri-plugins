@@ -19,6 +19,18 @@ export const runners = {
   },
 }
 
+export const games = {
+  fallout2: {
+    title: "Fallout 2",
+    releases: {
+      prepared: {
+        hashes: runners["fallout2-ce"].releases,
+        file: "fallout2/MASTER.DAT",
+      },
+    },
+  },
+}
+
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   if (input.runnerId !== runners["fallout2-ce"].id) {
     throw new Error("Unknown Fallout 2 runner")

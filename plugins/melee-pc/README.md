@@ -23,10 +23,11 @@ with the same bytes works. An archive, compressed disc, other revision, or PAL
 disc does not. Upstream supports more formats, but those are not measured inputs
 for this plugin.
 
-No general GameCube system or scanner is added. This plugin does not claim all
-`.iso` files, create library entries, register folders, or extract game data.
-The declaration uses the existing release-specific runner contract without a
-system claim.
+The plugin declares `melee` with an `original` release naming this hash,
+without a fixed file path or system. When another enabled plugin's system rules
+identify this disc in a paired source, discovery joins it to the declared game.
+No general GameCube system, `.iso` content rule, or extraction is added here.
+The existing release-specific runner hash list still selects the launch route.
 
 ## Native state and updates
 

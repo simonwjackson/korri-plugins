@@ -18,20 +18,22 @@ SHA-256 `aad9a53083e498fefe8f65652601ff9d9a9d2c1fb76d7fa97549214f17f0e694`.
 Retain the installation's `DATA` directory, including music and patch files.
 Do not register `CRITTER.DAT` or the enclosing archive as this release.
 
-The plugin adds a route to an existing library release whose key is
-`sha256:<the MASTER.DAT hash above>`. The release's file location must point to
-that `MASTER.DAT`, with its companion files in the same installation.
+The plugin declares the game `fallout1` with a `prepared` release. Its `file`
+is `fallout1/MASTER.DAT`, relative to the Korri account root. For the default
+account, this is `<root>/users/default/fallout1/MASTER.DAT`. Move the complete
+writable installation to `<accountRoot>/fallout1`, including companion files,
+native config, patches and saves. Do not move only `MASTER.DAT`.
+Discovery v2 hashes this exact file and makes the declared game available when
+it matches. A mismatch goes to the attention list.
 The runner does not rehash the file on every launch. Korri owns release identity.
 The identity covers `MASTER.DAT`, not the companion files, patches or mods.
 Only this measured file is admitted. Other editions need separate checks.
 
-There is deliberately no `discovery.fileReleases` contribution and no new system
-ID. Korri's current scanner uses extension claims, not exact-file discovery rules.
-Claiming `.dat` would label unrelated data files as Fallout. These plugins do not
-create library entries, extract archives, install Windows software, or implement
-the pending shared system-identification design. Automatic library import is not
-provided by this slice. Existing catalog records must identify the installed
-`MASTER.DAT`; simply adding its directory through the scanner does not do that.
+The prepared release has no system. The runner's existing `releases` hash list
+still selects the launch route. No `.dat` content rule is added, so unrelated
+data files cannot be labeled as Fallout. Discovery never walks plugin data.
+The plugin does not extract archives or install Windows software. Exact-file
+registration requires discovery v2 Core; the pinned Core predates that contract.
 
 The callback returns the approved engine program, no arguments, and the parent
 of `MASTER.DAT` as `cwd`. It references the package's `libexec/fallout-ce`, not
@@ -136,7 +138,8 @@ sudo korri-plugin install "$CACHE_URL" "$PACKAGE" "$APPROVAL"
 sudo korri-plugin enable @simonwjackson:fallout1-ce
 ```
 
-These commands do not register game data or grant the runtime user write access
-to an installation. Keep those separate, explicit deployment steps.
+These commands do not transfer game data or grant the runtime user write access
+to an installation. Place the complete writable installation at the declared
+account-relative path above as a separate deployment step.
 
 See [Fallout 2 CE](../fallout2-ce/README.md) for its distinct data and runner.

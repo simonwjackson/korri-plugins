@@ -9,7 +9,11 @@ export const description =
   "Runs the native Xbox 360 recompilation with your own USA disc image."
 
 export const systems = {
-  "xbox-360": { id: "xbox-360", title: "Xbox 360" },
+  "xbox-360": {
+    id: "xbox-360",
+    title: "Xbox 360",
+    content: { extensions: ["iso"] },
+  },
 }
 
 export const runners = {
@@ -23,14 +27,14 @@ export const runners = {
   },
 }
 
-export const discovery = {
-  fileReleases: {
-    "xbox-360-discs": {
-      id: "@simonwjackson:the-simpsons-game/xbox-360-discs",
-      title: "Xbox 360 disc images",
-      extensions: ["iso"],
-      system: "xbox-360",
-      runners: [runners.simpsons.id],
+export const games = {
+  "the-simpsons-game": {
+    title: "The Simpsons Game",
+    releases: {
+      original: {
+        system: "xbox-360",
+        hashes: runners.simpsons.releases,
+      },
     },
   },
 }

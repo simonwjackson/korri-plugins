@@ -50,16 +50,24 @@ engine's resolution configuration. The plugin does not write either file.
 
 ## Launch contract and limits
 
-Register this exact `MASTER.DAT` as the library release's file location, with
-its `sha256:` identity. The plugin offers a runner for that existing release.
-It invokes the approved `libexec/fallout2-ce` directly from the file's parent
-directory. The XDG wrapper in `bin/fallout2-ce` is not used.
+The plugin declares `fallout2` with one `prepared` release, this measured hash,
+and `file: "fallout2/MASTER.DAT"`. The path is relative to the Korri account
+root, so the default account uses `<root>/users/default/fallout2/MASTER.DAT`.
+Move the complete writable installation to `<accountRoot>/fallout2`, including
+`CRITTER.DAT`, `DATA`, patch data, native config and saves. Do not move only
+`MASTER.DAT`. Discovery v2 checks the exact declared file, without scanning the
+installation tree. A matching file makes the declared game available; a
+mismatch goes to the attention list. The prepared release has no system.
+The existing runner hash list still selects the launch route.
+
+The callback invokes the approved `libexec/fallout2-ce` directly from the file's
+parent directory. The XDG wrapper in `bin/fallout2-ce` is not used.
 
 The same [discovery, writable-folder, account-sharing and deployment limits](../fallout1-ce/README.md)
-apply to both plugins. In particular, neither claims `.dat` or creates library
-entries. Scanning a directory alone does not register these games. No archive
-extractor, account save schema, controller mapper, or shared discovery change is
-part of this plugin. Fallout 1 and Fallout 2 hashes are distinct; neither runner
+apply to both plugins. Neither claims `.dat`. Exact-file registration requires
+discovery v2 Core; this repository's pinned Core predates that contract. No
+archive extractor, account save schema, or controller mapper is part of this
+plugin. Fallout 1 and Fallout 2 hashes are distinct; neither runner
 claims the other's file. Other editions and mods are unverified.
 
 ## Build and license

@@ -12,7 +12,7 @@ import { join } from "node:path"
 import process from "node:process"
 import type { PluginLaunchInput } from "../contracts/generated/korrid"
 import {
-  discovery,
+  games,
   handlers,
   name,
   runners,
@@ -44,13 +44,23 @@ assert.deepEqual(runners.fable_ii, {
     "sha256:2cdaafead95680e2c6fe8886a89f1ae3d5e41549857c7fc125a12aab1cb99ad9",
   ],
 })
-assert.deepEqual(systems, { "xbox-360": { id: "xbox-360", title: "Xbox 360" } })
-assert.deepEqual(discovery.fileReleases["xbox-360-discs"], {
-  id: "@simonwjackson:fable-ii-recomp/xbox-360-discs",
-  title: "Xbox 360 disc images",
-  extensions: ["iso"],
-  system: "xbox-360",
-  runners: [runners.fable_ii.id],
+assert.deepEqual(systems, {
+  "xbox-360": {
+    id: "xbox-360",
+    title: "Xbox 360",
+    content: { extensions: ["iso"] },
+  },
+})
+assert.deepEqual(games, {
+  "fable-ii": {
+    title: "Fable II",
+    releases: {
+      original: {
+        system: "xbox-360",
+        hashes: runners.fable_ii.releases,
+      },
+    },
+  },
 })
 assert.deepEqual(Object.keys(handlers), ["launch.prepare"])
 const admission = spawnSync(

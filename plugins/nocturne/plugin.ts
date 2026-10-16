@@ -9,7 +9,11 @@ export const description =
   "Runs Castlevania: Symphony of the Night from your extracted Xbox Live Arcade game."
 
 export const systems = {
-  "xbox-360": { id: "xbox-360", title: "Xbox 360" },
+  "xbox-360": {
+    id: "xbox-360",
+    title: "Xbox 360",
+    content: { extensions: ["xex"] },
+  },
 }
 
 export const runners = {
@@ -24,14 +28,14 @@ export const runners = {
   },
 }
 
-export const discovery = {
-  fileReleases: {
-    "xbox-360-executables": {
-      id: "@simonwjackson:nocturne/xbox-360-executables",
-      title: "Xbox 360 executables",
-      extensions: ["xex"],
-      system: "xbox-360",
-      runners: [runners.nocturne.id],
+export const games = {
+  "symphony-of-the-night": {
+    title: "Castlevania: Symphony of the Night",
+    releases: {
+      original: {
+        system: "xbox-360",
+        hashes: runners.nocturne.releases,
+      },
     },
   },
 }

@@ -9,7 +9,11 @@ export const description =
   "Runs the native Skate 3 recompilation on your own Xbox 360 disc image."
 
 export const systems = {
-  "xbox-360": { id: "xbox-360", title: "Xbox 360" },
+  "xbox-360": {
+    id: "xbox-360",
+    title: "Xbox 360",
+    content: { extensions: ["iso"] },
+  },
 }
 
 export const runners = {
@@ -24,14 +28,14 @@ export const runners = {
   },
 }
 
-export const discovery = {
-  fileReleases: {
-    "xbox-360-discs": {
-      id: "@simonwjackson:skate-3/xbox-360-discs",
-      title: "Xbox 360 disc images",
-      extensions: ["iso"],
-      system: "xbox-360",
-      runners: ["@simonwjackson:skate-3/skate3"],
+export const games = {
+  "skate-3": {
+    title: "Skate 3",
+    releases: {
+      original: {
+        system: "xbox-360",
+        hashes: runners.skate3.releases,
+      },
     },
   },
 }

@@ -28,6 +28,15 @@ assert.deepEqual(plugin.runners, {
   },
 })
 
+assert.deepEqual(plugin.games, {
+  melee: {
+    title: "Super Smash Bros. Melee",
+    releases: {
+      original: { hashes: plugin.runners["melee-pc"].releases },
+    },
+  },
+})
+
 const admission = spawnSync(hostCli, ["seed", packagePath, "https://cache.example.invalid"], { encoding: "utf8" })
 assert.equal(admission.status, 0, admission.stderr)
 assert.equal(JSON.parse(admission.stdout).id, "@simonwjackson:melee-pc")

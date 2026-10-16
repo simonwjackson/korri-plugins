@@ -17,8 +17,11 @@ sha256:26a58b074c5dd6185b77a8111a0012866d11cba674b4b0810d79dbf07ad68aa6
 
 This is upstream's `GameDataSelectorSettings.default_xex_sha256`, measured
 again from the owner's package. It is not the hash of the archive or STFS
-container. The discovery claim covers `.xex` files under `xbox-360`, matching
-Skate 3's existing system identity. Other executables do not match this runner.
+container. The `xbox-360` system's `content.extensions` includes `xex`.
+Pair the extracted-content folder with that system. The declared
+`symphony-of-the-night` game's `original` release names this executable's hash,
+with no fixed file path. A matching discovered file joins that game.
+Other executables do not match this runner.
 The plugin does not scan `.7z` archives or extensionless STFS containers.
 The initial owner's archive was extracted operationally, outside the plugin.
 

@@ -52,6 +52,42 @@ export const runners = {
   },
 }
 
+// Paths are relative to the Korri account root. Each installation keeps its
+// complete prepared tree; Renegade uses the Jak II runner but a separate tree.
+export const games = {
+  jak1: {
+    title: "Jak and Daxter: The Precursor Legacy",
+    releases: {
+      prepared: {
+        hashes: releases.jak1,
+        file: "opengoal/jak1/out/jak1/iso/GAME.CGO",
+      },
+    },
+  },
+  jak2: {
+    title: "Jak II",
+    releases: {
+      prepared: {
+        hashes: [releases.jak2[0]],
+        file: "opengoal/jak2/out/jak2/iso/GAME.CGO",
+      },
+      renegade: {
+        hashes: [releases.jak2[1]],
+        file: "opengoal/jak2-renegade/out/jak2/iso/GAME.CGO",
+      },
+    },
+  },
+  jak3: {
+    title: "Jak 3",
+    releases: {
+      prepared: {
+        hashes: releases.jak3,
+        file: "opengoal/jak3/out/jak3/iso/GAME.CGO",
+      },
+    },
+  },
+}
+
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   if (input.corePath !== undefined) {
     throw new Error("OpenGOAL is a native engine and loads no emulator core")
