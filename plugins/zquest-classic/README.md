@@ -219,6 +219,10 @@ limits for the initial `public1` release. Both source archives and signed
 payloads for that release are public. That record does not establish publication
 or device acceptance of later font revisions.
 
+The [public2 publication record](../../docs/deployments/2026-10-16-zquest-tiny5-publication.md)
+records public corresponding source and a signature-conflict blocker before any
+public2 binary upload. It does not establish public2 device acceptance.
+
 Public destination: `https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
 Publish only the exact checked ZQuest plugin outputs, never all flake packages,
 a build/test closure, or a copy of the private cache. Each batch uses its own
