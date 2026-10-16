@@ -1,9 +1,13 @@
 # Research: Dr. Mario 64 Recomp Plus on Linux
 
+Historical record: the native `@simonwjackson:drmario64` source plugin and
+flake outputs have been removed. Device uninstallation has not been verified;
+this source removal does not remove installed packages, ROMs, or saves.
+
 ## Summary
 The exact upstream has a Linux build path and explicit ARM64 shader-tool selection. Its private x86_64 engine build passed locally, and the native aarch64 build passed on the approved builder `fuji`. Owned-ROM startup, shutdown, restart, and persistence checks passed on both architectures. Physical-device gameplay remains unverified. A clean US retail ROM is required for generation and at runtime. Upstream warns it is "Very lightly tested overall."
 
-Inspection date: 2026-10-02. The checked upstream commit is `af91e3bf56b1ffc329ff4327fdc2380515463de7`. Initial research inspected source only. Subsequent package and runtime results are recorded in `plugins/drmario64/README.md`.
+Inspection date: 2026-10-02. The checked upstream commit is `af91e3bf56b1ffc329ff4327fdc2380515463de7`. Initial research inspected source only. Subsequent package and runtime results were recorded in `plugins/drmario64/README.md` at source commit `ca44593ef31890a6c716e6d52832905dbe7d7531`, before removal.
 
 ## Findings
 
