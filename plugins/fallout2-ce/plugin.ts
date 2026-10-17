@@ -25,7 +25,7 @@ export const games = {
     releases: {
       prepared: {
         hashes: runners["fallout2-ce"].releases,
-        file: "fallout2/MASTER.DAT",
+        file: "fallout2-ce/MASTER.DAT",
       },
     },
   },

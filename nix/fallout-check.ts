@@ -57,7 +57,7 @@ assert.deepEqual(plugin.games, {
   [game]: {
     title: name === "fallout1-ce" ? "Fallout" : "Fallout 2",
     releases: {
-      prepared: { hashes: [expectedHash], file: `${game}/MASTER.DAT` },
+      prepared: { hashes: [expectedHash], file: `${name === "fallout1-ce" ? "fallout-ce" : "fallout2-ce"}/MASTER.DAT` },
     },
   },
 })

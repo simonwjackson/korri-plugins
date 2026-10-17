@@ -51,9 +51,9 @@ engine's resolution configuration. The plugin does not write either file.
 ## Launch contract and limits
 
 The plugin declares `fallout2` with one `prepared` release, this measured hash,
-and `file: "fallout2/MASTER.DAT"`. The path is relative to the Korri account
-root, so the default account uses `<root>/users/default/fallout2/MASTER.DAT`.
-Move the complete writable installation to `<accountRoot>/fallout2`, including
+and `file: "fallout2-ce/MASTER.DAT"`. The path is relative to the Korri account
+root, so the default account uses `<root>/users/default/fallout2-ce/MASTER.DAT`.
+Move the complete writable installation to `<accountRoot>/fallout2-ce`, including
 `CRITTER.DAT`, `DATA`, patch data, native config and saves. Do not move only
 `MASTER.DAT`. Discovery v2 checks the exact declared file, without scanning the
 installation tree. A matching file makes the declared game available; a
