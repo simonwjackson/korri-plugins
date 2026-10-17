@@ -19,9 +19,9 @@ Retain the installation's `DATA` directory, including music and patch files.
 Do not register `CRITTER.DAT` or the enclosing archive as this release.
 
 The plugin declares the game `fallout1` with a `prepared` release. Its `file`
-is `fallout1/MASTER.DAT`, relative to the Korri account root. For the default
-account, this is `<root>/users/default/fallout1/MASTER.DAT`. Move the complete
-writable installation to `<accountRoot>/fallout1`, including companion files,
+is `fallout-ce/MASTER.DAT`, relative to the Korri account root. For the default
+account, this is `<root>/users/default/fallout-ce/MASTER.DAT`. Move the complete
+writable installation to `<accountRoot>/fallout-ce`, including companion files,
 native config, patches and saves. Do not move only `MASTER.DAT`.
 Discovery v2 hashes this exact file and makes the declared game available when
 it matches. A mismatch goes to the attention list.

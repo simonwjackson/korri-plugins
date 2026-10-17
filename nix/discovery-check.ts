@@ -105,9 +105,9 @@ for (const [directory, [key, title, runner, system]] of Object.entries(
   })
 }
 
-for (const [directory, key, title, runner] of [
-  ["fallout1-ce", "fallout1", "Fallout", "fallout-ce"],
-  ["fallout2-ce", "fallout2", "Fallout 2", "fallout2-ce"],
+for (const [directory, key, title, runner, installation] of [
+  ["fallout1-ce", "fallout1", "Fallout", "fallout-ce", "fallout-ce"],
+  ["fallout2-ce", "fallout2", "Fallout 2", "fallout2-ce", "fallout2-ce"],
 ]) {
   test(`${directory}: installed MASTER.DAT is declared without a system`, async () => {
     const plugin = await import(new URL(`${directory}/plugin.ts`, plugins).href)
@@ -118,7 +118,7 @@ for (const [directory, key, title, runner] of [
         releases: {
           prepared: {
             hashes: plugin.runners[runner].releases,
-            file: `${key}/MASTER.DAT`,
+            file: `${installation}/MASTER.DAT`,
           },
         },
       },
@@ -131,7 +131,7 @@ for (const [directory, key, title, runner] of [
         accountRoot: "/accounts/default",
         files: {},
       }),
-      { command: "/engine", args: [], cwd: `/accounts/default/${key}` },
+      { command: "/engine", args: [], cwd: `/accounts/default/${installation}` },
     )
   })
 }
