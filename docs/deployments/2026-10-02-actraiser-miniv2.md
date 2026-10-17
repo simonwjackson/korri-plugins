@@ -134,6 +134,43 @@ shape; resizing is covered by the build machine tests. With the default
 Diorama camera, the tilted planes still leave a thin background edge at the
 top and bottom of the panel. Auto does not change the player's camera.
 
+## Upstream main update
+
+Upstream merged Screen ratio Auto, so source
+`064715d79d1df944dea5f2439fe104d8b4e7b286` builds upstream
+`546ba473f42efe128c8034bf0290273a64b445c1` with no patch. On 2026-10-04,
+`fuji` built that landed revision. The plugin path was identical to the path
+that passed aarch64 acceptance. The existing personal key signed the closure
+locally.
+
+| Artifact | Exact value |
+|---|---|
+| ARM64 plugin | `/nix/store/fb347w7h4ghwvh389z2d9zi9qh35swyd-korri-plugin` |
+| ARM64 engine | `/nix/store/g61mnnsq6svdg8r56knxkhflqgby8fmg-actraiser-0-unstable-546ba47` |
+| Exact-package approval | `e42a4e114f70e8f05b3bdad70729903da2fa2e5e9131d76758cf5fcbc1fed192` |
+| Retained previous package | `/nix/store/gcjq95ryl6wdn26pjrsfnrhsb3sn4l8z-korri-plugin` |
+
+The first install attempt, on 2026-10-04, stopped at its precondition check
+before it wrote anything. Ten cache paths, including the cache directory, were
+owned by `korri:users` (UID 1000, GID 100). The owner chose to restore root
+ownership. The device then went offline before the restore script reached it.
+
+On 2026-10-17 the device was at `192.168.1.143`. By then the cache directory
+was `root:root` again, but 6 paths from the 2026-10-03 OpenGOAL delivery were
+still `korri:users`. The restore script found no process using the cache. It
+changed only those 6 owners to `root:root` and recorded them in
+`/var/tmp/actraiser-cache-owner-restore.json` on the device.
+
+The device then ran the staged install from
+`/var/tmp/actraiser-auto-miniv2-9kvgl3oc/` while no ActRaiser process was
+running. `korri-plugin update` kept the previous approved package as
+`previous` for rollback. Recursive signature verification passed. ActRaiser
+settings and saves, other plugin selections, publisher bindings and the
+system generation stayed unchanged. No session was stopped or started.
+
+The device panel check was not repeated for this package. The aarch64 and
+x86_64 build-machine acceptance of `064715d` is the Auto evidence for it.
+
 ## Limits and retained evidence
 
 Campaign save/reload, full campaign completion, and reboot persistence were
