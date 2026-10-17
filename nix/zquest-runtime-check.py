@@ -315,6 +315,7 @@ def play(quest, owner, *, save=False, concurrent=False, complete=False):
             scheme = loaded.read_config(settings, "Controls", "global_control_scheme")
             controls = directory / "controls.cfg"
             assert loaded.read_config(controls, scheme, "btn_menu") == "0"
+            assert loaded.read_config(controls, scheme, "joystick_name") == loaded.SEAT
             return save_file
         except Exception:
             screenshot = capture_screen()
@@ -348,13 +349,13 @@ loader.exec_module(loaded)
 # so a fresh account gets upstream's first generated scheme name instead.
 fresh = root / "kiosk-fresh"
 fresh.mkdir()
-loaded.configure(fresh, 3)
+loaded.configure(fresh)
 assert (fresh / "zc.cfg").read_text() == (
     "[zeldadx]\nreplay_upload_prompt = 1\nclicktofreeze = 0\n"
     "[Controls]\nglobal_control_scheme = Custom\n"
 )
 assert (fresh / "controls.cfg").read_text() == (
-    "[Custom]\nbtn_menu = 0\njoystick_index = 3\n"
+    "[Custom]\nbtn_menu = 0\njoystick_name = Korri Seat P1\nbtn_s = 8\nbtn_ex2 = 10\n"
 )
 kept = root / "kiosk-kept"
 kept.mkdir()
@@ -363,27 +364,23 @@ kept.mkdir()
     "[Controls]\nglobal_control_scheme = Mine\n"
 )
 (kept / "controls.cfg").write_text(
-    "[Default]\nbtn_menu=9\n[Mine]\nbtn_menu=9\njoystick_index=0\n"
+    "[Default]\nbtn_menu=9\n[Mine]\nbtn_menu=9\njoystick_index=0\nbtn_s=10\n"
     "key_a=26\n\n[Other]\nkey_a=1\n"
 )
 (kept / "controls.cfg").chmod(0o640)
-loaded.configure(kept, None)
+loaded.configure(kept)
 assert (kept / "zc.cfg").read_text() == (
     "# note\n[zeldadx]\nclicktofreeze = 0\nsentinel = keep\n"
     "replay_upload_prompt = 1\n\n[Controls]\nglobal_control_scheme = Mine\n"
 )
 assert (kept / "controls.cfg").read_text() == (
-    "[Default]\nbtn_menu=9\n[Mine]\nbtn_menu = 0\njoystick_index=0\n"
-    "key_a=26\n\n[Other]\nkey_a=1\nbtn_menu = 0\n"
+    "[Default]\nbtn_menu=9\n[Mine]\nbtn_menu = 0\njoystick_index=0\nbtn_s = 8\n"
+    "key_a=26\njoystick_name = Korri Seat P1\nbtn_ex2 = 10\n\n"
+    "[Other]\nkey_a=1\nbtn_menu = 0\njoystick_name = Korri Seat P1\nbtn_s = 8\n"
+    "btn_ex2 = 10\n"
 )
 assert (kept / "controls.cfg").stat().st_mode & 0o777 == 0o640
 assert sorted(path.name for path in kept.iterdir()) == ["controls.cfg", "zc.cfg"]
-# Without a Korri seat the player keeps its configured joystick. A regular
-# file with an input device name is not a joystick.
-seatless = root / "no-seats"
-seatless.mkdir()
-(seatless / "event0").write_text("")
-assert loaded.seat_joystick(seatless) is None
 
 # An original generated room exercises the public player without a copied
 # template, tiles, music or quest. The fixture never enters the runtime closure.
@@ -487,7 +484,7 @@ for input_path, expected in (
 # These fetched test fixtures are not in the distributable plugin closure.
 script_account = account("Script replay") / "zquest-classic"
 loaded.prepare_resources(script_account)
-loaded.configure(script_account, None)
+loaded.configure(script_account)
 replay_result = subprocess.run(
     [
         executable,

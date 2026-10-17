@@ -12,18 +12,12 @@ import tempfile
 
 ENGINE = "@engine@/bin/zplayer"
 RESOURCES = Path("@engine@/share/zquestclassic")
-# Korri's input daemon routes the device's own controls to this seat.
+# Korri's input daemon routes the device's own controls to this seat. The
+# player selects its gamepad by this name, whatever Allegro's device order.
 SEAT = "Korri Seat P1"
-# Allegro 5 accepts a device with one of these buttons and one of these axes
-# (src/linux/ljoynu.c: is_joystick_button and have_joystick_axis).
-JOYSTICK_BUTTONS = [
-    *range(0x100, 0x10A),  # BTN_MISC to BTN_9
-    *range(0x120, 0x130),  # BTN_JOYSTICK to BTN_DEAD
-    *range(0x130, 0x13F),  # BTN_GAMEPAD to BTN_THUMBR
-    *range(0x150, 0x152),  # BTN_WHEEL to BTN_GEAR_UP
-    *range(0x2C0, 0x2E8),  # BTN_TRIGGER_HAPPY to BTN_TRIGGER_HAPPY40
-]
-JOYSTICK_AXES = range(0x00, 0x18)  # ABS_X to ABS_HAT3Y
+# Korri's seats report a wired Xbox 360 pad. In Linux's button order, upstream's
+# defaults put Start on the left-stick click (10) and Extra2 on Start (8).
+SEAT_BUTTONS = {"btn_s": 8, "btn_ex2": 10}
 # Upstream resets this control scheme on every start.
 RESET_SCHEME = "Default"
 
@@ -50,58 +44,6 @@ def prepare_resources(directory: Path) -> None:
             link = Path(temp) / resource.name
             link.symlink_to(resource, target_is_directory=resource.is_dir())
             link.replace(target)
-
-
-def _evdev_read(number: int, size: int) -> int:
-    # _IOC(_IOC_READ, 'E', number, size)
-    return (2 << 30) | (size << 16) | (ord("E") << 8) | number
-
-
-def _has_any(bits: bytearray, codes) -> bool:
-    return any(bits[code // 8] >> (code % 8) & 1 for code in codes)
-
-
-def joystick_name(path: Path) -> str | None:
-    """Return the device name if Allegro would count it as a joystick."""
-    try:
-        descriptor = os.open(path, os.O_RDWR | os.O_NONBLOCK)
-    except OSError:
-        return None
-    try:
-        keys = bytearray(0x300 // 8)  # KEY_CNT
-        axes = bytearray(0x40 // 8)  # ABS_CNT
-        name = bytearray(256)
-        fcntl.ioctl(descriptor, _evdev_read(0x20 + 0x01, len(keys)), keys)
-        fcntl.ioctl(descriptor, _evdev_read(0x20 + 0x03, len(axes)), axes)
-        if not (_has_any(keys, JOYSTICK_BUTTONS) and _has_any(axes, JOYSTICK_AXES)):
-            return None
-        fcntl.ioctl(descriptor, _evdev_read(0x06, len(name)), name)
-    except OSError:
-        return None
-    finally:
-        os.close(descriptor)
-    return name.split(b"\0", 1)[0].decode(errors="replace")
-
-
-def seat_joystick(devices: Path = Path("/dev/input")) -> int | None:
-    """Return the player's joystick index for Korri's first seat."""
-    # Allegro numbers joysticks in unsorted directory order. On the Mini V2 that
-    # made the newest seat, P4, joystick 0, and the player ignored the pad.
-    try:
-        entries = os.listdir(devices)
-    except OSError:
-        return None
-    index = 0
-    for entry in entries:
-        path = devices / entry
-        if path.is_dir():
-            continue
-        name = joystick_name(path)
-        if name == SEAT:
-            return index
-        if name is not None:
-            index += 1
-    return None
 
 
 def _section(line: str) -> str | None:
@@ -180,7 +122,7 @@ def set_config(path: Path, section: str, values: dict[str, object]) -> None:
             raise
 
 
-def configure(directory: Path, joystick: int | None) -> None:
+def configure(directory: Path) -> None:
     """Apply Korri's handheld settings to the player's native configuration."""
     settings = directory / "zc.cfg"
     controls = directory / "controls.cfg"
@@ -197,9 +139,7 @@ def configure(directory: Path, joystick: int | None) -> None:
         set_config(settings, "Controls", {"global_control_scheme": "Custom"})
         if "Custom" not in schemes:
             schemes.append("Custom")
-    values: dict[str, object] = {"btn_menu": 0}
-    if joystick is not None:
-        values["joystick_index"] = joystick
+    values: dict[str, object] = {"btn_menu": 0, "joystick_name": SEAT, **SEAT_BUTTONS}
     for scheme in schemes:
         set_config(controls, scheme, values)
 
@@ -227,12 +167,7 @@ def launch(quest: Path, directory: Path) -> None:
                 "ZQuest Classic is already running for this account."
             ) from None
         prepare_resources(directory)
-        joystick = seat_joystick()
-        if joystick is None:
-            print(
-                f"zquest-classic: {SEAT} not found; joystick unchanged", file=sys.stderr
-            )
-        configure(directory, joystick)
+        configure(directory)
         os.chdir(directory)
         # The native binary normally switches cwd into its read-only package.
         os.environ["ZC_DISABLE_CHDIR"] = "1"

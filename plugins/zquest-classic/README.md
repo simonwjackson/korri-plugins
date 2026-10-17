@@ -115,16 +115,36 @@ named keys and keeps every other line.
 | `replay_upload_prompt = 1` | `zc.cfg`, `[zeldadx]` | Upstream's upload question is marked as asked. `replay_upload` keeps its value; upstream's default is off. The plugin does not consent for the user. |
 | `clicktofreeze = 0` | `zc.cfg`, `[zeldadx]` | A touch or click does not open the system menu. |
 | `btn_menu = 0` | every scheme in `controls.cfg` except `Default` | The gamepad menu button does not open the system menu. |
-| `joystick_index` | the same schemes | Selects `Korri Seat P1`, where Korri sends the device's own controls. |
+| `joystick_name = Korri Seat P1` | the same schemes | Selects the seat where Korri sends the device's own controls. |
+| `btn_s = 8`, `btn_ex2 = 10` | the same schemes | Start opens the subscreen; Extra2 moves to the left-stick click. |
 
 Upstream resets the `Default` scheme on every start, so it cannot hold these
 keys. When the global scheme is `Default` or missing, the launcher selects
 `Custom`, the scheme upstream creates on its own first start.
 
-Allegro numbers joysticks in unsorted `/dev/input` order. On the Mini V2 that
-made the newest seat, `Korri Seat P4`, joystick 0, so the player ignored the
-pad. The launcher repeats Allegro's joystick test to find the seat's index.
-Without a Korri seat it leaves `joystick_index` unchanged.
+Allegro numbers gamepads in unsorted `/dev/input` order. On the Mini V2 that
+made the newest seat, `Korri Seat P4`, gamepad 0, so an index-based scheme
+ignored the device's controls. `gamepad-input.patch` adds `joystick_name`: the
+player looks the name up in Allegro's current gamepad list on every input read.
+Adding, removing or reordering gamepads does not change the selection. While
+the named gamepad is absent the player reads no gamepad, not another one. The
+in-game controls dialog stores the name of the gamepad it selects.
+
+The same patch lets any D-pad hat move the hero, in addition to the scheme's
+movement stick or buttons. Korri's seats report the D-pad as a hat
+(`ABS_HAT0X`/`ABS_HAT0Y`), which Allegro exposes as a digital stick. Upstream
+reads only one configured stick for movement, so the D-pad did nothing while
+the left stick moved the hero.
+
+Korri's seats report a wired Xbox 360 pad. In Linux's button order,
+upstream's defaults put Start on the left-stick click (button 10) and Extra2 on
+Start (button 8), so the launcher swaps them.
+
+`nix build .#checks.x86_64-linux.zquest-gamepad-vm` drives the packaged player
+with four virtual seats in a VM. P1 is deliberately not Allegro's first
+gamepad. It checks that P1's D-pad and left stick move the hero, that other
+gamepads do not, and that the selection survives a gamepad added during play
+and P1 disconnecting and reconnecting.
 
 The system menu is the player's only in-game route to settings and to ending
 the game. Korri stops the session instead. The Escape key still opens the menu,

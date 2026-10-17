@@ -307,6 +307,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link .#zquest-classic-source' \
           '  nix build --no-link .#checks.x86_64-linux.korri-zquest-classic-plugin' \
           '  nix build --no-link .#checks.aarch64-linux.korri-zquest-classic-plugin' \
+          '  nix build --no-link .#checks.x86_64-linux.zquest-gamepad-vm' \
           '  nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state' \
           'Private quest editing proof, not a complete sanitizer or rights clearance:' \
           '  nix run .#zquest-midi-proof -- --help' \
@@ -483,6 +484,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
+      };
+    }
+    # The VM needs KVM; it runs on the x86_64 build machine only.
+    // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
+      zquest-gamepad-vm = import ./zquest-gamepad-vm.nix {
+        inherit pkgs;
+        launcher = zquestLauncher;
       };
     };
     formatter = pkgs.nixfmt;

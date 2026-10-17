@@ -42,6 +42,8 @@ let
     # Match the initialized 100 ms waits in the other Allegro Legacy workers.
     # An indeterminate timespec can starve the audio event queue on ARM.
     ./sound-thread-timeout.patch
+    # Select the gamepad by name and let any D-pad hat move the hero.
+    ./gamepad-input.patch
   ]
   ++ lib.optional pkgs.stdenv.hostPlatform.isAarch64 ./aarch64-disable-x86-tile-simd.patch;
   publicSource = import ./public-source.nix {
@@ -55,7 +57,7 @@ let
 in
 pkgs.stdenv.mkDerivation {
   pname = "zquest-classic";
-  version = "unstable-2026-06-18-public2";
+  version = "unstable-2026-06-18-public3";
   src = publicSource;
   passthru = {
     inherit publicSource assets;

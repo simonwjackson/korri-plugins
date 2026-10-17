@@ -26,6 +26,7 @@ let
       ../plugins/zquest-classic/public-player.patch
       ../plugins/zquest-classic/standalone-quest-path.patch
       ../plugins/zquest-classic/sound-thread-timeout.patch
+      ../plugins/zquest-classic/gamepad-input.patch
       ../plugins/zquest-classic/aarch64-disable-x86-tile-simd.patch
     ];
   };

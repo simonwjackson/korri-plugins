@@ -13,6 +13,11 @@ Changes:
 - Account-owned standalone saves use a whole-quest SHA-256 identity.
 - The player uses the selected quest path even when loading an existing save.
 - The audio worker initializes its wait timeout.
+- A control scheme can select its gamepad by name (joystick_name), so adding
+  or reordering gamepads does not change which one it reads. A named gamepad
+  that is absent gives no gamepad input instead of another gamepad's input.
+- A D-pad hat moves the hero on any gamepad, in addition to the scheme's
+  movement stick or buttons.
 - ARM uses the scalar tile renderer and the ZScript interpreter.
 - Runtime resources are selected before compilation, not hidden at launch.
 - Default sound samples and MIDI songs are replaced by original procedural
