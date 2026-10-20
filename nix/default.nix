@@ -109,6 +109,15 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       };
       plugin = _: import ../plugins/zquest-classic/plugin.nix { launcher = zquestLauncher; };
     };
+    # The ZIP is a korrid-downloaded artifact (Korri ADR 0013), not in the closure.
+    megaManRockNRollPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = pkgs.lib.fileset.toSource {
+        root = ../plugins/mega-man-rock-n-roll;
+        fileset = ../plugins/mega-man-rock-n-roll/plugin.ts;
+      };
+      plugin = _: import ../plugins/mega-man-rock-n-roll/plugin.nix { inherit pkgs; };
+    };
     # The engines use the Sustainable Use License. Keep permission scoped to
     # these two packages instead of enabling every unfree dependency.
     falloutPkgs = import nixpkgs {
@@ -402,6 +411,10 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       fable-ii-recomp-native = fableEngine;
       fable-ii-extract-xiso = fableExtractor;
       korri-plugin-fable-ii-recomp = fablePlugin;
+    }
+    # The bundled FEX (pkgs.fex) is built for ARM hosts only.
+    // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
+      korri-plugin-mega-man-rock-n-roll = megaManRockNRollPlugin;
     };
     checks = {
       korri-actraiser-plugin = import ./actraiser-check.nix {
@@ -470,6 +483,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
       };
+      korri-mega-man-rock-n-roll-source = import ./mega-man-rock-n-roll-source-check.nix { inherit pkgs; };
       korri-skate3-plugin = import ./skate3-check.nix {
         inherit pkgs;
         package = packages.korri-plugin-skate-3;
@@ -484,6 +498,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
+      };
+    }
+    # The bundled FEX (pkgs.fex) runs x86_64 code on ARM hosts only.
+    // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
+      korri-mega-man-rock-n-roll-plugin = import ./mega-man-rock-n-roll-check.nix {
+        inherit pkgs;
+        package = megaManRockNRollPlugin;
+        contract = korri.lib.${system}.pluginContract;
       };
     }
     # The VM needs KVM; it runs on the x86_64 build machine only.

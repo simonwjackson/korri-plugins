@@ -47,6 +47,7 @@ node nix/discovery-check.ts
 | `korri-plugin-signs-of-rain` | `@simonwjackson:signs-of-rain`, exact packaged PCK | x86_64 and aarch64 Linux checked |
 | `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
 | `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
+| `korri-plugin-mega-man-rock-n-roll` | `@simonwjackson:mega-man-rock-n-roll`, downloaded ZIP under FEX | aarch64 Linux |
 | `korri-plugin-fallout1-ce` | `@simonwjackson:fallout1-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
 
@@ -274,6 +275,17 @@ each architecture. The approved public cache is
 `https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
 Publication does not change existing device trust or clear user quest rights.
 See the plugin README for limitations, licenses and the publication procedure.
+
+## Mega Man Rock N Roll
+
+[Mega Man Rock N Roll](plugins/mega-man-rock-n-roll/README.md) declares the
+public Linux 1.3 ZIP as an artifact that korrid downloads, verifies and
+unpacks (Korri ADR 0012 and 0013). The plugin ships only the URL and hashes,
+never the game. It plays the x86_64 Godot 2.1.4 build under FEX with the
+`@korri:fex` rootfs artifact and its own FEX configuration. It moved here from
+`korri-os/korri` on 2026-10-20. It needs a Core with ADR 0013, which the
+pinned Korri input has. Its package and plugin check are aarch64-linux only,
+because `pkgs.fex` builds for ARM hosts only. Nothing has run the game yet.
 
 ## Fallout 1 and 2 Community Edition
 
