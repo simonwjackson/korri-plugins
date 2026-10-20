@@ -107,10 +107,12 @@ def main():
             "program": manifest["files"]["opengoal"],
             "contentPath": str(anchor),
             "accountRoot": str(work / "account"),
+            "cacheRoot": str(work / "cache"),
             "files": manifest["files"],
+            "artifacts": {},
         }
         game = start([str(args.korrid), "plugin-launch", str(args.package / "plugin.ts"),
-                      json.dumps(inputs)], "game.log")
+                      json.dumps(inputs), json.dumps({"modifiers": []})], "game.log")
         color_samples = []
         elapsed = 0
         for second in sorted({10, args.seconds // 2, args.seconds}):

@@ -81,7 +81,9 @@ try {
     program: probe,
     contentPath: "/library/Super Mario World (U) [!].smc",
     accountRoot: join(root, "account '; $(exit 19) #"),
+    cacheRoot: join(root, "cache"),
     files: manifest.files,
+    artifacts: {},
   }
   const directory = join(input.accountRoot, "smw")
   const prepare = handlers["launch.prepare"]
@@ -104,6 +106,7 @@ try {
         "plugin-launch",
         join(packagePath, "plugin.ts"),
         JSON.stringify({ ...input, contentPath }),
+        JSON.stringify({ modifiers: [] }),
       ],
       { encoding: "utf8" },
     )
@@ -111,6 +114,7 @@ try {
     assert.equal(launch.stdout, `${directory}\n${contentPath}\n`)
   }
   const refusals: PluginLaunchInput[] = [
+    { ...input, contentPath: undefined, ref: "123" },
     { ...input, corePath: "/unwanted/core.so" },
     { ...input, overrides: { settings: {}, config: { append: "ignored" } } },
     { ...input, overrides: { settings: { unsupported: true } } },
@@ -123,6 +127,7 @@ try {
         "plugin-launch",
         join(packagePath, "plugin.ts"),
         JSON.stringify(refused),
+        JSON.stringify({ modifiers: [] }),
       ],
       { encoding: "utf8" },
     )

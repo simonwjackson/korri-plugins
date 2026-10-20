@@ -2,7 +2,7 @@
   description = "Personal Korri plugins, built separately from Korri OS";
 
   inputs = {
-    korri.url = "github:korri-os/korri/ce5228aec4e13283099ebae9521ac0c4ea5019bc";
+    korri.url = "github:korri-os/korri/2c7a515b5bd28abcf366cc024753209bbb53acd6";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     skate3.url = "github:simonwjackson/skate-3-flake/4e58e784407326d4da9dab5ab2b44fd32eb03c22";

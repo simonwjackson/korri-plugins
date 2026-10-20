@@ -87,14 +87,17 @@ for (const [index, game] of ["jak1", "jak2", "jak3"].entries()) {
       program: argvProgram,
       contentPath: `${data}/out/${game}/iso/GAME.CGO`,
       accountRoot: "/unused-account-root",
+      cacheRoot: "/unused-cache-root",
       files: manifest.files,
+      artifacts: {},
     }
     const args = ["--game", game, "--proj-path", data]
     assert.deepEqual(plugin.handlers["launch.prepare"](input), { command: argvProgram, args })
-    const launched = spawnSync(korridCli, ["plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input)], { encoding: "utf8" })
+    const launched = spawnSync(korridCli, ["plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input), JSON.stringify({ modifiers: [] })], { encoding: "utf8" })
     assert.equal(launched.status, 0, launched.stderr)
     assert.deepEqual(launched.stdout.split("\0").slice(0, -1), args)
     for (const change of [
+      { contentPath: undefined, ref: "123" },
       { runnerId: "@other:plugin/jak1" },
       { corePath: "/core.so" },
       { overrides: { config: { prepend: "unsafe" } } },
@@ -105,7 +108,7 @@ for (const [index, game] of ["jak1", "jak2", "jak3"].entries()) {
       { contentPath: `${data}/../out/${game}/iso/GAME.CGO` },
       { contentPath: `${data}/out/${game === "jak1" ? "jak2" : "jak1"}/iso/GAME.CGO` },
     ]) {
-      const rejected = spawnSync(korridCli, ["plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify({ ...input, ...change })], { encoding: "utf8" })
+      const rejected = spawnSync(korridCli, ["plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify({ ...input, ...change }), JSON.stringify({ modifiers: [] })], { encoding: "utf8" })
       assert.notEqual(rejected.status, 0, "The actual sandbox must reject unsupported inputs")
     }
   }

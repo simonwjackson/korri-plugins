@@ -256,7 +256,9 @@ def main():
             runnerId="@simonwjackson:2ship/2ship",
             program=manifest["files"]["2ship"],
             accountRoot=str(root / "account"),
+            cacheRoot=str(root / "cache"),
             files=manifest["files"],
+            artifacts={},
         )
         rom = root / "ROM '; $(exit 19) #.n64"
         rom.write_bytes(original)
@@ -267,6 +269,7 @@ def main():
             "plugin-launch",
             str(package / "plugin.ts"),
             json.dumps(plan),
+            json.dumps({"modifiers": []}),
         ]
         run_game(command, env, root, True)
         archive = directory / "mm.o2r"
@@ -294,7 +297,7 @@ def main():
         normalized_rom.write_bytes(normalized)
         normalized_rom.chmod(0o444)
         plan["contentPath"] = str(normalized_rom)
-        command[-1] = json.dumps(plan)
+        command[-2] = json.dumps(plan)
         run_game(command, env, root, False)
         assert archive.stat().st_ino == initial_archive.st_ino
         assert archive.stat().st_mtime_ns == initial_archive.st_mtime_ns

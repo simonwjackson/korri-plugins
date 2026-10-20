@@ -129,7 +129,9 @@ for (const [directory, key, title, runner, installation] of [
         program: "/engine",
         contentPath: `/accounts/default/${plugin.games[key].releases.prepared.file}`,
         accountRoot: "/accounts/default",
+        cacheRoot: "/cache",
         files: {},
+        artifacts: {},
       }),
       { command: "/engine", args: [], cwd: `/accounts/default/${installation}` },
     )
@@ -212,7 +214,9 @@ for (const [system, expectedHashes] of Object.entries(opengoalHashes)) {
               program: "/gk",
               contentPath,
               accountRoot: "/accounts/default",
+              cacheRoot: "/cache",
               files: {},
+              artifacts: {},
             }),
             { command: "/gk", args: ["--game", game, "--proj-path", data] },
           )

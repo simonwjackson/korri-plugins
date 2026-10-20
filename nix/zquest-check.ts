@@ -63,7 +63,9 @@ for (const contentPath of [
     program: recordArguments,
     contentPath,
     accountRoot: "/accounts/Player One '; $(exit 21)",
+    cacheRoot: "/cache",
     files: manifest.files,
+    artifacts: {},
   }
   const args = ["--", contentPath, `${input.accountRoot}/zquest-classic`]
   assert.deepEqual(handlers["launch.prepare"](input), {
@@ -73,12 +75,16 @@ for (const contentPath of [
   })
   const result = spawnSync(
     korridCli,
-    ["plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input)],
+    [
+      "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input),
+      JSON.stringify({ modifiers: [] }),
+    ],
     { encoding: "utf8" },
   )
   assert.equal(result.status, 0, result.stderr)
   assert.equal(result.stdout, `${args.join("\0")}\0`)
   for (const unsupported of [
+    { contentPath: undefined, ref: "123" },
     { corePath: "/core.so" },
     { overrides: { config: { replace: "unsupported" } } },
     { overrides: { settings: { unsupported: true } } },
@@ -92,6 +98,7 @@ for (const contentPath of [
         "plugin-launch",
         join(packagePath, "plugin.ts"),
         JSON.stringify({ ...input, ...unsupported }),
+        JSON.stringify({ modifiers: [] }),
       ],
       { encoding: "utf8" },
     )

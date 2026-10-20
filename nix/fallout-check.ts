@@ -85,7 +85,9 @@ try {
         program: pwd,
         contentPath: join(cwd, filename),
         accountRoot: join(root, "must-not-be-created"),
+        cacheRoot: join(root, "cache-must-not-be-created"),
         files: manifest.files,
+        artifacts: {},
       }
       assert.deepEqual(plugin.handlers["launch.prepare"](input), {
         command: pwd,
@@ -94,12 +96,14 @@ try {
       })
       const launch = spawnSync(korridCli, [
         "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input),
+        JSON.stringify({ modifiers: [] }),
       ], { encoding: "utf8" })
       assert.equal(launch.status, 0, launch.stderr)
       assert.equal(launch.stdout.trimEnd(), cwd)
       assert.deepEqual(readdirSync(cwd), ["user-config"])
       assert.equal(readFileSync(join(cwd, "user-config"), "utf8"), "retain user settings")
       for (const change of [
+        { contentPath: undefined, ref: "123" },
         { runnerId: "@other:game/runner" },
         { corePath: "/core.so" },
         { overrides: { config: { prepend: "native config" } } },
@@ -112,6 +116,7 @@ try {
         assert.throws(() => plugin.handlers["launch.prepare"]({ ...input, ...change }))
         const rejected = spawnSync(korridCli, [
           "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify({ ...input, ...change }),
+          JSON.stringify({ modifiers: [] }),
         ], { encoding: "utf8" })
         assert.notEqual(rejected.status, 0, "sandbox must reject unsupported input")
       }

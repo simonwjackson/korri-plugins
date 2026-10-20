@@ -15,7 +15,13 @@ import tempfile
 def run_game(
     korrid: str, source: Path, launch: dict, env: dict, check_lock: bool
 ) -> str:
-    command = [korrid, "plugin-launch", str(source), json.dumps(launch)]
+    command = [
+        korrid,
+        "plugin-launch",
+        str(source),
+        json.dumps(launch),
+        json.dumps({"modifiers": []}),
+    ]
     game = subprocess.Popen(
         command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     )
@@ -70,7 +76,9 @@ def main() -> None:
             "runnerId": "@simonwjackson:super-mario-world/smw",
             "program": manifest["files"]["smw"],
             "accountRoot": str(account),
+            "cacheRoot": str(root / "cache"),
             "files": manifest["files"],
+            "artifacts": {},
         }
         bootstrap_rom = root / "bootstrap.smc"
         bootstrap_rom.write_bytes(original)
@@ -82,6 +90,7 @@ def main() -> None:
                 "plugin-launch",
                 str(Path(package) / "plugin.ts"),
                 json.dumps(launch),
+                json.dumps({"modifiers": []}),
             ],
             env=dict(env, SDL_VIDEODRIVER="korri-nonexistent-driver"),
             capture_output=True,

@@ -64,7 +64,9 @@ try {
         program: recordArguments,
         contentPath,
         accountRoot,
+        cacheRoot: join(work, "cache"),
         files: manifest.files,
+        artifacts: {},
       }
       const expected = {
         command: recordArguments,
@@ -83,6 +85,7 @@ try {
       // Real korrid sandbox evaluation and exec into a literal argv/env observer.
       const launch = spawnSync(korridCli, [
         "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input),
+        JSON.stringify({ modifiers: [] }),
       ], {
         encoding: "utf8", timeout: 30_000,
         env: {
@@ -98,6 +101,7 @@ try {
       assert.equal(existsSync(accountRoot), true)
 
       for (const unsupported of [
+        { contentPath: undefined, ref: "123" },
         { runnerId: "@other:runner/runner" },
         { corePath: "/core.so" },
         { overrides: { config: { replace: "ignored settings" } } },
@@ -115,6 +119,7 @@ try {
         assert.throws(() => plugin.handlers["launch.prepare"](invalid))
         const rejected = spawnSync(korridCli, [
           "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(invalid),
+          JSON.stringify({ modifiers: [] }),
         ], { encoding: "utf8", timeout: 30_000 })
         assert.notEqual(rejected.status, 0)
         assert.equal(rejected.stdout, "")

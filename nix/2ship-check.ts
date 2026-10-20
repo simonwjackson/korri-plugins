@@ -94,7 +94,9 @@ try {
       program: probe,
       contentPath: join(root, filename),
       accountRoot: account,
+      cacheRoot: join(root, "cache"),
       files: manifest.files,
+      artifacts: {},
     }
     assert.deepEqual(handlers["launch.prepare"](input), {
       command: probe,
@@ -105,7 +107,12 @@ try {
     })
     const launch = spawnSync(
       korridCli,
-      ["plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input)],
+      [
+        "plugin-launch",
+        join(packagePath, "plugin.ts"),
+        JSON.stringify(input),
+        JSON.stringify({ modifiers: [] }),
+      ],
       { encoding: "utf8" },
     )
     assert.equal(launch.status, 0, launch.stderr)
@@ -132,6 +139,7 @@ try {
           "plugin-launch",
           join(packagePath, "plugin.ts"),
           JSON.stringify(input),
+          JSON.stringify({ modifiers: [] }),
         ],
         { encoding: "utf8", timeout: 10000 },
       )
