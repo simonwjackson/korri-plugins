@@ -32,6 +32,11 @@ export const games = {
 }
 
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
+  // Provider-ref routes carry no file. This runner always loads one.
+  const contentPath = input.contentPath
+  if (contentPath === undefined) {
+    throw new Error("Fallout 2 Community Edition requires a content file")
+  }
   if (input.runnerId !== runners["fallout2-ce"].id) {
     throw new Error("Unknown Fallout 2 runner")
   }
@@ -44,17 +49,17 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   if (Object.keys(input.overrides?.settings ?? {}).length > 0) {
     throw new Error("Fallout 2 CE does not implement typed settings")
   }
-  const separator = input.contentPath.lastIndexOf("/")
+  const separator = contentPath.lastIndexOf("/")
   if (
-    !input.contentPath.startsWith("/") ||
-    input.contentPath.slice(separator + 1).toLowerCase() !== "master.dat"
+    !contentPath.startsWith("/") ||
+    contentPath.slice(separator + 1).toLowerCase() !== "master.dat"
   ) {
     throw new Error("Select MASTER.DAT in an installed Fallout 2 folder")
   }
   return {
     command: input.program,
     args: [],
-    cwd: input.contentPath.slice(0, separator) || "/",
+    cwd: contentPath.slice(0, separator) || "/",
   }
 }
 

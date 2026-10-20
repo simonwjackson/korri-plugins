@@ -25,6 +25,11 @@ export const runners = {
 }
 
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
+  // Provider-ref routes carry no file. This runner always loads one.
+  const contentPath = input.contentPath
+  if (contentPath === undefined) {
+    throw new Error("ZQuest Classic requires a content file")
+  }
   if (input.corePath !== undefined) {
     throw new Error("ZQuest Classic is standalone and loads no core")
   }
@@ -37,7 +42,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   // Account-owned storage follows Zelda3. The launcher owns native state files.
   return {
     command: input.program,
-    args: ["--", input.contentPath, `${input.accountRoot}/zquest-classic`],
+    args: ["--", contentPath, `${input.accountRoot}/zquest-classic`],
     env: {},
   }
 }

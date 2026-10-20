@@ -42,6 +42,11 @@ export const games = {
 }
 
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
+  // Provider-ref routes carry no file. This runner always loads one.
+  const contentPath = input.contentPath
+  if (contentPath === undefined) {
+    throw new Error("Super Mario World requires a content file")
+  }
   if (input.corePath !== undefined) {
     throw new Error("SMW is a native program and loads no emulator core")
   }
@@ -55,7 +60,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   const directory = `${input.accountRoot}/smw`
   return {
     command: input.program,
-    args: [input.contentPath],
+    args: [contentPath],
     cwd: directory,
     directories: [directory],
     env: {},

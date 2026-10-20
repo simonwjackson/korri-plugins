@@ -41,11 +41,16 @@ export const games = {
 }
 
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
+  // Provider-ref routes carry no file. This runner always loads one.
+  const contentPath = input.contentPath
+  if (contentPath === undefined) {
+    throw new Error("2 Ship 2 Harkinian requires a content file")
+  }
   // Core supplies accountRoot; upstream's appShortName / SDL directory is 2ship.
   const directory = `${input.accountRoot}/2ship`
   return {
     command: input.program,
-    args: [input.contentPath],
+    args: [contentPath],
     cwd: directory,
     directories: [directory],
     env: { SHIP_HOME: directory },

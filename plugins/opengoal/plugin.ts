@@ -89,6 +89,11 @@ export const games = {
 }
 
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
+  // Provider-ref routes carry no file. This runner always loads one.
+  const contentPath = input.contentPath
+  if (contentPath === undefined) {
+    throw new Error("Jak and Daxter trilogy requires a content file")
+  }
   if (input.corePath !== undefined) {
     throw new Error("OpenGOAL is a native engine and loads no emulator core")
   }
@@ -105,16 +110,16 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
     throw new Error("Unknown OpenGOAL runner")
   }
   const suffix = `/out/${game}/iso/GAME.CGO`
-  const segments = input.contentPath.split("/")
+  const segments = contentPath.split("/")
   if (
-    !input.contentPath.startsWith("/") ||
-    !input.contentPath.endsWith(suffix) ||
+    !contentPath.startsWith("/") ||
+    !contentPath.endsWith(suffix) ||
     segments.includes(".") ||
     segments.includes("..")
   ) {
     throw new Error(`Select ${suffix} inside a complete OpenGOAL 0.3.8 prepared data directory`)
   }
-  const data = input.contentPath.slice(0, -suffix.length) || "/"
+  const data = contentPath.slice(0, -suffix.length) || "/"
   return {
     command: input.program,
     args: ["--game", game, "--proj-path", data],

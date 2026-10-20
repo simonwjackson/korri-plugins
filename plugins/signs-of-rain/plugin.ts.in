@@ -19,6 +19,11 @@ export const runners = {
 }
 
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
+  // Provider-ref routes carry no file. This runner always loads one.
+  const contentPath = input.contentPath
+  if (contentPath === undefined) {
+    throw new Error("Signs of Rain requires a content file")
+  }
   if (input.runnerId !== runners["signs-of-rain"].id) {
     throw new Error("Unknown Signs of Rain runner")
   }
@@ -32,7 +37,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
     throw new Error("Signs of Rain does not implement Korri launch overrides")
   }
   if (
-    [input.program, input.contentPath, input.accountRoot].some(
+    [input.program, contentPath, input.accountRoot].some(
       path => !path.startsWith("/") || path.includes("\0"),
     )
   ) {
@@ -41,7 +46,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   return {
     command: input.program,
     // Request fullscreen from Godot for the handheld session.
-    args: ["--main-pack", input.contentPath, "--fullscreen",
+    args: ["--main-pack", contentPath, "--fullscreen",
       "--rendering-method", "gl_compatibility", "--rendering-driver", "opengl3_es",
       "--", "--handheld", "--graphics=fast"],
     // project.godot uses Godot's custom user directory "signs-of-rain".
