@@ -6,8 +6,8 @@ import type {
 // Dennis Engelhard's Mega Man Rock N Roll, public Linux 1.3 build: Godot
 // 2.1.4 with an x86_64 executable. korrid downloads the ZIP as the artifact
 // `game` and the game's release names `data.pck` in its ready directory
-// (ADR 0013). The runner plays it under FEX with the @korri:fex rootfs
-// artifact and this plugin's own FEX configuration (plugin.nix).
+// (ADR 0013). The runner plays `data.pck` with a native Godot 2.1.4 runtime
+// that plugin.nix builds from source; the ZIP's x86_64 executable never runs.
 export const name = "mega-man-rock-n-roll"
 export const title = "Mega Man Rock N Roll"
 export const description =
@@ -50,20 +50,11 @@ export const games = {
 
 // No system: the runner accepts the release by its hash.
 export const runners = {
-  fex: {
-    id: "@simonwjackson:mega-man-rock-n-roll/fex",
-    program: "fex-launch",
+  godot: {
+    id: "@simonwjackson:mega-man-rock-n-roll/godot",
+    program: "godot-launch",
     releases: [dataPck],
-    artifacts: ["@korri:fex/rootfs"],
   },
-}
-
-function requiredPath(paths: Record<string, string>, key: string): string {
-  const path = paths[key]
-  if (!path) {
-    throw new Error(`Mega Man Rock N Roll requires ${key}`)
-  }
-  return path
 }
 
 function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
@@ -83,7 +74,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   ) {
     throw new Error("Mega Man Rock N Roll runner does not implement typed settings")
   }
-  // The content path is `data.pck`; the executable sits beside it.
+  // The content path is `data.pck`; the launcher runs from its directory.
   if (!input.contentPath.startsWith("/")) {
     throw new Error("Mega Man Rock N Roll requires an absolute content path")
   }
@@ -93,12 +84,8 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   const home = `${input.accountRoot}/mega-man-rock-n-roll`
   return {
     command: input.program,
-    args: [gameDirectory],
-    env: {
-      HOME: home,
-      KORRI_FEX_CONFIG: requiredPath(input.files, "fex-config"),
-      KORRI_FEX_ROOTFS: requiredPath(input.artifacts, "@korri:fex/rootfs"),
-    },
+    args: [input.contentPath],
+    env: { HOME: home },
     cwd: gameDirectory,
     directories: [home],
     envUnset: [],

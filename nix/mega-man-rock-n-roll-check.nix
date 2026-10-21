@@ -1,7 +1,7 @@
 # Package checks for the built Mega Man Rock N Roll plugin, against the Core
-# contract of the korri input. The release and runner fields need a Core with
-# ADR 0012 and ADR 0013 (see the plugin README). Build for the target system on
-# a build machine; nothing here downloads the game or the FEX rootfs.
+# contract of the korri input. The release field needs a Core with ADR 0012
+# and ADR 0013 (see the plugin README). Build for the target system on a build
+# machine; nothing here downloads the game.
 {
   pkgs,
   package,
@@ -12,7 +12,6 @@ let
     path = contract;
     name = "korrid.ts";
   };
-  isAarch64 = pkgs.stdenv.hostPlatform.isAarch64;
 in
 pkgs.runCommand "korri-mega-man-rock-n-roll-plugin-check"
   {
@@ -31,27 +30,30 @@ pkgs.runCommand "korri-mega-man-rock-n-roll-plugin-check"
       --moduleResolution Bundler plugins/mega-man-rock-n-roll/plugin.ts)
     (cd work/plugins/mega-man-rock-n-roll && HOME="$TMPDIR" bun test plugin.test.ts)
 
-    python3 - ${package} ${if isAarch64 then "1" else "0"} <<'PY'
+    python3 - ${package} <<'PY'
     import json
     import os
     from pathlib import Path
     import re
-    import struct
     import subprocess
     import sys
     import tempfile
 
     package = Path(sys.argv[1])
-    run_fex = sys.argv[2] == "1"
     manifest = json.loads((package / 'manifest.json').read_text())
     assert manifest['publisher'] == {'namespace': '@simonwjackson'}, manifest['publisher']
     assert manifest['sources'] == ['plugin.ts'], manifest['sources']
     assert manifest['services'] == {}, manifest['services']
-    # No other publisher's package: @korri:fex is used only for its rootfs artifact.
+    # No other publisher's package and no artifact besides the game's ZIP.
     assert 'requires' not in manifest, manifest.get('requires')
     files = manifest['files']
-    assert sorted(files) == ['fex-config', 'fex-launch', 'game-unpack'], files
-    assert (Path(files['fex-config']) / 'Config.json').is_file(), files['fex-config']
+    assert sorted(files) == ['game-unpack', 'godot-launch'], files
+    assert sorted(manifest['packages']) == [
+        'godot2-runtime', 'mega-man-rock-n-roll-godot', 'mega-man-rock-n-roll-unpack',
+    ], manifest['packages']
+    runtime_package = Path(manifest['packages']['godot2-runtime'])
+    for notice in ('LICENSE.txt', 'COPYRIGHT.txt'):
+        assert (runtime_package / 'share/licenses/godot2-runtime' / notice).is_file(), notice
 
     unpack = files['game-unpack']
     for arguments in ([], ['/nonexistent-work-dir'], ['/nonexistent-work-dir', '/nonexistent.zip']):
@@ -59,42 +61,42 @@ pkgs.runCommand "korri-mega-man-rock-n-roll-plugin-check"
         assert result.returncode == 1, (arguments, result)
         assert not result.stdout, result.stdout
 
-    launch = files['fex-launch']
-    # The bundled FEX is first on the launcher's PATH.
+    launch = files['godot-launch']
+    # The bundled engine is first on the launcher's PATH.
     search = re.search(r'export PATH="([^"]*)"', Path(launch).read_text()).group(1)
-    interpreter = Path(search.split(':')[0]) / 'FEX'
-    assert interpreter.is_file() and os.access(interpreter, os.X_OK), search
-    assert subprocess.run([launch], capture_output=True).returncode == 2
-    game = Path(tempfile.mkdtemp())
-    (game / 'data.pck').write_bytes(b'pack')
-    (game / 'MegaMan_RocknRoll').write_bytes(b'elf')
-    runtime = {
-        'HOME': tempfile.mkdtemp(),
-        'KORRI_FEX_CONFIG': files['fex-config'],
-        'KORRI_FEX_ROOTFS': '/nonexistent/fex/rootfs/archlinux-2026-01-08-mesa-26.1.2',
-    }
-    result = subprocess.run([launch, str(game)], env=runtime, capture_output=True)
-    assert result.returncode == 2, result.stderr
-    assert b'KORRI_FEX_ROOTFS is not a directory' in result.stderr, result.stderr
+    engine = Path(search.split(':')[0]) / 'godot2-runtime'
+    assert engine.is_file() and os.access(engine, os.X_OK), search
+    assert engine.resolve() == (runtime_package / 'bin/godot2-runtime').resolve(), engine
 
-    if run_fex:
-        # The bundled FEX runs an x86_64 game executable with this plugin's
-        # config. This hand-assembled static ELF writes one line and exits 0,
-        # so it needs nothing from a rootfs.
-        message = b'x86_64 game ran\n'
-        code = (bytes.fromhex('b801000000bf01000000488d35') + struct.pack('<i', 16)
-                + b'\xba' + struct.pack('<I', len(message))
-                + bytes.fromhex('0f05b83c00000031ff0f05') + message)
-        base, offset = 0x400000, 64 + 56
-        elf = (b'\x7fELF' + bytes([2, 1, 1, 0]) + bytes(8)
-               + struct.pack('<HHIQQQIHHHHHH', 2, 0x3e, 1, base + offset, 64, 0, 0, 64, 56, 1, 0, 0, 0)
-               + struct.pack('<IIQQQQQQ', 1, 5, 0, base, base, offset + len(code), offset + len(code), 0x1000)
-               + code)
-        (game / 'MegaMan_RocknRoll').write_bytes(elf)
-        runtime['KORRI_FEX_ROOTFS'] = tempfile.mkdtemp()
-        result = subprocess.run([launch, str(game)], env=runtime, capture_output=True, timeout=120)
-        assert result.returncode == 0, result
-        assert result.stdout == message, result
+    home = tempfile.mkdtemp()
+    game = Path(tempfile.mkdtemp())
+    pack = game / 'data.pck'
+    pack.write_bytes(b'not a Godot pack\n')
+    refusals = [
+        ([], {'HOME': home}, b'usage'),
+        ([str(game / 'missing.pck')], {'HOME': home}, b'not an absolute file'),
+        (['data.pck'], {'HOME': home}, b'not an absolute file'),
+        ([str(pack)], {}, b'HOME must be an absolute path'),
+        ([str(pack)], {'HOME': home + '/missing'}, b'HOME is not a directory'),
+    ]
+    for arguments, env, message in refusals:
+        result = subprocess.run([launch, *arguments], env=env, capture_output=True)
+        assert result.returncode == 2, (arguments, env, result)
+        assert message in result.stderr, (arguments, result.stderr)
+
+    # The built engine executes on this system. Godot 2.1.4 prints its banner
+    # and usage for -h and exits 255.
+    result = subprocess.run([engine, '-h'], env={'HOME': home}, capture_output=True, timeout=60)
+    assert result.returncode == 255, result
+    output = result.stdout + result.stderr
+    assert b'Godot Engine v2.1.4.stable' in output, output
+    assert b'Request Fullscreen' in output, output
+
+    # Through the launcher, the engine opens the pack before any display and
+    # refuses one that is not a Godot pack.
+    result = subprocess.run([launch, str(pack)], env={'HOME': home}, capture_output=True, timeout=60)
+    assert result.returncode == 255, result
+    assert b"Couldn't load game path" in result.stdout + result.stderr, result
     PY
     touch "$out"
   ''

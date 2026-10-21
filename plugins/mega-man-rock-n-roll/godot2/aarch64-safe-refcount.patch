@@ -1,0 +1,34 @@
+diff --git a/core/safe_refcount.h b/core/safe_refcount.h
+index 4798538..f6801f1 100644
+--- a/core/safe_refcount.h
++++ b/core/safe_refcount.h
+@@ -234,6 +234,29 @@ inline int atomic_decrement(volatile int *v) {
+ 	return t;
+ }
+ 
++/* AArch64 GCC and Clang, with the atomic builtins Godot 2.1.6 uses */
++
++#elif defined(__GNUC__) && defined(__aarch64__)
++
++#define REFCOUNT_T volatile int
++#define REFCOUNT_GET_T int const volatile &
++
++static inline int atomic_conditional_increment(volatile int *pw) {
++
++	while (true) {
++		int tmp = *pw;
++		if (tmp == 0)
++			return 0;
++		if (__sync_val_compare_and_swap(pw, tmp, tmp + 1) == tmp)
++			return tmp + 1;
++	}
++}
++
++static inline int atomic_decrement(volatile int *pw) {
++
++	return __sync_sub_and_fetch(pw, 1);
++}
++
+ /* CW PPC */
+ 
+ #elif (defined(__MWERKS__)) && defined(__POWERPC__)

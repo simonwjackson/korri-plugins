@@ -1,0 +1,184 @@
+diff --git a/SConstruct b/SConstruct
+index 0ea0ca3..e18bf1f 100644
+--- a/SConstruct
++++ b/SConstruct
+@@ -65,7 +65,7 @@ elif (os.name == "nt"):
+     if (os.getenv("VCINSTALLDIR") == None or platform_arg == "android" or platform_arg == "javascript"):
+         custom_tools = ['mingw']
+ 
+-env_base = Environment(tools=custom_tools)
++env_base = Environment(tools=custom_tools, ENV=os.environ)
+ if 'TERM' in os.environ:
+     env_base['ENV']['TERM'] = os.environ['TERM']
+ env_base.AppendENVPath('PATH', os.getenv('PATH'))
+@@ -171,6 +171,7 @@ opts.Add("CXX", "C++ compiler")
+ opts.Add("CC", "C compiler")
+ opts.Add("CCFLAGS", "Custom flags for the C and C++ compilers")
+ opts.Add("CFLAGS", "Custom flags for the C compiler")
++opts.Add("CXXFLAGS", "Custom flags for the C++ compiler")
+ opts.Add("LINKFLAGS", "Custom flags for the linker")
+ 
+ # add platform specific options
+@@ -260,17 +261,22 @@ if selected_platform in platform_list:
+     CCFLAGS = env.get('CCFLAGS', '')
+     env['CCFLAGS'] = ''
+ 
+-    env.Append(CCFLAGS=string.split(str(CCFLAGS)))
++    env.Append(CCFLAGS=str(CCFLAGS).split())
+ 
+     CFLAGS = env.get('CFLAGS', '')
+     env['CFLAGS'] = ''
+ 
+-    env.Append(CFLAGS=string.split(str(CFLAGS)))
++    env.Append(CFLAGS=str(CFLAGS).split())
++
++    CXXFLAGS = env.get('CXXFLAGS', '')
++    env['CXXFLAGS'] = ''
++
++    env.Append(CXXFLAGS=str(CXXFLAGS).split())
+ 
+     LINKFLAGS = env.get('LINKFLAGS', '')
+     env['LINKFLAGS'] = ''
+ 
+-    env.Append(LINKFLAGS=string.split(str(LINKFLAGS)))
++    env.Append(LINKFLAGS=str(LINKFLAGS).split())
+ 
+     flag_list = platform_flags[selected_platform]
+     for f in flag_list:
+diff --git a/core/SCsub b/core/SCsub
+index d4aba34..b89a1bf 100644
+--- a/core/SCsub
++++ b/core/SCsub
+@@ -18,7 +18,7 @@ gd_cpp = '#include "globals.h"\n'
+ gd_cpp += gd_inc
+ gd_cpp += "void Globals::register_global_defaults() {\n" + gd_call + "\n}\n"
+ 
+-f = open("global_defaults.gen.cpp", "wb")
++f = open("global_defaults.gen.cpp", "w")
+ f.write(gd_cpp)
+ f.close()
+ 
+@@ -47,7 +47,7 @@ if ("SCRIPT_AES256_ENCRYPTION_KEY" in os.environ):
+         txt = "0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0"
+         print("Invalid AES256 encryption key, not 64 bits hex: " + e)
+ 
+-f = open("script_encryption_key.gen.cpp", "wb")
++f = open("script_encryption_key.gen.cpp", "w")
+ f.write("#include \"globals.h\"\nuint8_t script_encryption_key[32]={" + txt + "};\n")
+ f.close()
+ 
+diff --git a/drivers/gles2/shaders/SCsub b/drivers/gles2/shaders/SCsub
+index bf4ec94..13e6490 100644
+--- a/drivers/gles2/shaders/SCsub
++++ b/drivers/gles2/shaders/SCsub
+@@ -2,7 +2,7 @@
+ 
+ Import('env')
+ 
+-if env['BUILDERS'].has_key('GLSL120GLES'):
++if 'GLSL120GLES' in env['BUILDERS']:
+     env.GLSL120GLES('material.glsl')
+     env.GLSL120GLES('canvas.glsl')
+     env.GLSL120GLES('canvas_shadow.glsl')
+diff --git a/drivers/unix/SCsub b/drivers/unix/SCsub
+index 96efc91..5ced44d 100644
+--- a/drivers/unix/SCsub
++++ b/drivers/unix/SCsub
+@@ -8,7 +8,7 @@ g_set_p += 'String OS_Unix::get_global_settings_path() const {\n'
+ g_set_p += '\treturn "' + env["unix_global_settings_path"] + '";\n'
+ g_set_p += '}\n'
+ g_set_p += '#endif'
+-f = open("os_unix_global_settings_path.gen.cpp", "wb")
++f = open("os_unix_global_settings_path.gen.cpp", "w")
+ f.write(g_set_p)
+ f.close()
+ 
+diff --git a/methods.py b/methods.py
+index eb94e7a..5b742bd 100755
+--- a/methods.py
++++ b/methods.py
+@@ -21,7 +21,7 @@ def add_source_files(self, sources, filetype, lib_env=None, shared=False):
+ def build_shader_header(target, source, env):
+ 
+     for x in source:
+-        print x
++        print(x)
+ 
+         name = str(x)
+         name = name[name.rfind("/") + 1:]
+@@ -701,11 +701,11 @@ def include_file_in_legacygl_header(filename, header_data, depth):
+             if (not included_file in header_data.vertex_included_files and header_data.reading == "vertex"):
+                 header_data.vertex_included_files += [included_file]
+                 if(include_file_in_legacygl_header(included_file, header_data, depth + 1) == None):
+-                    print "Error in file '" + filename + "': #include " + includeline + "could not be found!"
++                    print("Error in file '" + filename + "': #include " + includeline + "could not be found!")
+             elif (not included_file in header_data.fragment_included_files and header_data.reading == "fragment"):
+                 header_data.fragment_included_files += [included_file]
+                 if(include_file_in_legacygl_header(included_file, header_data, depth + 1) == None):
+-                    print "Error in file '" + filename + "': #include " + includeline + "could not be found!"
++                    print("Error in file '" + filename + "': #include " + includeline + "could not be found!")
+ 
+             line = fs.readline()
+ 
+@@ -1093,7 +1093,7 @@ def update_version():
+         print("Using custom revision: " + rev)
+     import version
+ 
+-    f = open("core/version_generated.gen.h", "wb")
++    f = open("core/version_generated.gen.h", "w")
+     f.write("#define VERSION_SHORT_NAME " + str(version.short_name) + "\n")
+     f.write("#define VERSION_NAME " + str(version.name) + "\n")
+     f.write("#define VERSION_MAJOR " + str(version.major) + "\n")
+@@ -1225,7 +1225,7 @@ void unregister_module_types() {
+ 
+ """
+ 
+-    f = open("modules/register_module_types.gen.cpp", "wb")
++    f = open("modules/register_module_types.gen.cpp", "w")
+     f.write(modules_cpp)
+ 
+     return module_list
+@@ -1245,9 +1245,9 @@ def win32_spawn(sh, escape, cmd, args, env):
+     data, err = proc.communicate()
+     rv = proc.wait()
+     if rv:
+-        print "====="
+-        print err
+-        print "====="
++        print("=====")
++        print(err)
++        print("=====")
+     return rv
+ 
+ """
+@@ -1366,9 +1366,9 @@ def use_windows_spawn_fix(self, platform=None):
+         data, err = proc.communicate()
+         rv = proc.wait()
+         if rv:
+-            print "====="
+-            print err
+-            print "====="
++            print("=====")
++            print(err)
++            print("=====")
+         return rv
+ 
+     def mySpawn(sh, escape, cmd, args, env):
+@@ -1409,7 +1409,7 @@ def split_lib(self, libname):
+         else:
+             fname = env.File(f)[0].path
+         fname = fname.replace("\\", "/")
+-        base = string.join(fname.split("/")[:2], "/")
++        base = "/".join(fname.split("/")[:2])
+         if base != cur_base and len(list) > max_src:
+             if num > 0:
+                 lib = env.Library(libname + str(num), list)
+@@ -1454,7 +1454,7 @@ def save_active_platforms(apnames, ap):
+         str += "};\n"
+ 
+         wf = x + "/logo.gen.h"
+-        logow = open(wf, "wb")
++        logow = open(wf, "w")
+         logow.write(str)
+ 
+ 

@@ -6,19 +6,16 @@ const dataPck =
 const gameDirectory = "/var/lib/korri/cache/mega-man-rock-n-roll/game/1.3"
 
 const launchInput = () => ({
-  runnerId: "@simonwjackson:mega-man-rock-n-roll/fex",
-  program: "/nix/store/mmrnr/bin/mega-man-rock-n-roll-fex",
+  runnerId: "@simonwjackson:mega-man-rock-n-roll/godot",
+  program: "/nix/store/mmrnr/bin/mega-man-rock-n-roll-godot",
   contentPath: `${gameDirectory}/data.pck`,
   accountRoot: "/var/lib/korri/accounts/a",
   cacheRoot: "/var/lib/korri/cache",
   files: {
-    "fex-launch": "/nix/store/mmrnr/bin/mega-man-rock-n-roll-fex",
+    "godot-launch": "/nix/store/mmrnr/bin/mega-man-rock-n-roll-godot",
     "game-unpack": "/nix/store/mmrnr/bin/mega-man-rock-n-roll-unpack",
-    "fex-config": "/nix/store/mmrnr-fex-config/share/fex-emu",
   },
-  artifacts: {
-    "@korri:fex/rootfs": "/var/lib/korri/cache/fex/rootfs/archlinux-2026-01-08-mesa-26.1.2",
-  },
+  artifacts: {},
 })
 
 describe("Mega Man Rock N Roll declaration", () => {
@@ -31,23 +28,22 @@ describe("Mega Man Rock N Roll declaration", () => {
     })
   })
 
-  test("the runner accepts that release and needs the FEX rootfs", () => {
-    expect(runners.fex.releases).toEqual([dataPck])
-    expect(runners.fex.artifacts).toEqual(["@korri:fex/rootfs"])
+  test("the runner accepts that release and needs no other artifact", () => {
+    expect(runners.godot).toEqual({
+      id: "@simonwjackson:mega-man-rock-n-roll/godot",
+      program: "godot-launch",
+      releases: [dataPck],
+    })
   })
 })
 
 describe("Mega Man Rock N Roll launch", () => {
-  test("runs the launcher on the game directory with its home and FEX paths", () => {
+  test("runs the launcher on data.pck from the game directory with its home", () => {
     const input = launchInput()
     expect(handlers["launch.prepare"](input)).toEqual({
       command: input.program,
-      args: [gameDirectory],
-      env: {
-        HOME: "/var/lib/korri/accounts/a/mega-man-rock-n-roll",
-        KORRI_FEX_CONFIG: "/nix/store/mmrnr-fex-config/share/fex-emu",
-        KORRI_FEX_ROOTFS: "/var/lib/korri/cache/fex/rootfs/archlinux-2026-01-08-mesa-26.1.2",
-      },
+      args: [`${gameDirectory}/data.pck`],
+      env: { HOME: "/var/lib/korri/accounts/a/mega-man-rock-n-roll" },
       cwd: gameDirectory,
       directories: ["/var/lib/korri/accounts/a/mega-man-rock-n-roll"],
       envUnset: [],
@@ -61,8 +57,6 @@ describe("Mega Man Rock N Roll launch", () => {
       ["loads no core", { corePath: "/nix/store/core.so" }],
       ["no raw config override", { overrides: { config: { append: [] } } }],
       ["does not implement typed settings", { overrides: { settings: { scale: 2 } } }],
-      ["requires fex-config", { files: {} }],
-      ["requires @korri:fex/rootfs", { artifacts: {} }],
     ]
     for (const [message, change] of refused) {
       expect(() => handlers["launch.prepare"]({ ...launchInput(), ...change } as never)).toThrow(
