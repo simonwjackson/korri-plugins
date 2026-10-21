@@ -17,6 +17,14 @@ with open(os.environ["RECORD"], "w") as record:
 sys.exit(int(os.environ.get("RECORDER_STATUS", "0")))
 """
 
+# Stands in for xdpyinfo: prints the X screen size unless told to fail.
+XDPYINFO = """#!/bin/sh
+[ -n "$XDPYINFO_FAIL" ] && { echo 'xdpyinfo:  unable to open display' >&2; exit 1; }
+echo 'name of display:    :1'
+echo 'screen #0:'
+echo '  dimensions:    640x480 pixels (169x127 millimeters)'
+"""
+
 
 class LaunchTests(unittest.TestCase):
     def setUp(self):
@@ -33,6 +41,8 @@ class LaunchTests(unittest.TestCase):
         tools.mkdir()
         (tools / "godot2-runtime").write_text(RECORDER)
         (tools / "godot2-runtime").chmod(0o755)
+        (tools / "xdpyinfo").write_text(XDPYINFO)
+        (tools / "xdpyinfo").chmod(0o755)
         self.record = root / "record.json"
         self.env = {
             "PATH": f"{tools}:{os.environ['PATH']}",
@@ -50,12 +60,19 @@ class LaunchTests(unittest.TestCase):
         result = self.run_launch(self.pack)
         self.assertEqual(result.returncode, 0, result.stderr)
         record = json.loads(self.record.read_text())
-        self.assertEqual(record["argv"], ["-main_pack", str(self.pack)])
+        # Window at the screen's size and fullscreen from the start.
+        self.assertEqual(record["argv"], ["-r", "640x480", "-f", "-main_pack", str(self.pack)])
         self.assertEqual(record["cwd"], str(self.game))
         env = record["env"]
         self.assertEqual(env["HOME"], str(self.home))
         self.assertEqual(env["DISPLAY"], ":1")
         self.assertNotIn("WAYLAND_DISPLAY", env)
+
+    def test_without_a_readable_screen_size_the_game_requests_fullscreen_itself(self):
+        result = self.run_launch(self.pack, env=self.env | {"XDPYINFO_FAIL": "1"})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        record = json.loads(self.record.read_text())
+        self.assertEqual(record["argv"], ["-main_pack", str(self.pack)])
 
     def test_returns_the_engine_status(self):
         result = self.run_launch(self.pack, env=self.env | {"RECORDER_STATUS": "7"})

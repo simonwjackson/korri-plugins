@@ -116,19 +116,23 @@ the same way as the download. It returns:
 
 `mega-man-rock-n-roll-godot` refuses with status 2 if it does not get exactly
 one argument, if the pack is not an absolute file, or if `HOME` is not an
-absolute directory. Otherwise it changes to the pack's directory and runs
-`godot2-runtime -main_pack <pack>`; the exit status is the engine's.
+absolute directory. Otherwise it changes to the pack's directory, reads the
+screen size from the X server with `xdpyinfo`, and runs
+`godot2-runtime -r <width>x<height> -f -main_pack <pack>`. If the size cannot
+be read, it runs `godot2-runtime -main_pack <pack>`. The exit status is the
+engine's.
 
 The game is X11 only. It uses the game unit's Xwayland `DISPLAY`; nothing
 sets `WAYLAND_DISPLAY`. Godot uses GLES2 over OpenGL and PulseAudio, then ALSA.
 
-The launcher does not pass `-f`. The game's `engine.cfg` asks for a 1024x896
-window with `stretch_mode` `viewport` and `stretch_aspect` `keep`, and the
-game's own script then requests fullscreen. Under Xvfb at 640x480 with an
-EWMH window manager (openbox), a fresh `HOME` and no `-f`, the window had
-`_NET_WM_STATE_FULLSCREEN` at 640x480 and the game filled the screen with
-side bars. Godot 2 asks the window manager for fullscreen through EWMH, so on
-a device the compositor's X11 window manager must honour that request.
+The game's `engine.cfg` asks for a 1024x896 window with `stretch_mode`
+`viewport` and `stretch_aspect` `keep`, and the game's own script then
+requests fullscreen through EWMH. On the RG353M (sway, Xwayland) that
+request sometimes lost a race: on a second launch sway marked the window
+fullscreen at 640x480 while the game kept its 1024x896 window, so the game
+showed in a smaller box. The launcher therefore opens the window at the
+screen's own size and fullscreen from the start; the viewport stretch fits
+the picture either way.
 
 ## Checks
 

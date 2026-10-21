@@ -13,7 +13,12 @@ let
   runtime = import ./godot2/package.nix { inherit pkgs; };
   launch = pkgs.writeShellApplication {
     name = "mega-man-rock-n-roll-godot";
-    runtimeInputs = [ runtime ];
+    runtimeInputs = [
+      runtime
+      pkgs.xorg.xdpyinfo
+      pkgs.gnused
+      pkgs.coreutils
+    ];
     text = builtins.readFile ./runner/godot-launch.sh;
   };
 in

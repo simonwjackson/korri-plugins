@@ -5,7 +5,14 @@
 # Godot keeps settings and saves in ~/.godot/app_userdata/Megaman_RnR.
 #
 # The game is X11 only and uses the game unit's Xwayland DISPLAY. Do not set
-# WAYLAND_DISPLAY. There is no -f: the game requests fullscreen itself.
+# WAYLAND_DISPLAY.
+#
+# The game opens a 1024x896 window and then asks the window manager for
+# fullscreen. On the RG353M that request sometimes loses a race with Xwayland:
+# sway marked the window fullscreen at 640x480 while the game kept a 1024x896
+# window, so it showed in a smaller box. Open the window at the screen's own
+# size (-r, read from the X server) and fullscreen from the start (-f); the
+# game's viewport stretch then fits the picture either way.
 #
 # Exit status: 2 if an input is missing or wrong; otherwise the engine's own.
 set -Eeuo pipefail
@@ -21,4 +28,9 @@ pack="$1"
 # Run from the game directory, the directory that holds the pack.
 game="${pack%/*}"
 cd "${game:-/}"
+size=$(xdpyinfo 2>/dev/null | sed -n 's/^ *dimensions: *\([0-9][0-9]*x[0-9][0-9]*\) pixels.*/\1/p' | head -n 1 || true)
+if [[ -n "$size" ]]; then
+  exec godot2-runtime -r "$size" -f -main_pack "$pack"
+fi
+# No readable screen size: let the game request fullscreen itself.
 exec godot2-runtime -main_pack "$pack"
