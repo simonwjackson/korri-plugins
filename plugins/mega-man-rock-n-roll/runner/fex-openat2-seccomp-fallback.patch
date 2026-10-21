@@ -1,0 +1,25 @@
+--- a/Source/Tools/LinuxEmulation/LinuxSyscalls/FileManagement.cpp
++++ b/Source/Tools/LinuxEmulation/LinuxSyscalls/FileManagement.cpp
+@@ -664,8 +664,9 @@
+         .resolve = (Path.FD == AT_FDCWD) ? 0u : RESOLVE_IN_ROOT,    // AT_FDCWD means it's a thunk and not via RootFS
+       };
+       fd = ::syscall(SYSCALL_DEF(openat2), Path.FD, Path.Path, &how, sizeof(how));
+-
+-      if (fd == -1 && errno == EXDEV) {
++      if (fd == -1 && (errno == EXDEV || errno == ENOSYS || errno == EPERM)) {
++        // ENOSYS/EPERM: a seccomp filter refused openat2 (systemd RestrictSUIDSGID
++        // cannot inspect open_how, so it denies the call). Fall back as for EXDEV.
+         // This means a magic symlink (/proc/foo) was involved. In this case we
+         // just punt and do the access without RESOLVE_IN_ROOT.
+         fd = ::syscall(SYSCALL_DEF(openat), Path.FD, Path.Path, flags, mode);
+@@ -918,7 +919,9 @@
+         .resolve = (Path.FD == AT_FDCWD) ? 0u : RESOLVE_IN_ROOT,    // AT_FDCWD means it's a thunk and not via RootFS
+       };
+       fd = ::syscall(SYSCALL_DEF(openat2), Path.FD, Path.Path, &how, sizeof(how));
+-      if (fd == -1 && errno == EXDEV) {
++      if (fd == -1 && (errno == EXDEV || errno == ENOSYS || errno == EPERM)) {
++        // ENOSYS/EPERM: a seccomp filter refused openat2 (systemd RestrictSUIDSGID
++        // cannot inspect open_how, so it denies the call). Fall back as for EXDEV.
+         // This means a magic symlink (/proc/foo) was involved. In this case we
+         // just punt and do the access without RESOLVE_IN_ROOT.
+         fd = ::syscall(SYSCALL_DEF(openat), Path.FD, Path.Path, flags, mode);

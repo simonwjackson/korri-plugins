@@ -11,9 +11,17 @@ let
     runtimeInputs = [ pkgs.python3 ];
     text = ''exec python3 ${./game/unpack.py} ${./game/contents} "$@"'';
   };
+  # Korri runs games in a systemd unit with RestrictSUIDSGID=yes. Its seccomp
+  # filter refuses openat2, which FEX uses with RESOLVE_IN_ROOT to look guest
+  # files up in the RootFS; FEX then treated every RootFS library as missing
+  # ("libX11.so.6: cannot open shared object file" on the RG353M). The patch
+  # falls back to openat relative to the RootFS, as FEX already does for EXDEV.
+  fex = pkgs.fex.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ [ ./runner/fex-openat2-seccomp-fallback.patch ];
+  });
   launch = pkgs.writeShellApplication {
     name = "mega-man-rock-n-roll-fex";
-    runtimeInputs = [ pkgs.fex ];
+    runtimeInputs = [ fex ];
     text = builtins.readFile ./runner/fex-launch.sh;
   };
   fexConfig = pkgs.runCommand "mega-man-rock-n-roll-fex-config" { } ''
