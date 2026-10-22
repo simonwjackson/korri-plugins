@@ -1,0 +1,7 @@
+# Files the public 4.2.3 ZIP must yield, read by unpack.py.
+# Columns: mode, path in the ready directory. Proton loads MegaManArena.exe
+# and GameMaker reads data.win beside it; neither needs the executable bit.
+# korrid verifies the whole ZIP against its pinned SHA-256 before unpacking,
+# so this list holds no hashes.
+0644 MegaManArena.exe
+0644 data.win

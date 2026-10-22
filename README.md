@@ -48,6 +48,7 @@ node nix/discovery-check.ts
 | `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
 | `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
 | `korri-plugin-mega-man-rock-n-roll` | `@simonwjackson:mega-man-rock-n-roll`, downloaded ZIP on native Godot 2.1.4 | x86_64 and aarch64 Linux |
+| `korri-plugin-mega-man-arena` | `@simonwjackson:mega-man-arena`, downloaded Windows ZIP on `@korri:proton` | aarch64 Linux |
 | `korri-plugin-fallout1-ce` | `@simonwjackson:fallout1-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
 
@@ -287,6 +288,16 @@ replaced the FEX runner on 2026-10-21. It moved here from `korri-os/korri` on
 2026-10-20. It needs a Core with ADR 0013, which the pinned Korri input has.
 The x86_64 package played the game's intro under Xvfb on a build machine.
 Nothing has run the game on aarch64 or on a device.
+
+## Mega Man Arena
+
+[Mega Man Arena](plugins/mega-man-arena/README.md) declares the public Windows
+4.2.3 ZIP as an artifact that korrid downloads, verifies and unpacks (Korri ADR
+0012 and 0013), and runs it with `@korri:proton`'s Proton-CachyOS arm64 inside
+an FHS environment. It replaces legacy Korri's `mega-man-arena` plugin. It
+exists for aarch64 only. On 2026-10-21 Korri's `plugin-run` prepared and ran
+it to the main menu on the Odin 2 Portal inside the game unit's sandbox;
+korrid's catalog and download flow and controller play remain unverified.
 
 ## Fallout 1 and 2 Community Edition
 

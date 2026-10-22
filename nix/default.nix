@@ -71,6 +71,9 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
               skate3Package = skate3.packages.${system}.default;
             };
         };
+      }
+      // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
+        korri-plugin-mega-man-arena = megaManArenaPlugin;
       };
     actraiserPackage = import ../plugins/actraiser/package.nix { inherit pkgs; };
     actraiserPlugin =
@@ -117,6 +120,17 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         fileset = ../plugins/mega-man-rock-n-roll/plugin.ts;
       };
       plugin = _: import ../plugins/mega-man-rock-n-roll/plugin.nix { inherit pkgs; };
+    };
+    # The ZIP is a korrid-downloaded artifact (Korri ADR 0013), not in the
+    # closure. Its runner needs @korri:proton's Proton-CachyOS, an arm64-only
+    # build, so the plugin exists for aarch64-linux only.
+    megaManArenaPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = pkgs.lib.fileset.toSource {
+        root = ../plugins/mega-man-arena;
+        fileset = ../plugins/mega-man-arena/plugin.ts;
+      };
+      plugin = _: import ../plugins/mega-man-arena/plugin.nix { inherit pkgs; };
     };
     # The engines use the Sustainable Use License. Keep permission scoped to
     # these two packages instead of enabling every unfree dependency.
@@ -481,6 +495,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         korridPackage = korri.packages.${system}.korrid;
       };
       korri-mega-man-rock-n-roll-source = import ./mega-man-rock-n-roll-source-check.nix { inherit pkgs; };
+      korri-mega-man-arena-source = import ./mega-man-arena-source-check.nix { inherit pkgs; };
       korri-mega-man-rock-n-roll-plugin = import ./mega-man-rock-n-roll-check.nix {
         inherit pkgs;
         package = megaManRockNRollPlugin;
@@ -500,6 +515,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
+      };
+    }
+    // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
+      korri-mega-man-arena-plugin = import ./mega-man-arena-check.nix {
+        inherit pkgs;
+        package = megaManArenaPlugin;
+        contract = korri.lib.${system}.pluginContract;
       };
     }
     # The VM needs KVM; it runs on the x86_64 build machine only.
