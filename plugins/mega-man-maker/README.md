@@ -156,11 +156,23 @@ GPU. Sway reported the Gamescope window `Mega Man Maker` focused and
 fullscreen at 1240x1080, and a Gamescope screenshot showed the game's
 first-run profile screen scaled to the whole display.
 
+## Verified on the Mini V2 with a current Core
+
+Later on 2026-10-22 the Mini V2 moved to Korri main (ADR 0012 to 0016) and
+this plugin replaced the test variant. korrid listed Mega Man Maker before any
+download, downloaded and verified the game ZIP and `@korri:proton/cachyos`
+into its cache, ran `game-unpack`, routed the game to the Proton runner with
+`contentPath` inside the ready artifact, and started it nested in Gamescope.
+Sway reported the window focused and fullscreen at 1240x1080, and the
+first-run profile screen filled the display.
+
+Two device fixes were needed that are not part of this plugin: Core's save
+folder preparation under `RestrictSUIDSGID` (korri branch
+`fix/saves-restrict-suidsgid`), and an ACL mask in korrid's cache that hid the
+game user's read access to the ready artifacts.
+
 ## Not verified
 
-- This plugin itself on a device: korrid's download and unpack of the game
-  ZIP and Proton, the library entry before download, and the release `file`
-  in the artifact. These need a device Core with ADR 0012 and ADR 0013.
 - Controller input, audio and frame rate. The first run asks for a typed
   username to create an online profile, or to log in; that step was not
   taken, because it creates an account on megamanmaker.com.
