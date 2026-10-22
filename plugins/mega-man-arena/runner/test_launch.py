@@ -5,6 +5,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 
 HERE = Path(__file__).parent
@@ -15,6 +16,13 @@ import json, os, sys
 with open(os.environ["RECORD"], "w") as record:
     json.dump({{"argv": sys.argv[1:], "cwd": os.getcwd(), "env": dict(os.environ)}}, record)
 sys.exit(int(os.environ.get("RECORDER_STATUS", "0")))
+"""
+
+# Records the arguments of the fullscreen request.
+XDOTOOL = f"""#!{sys.executable}
+import json, os, sys
+with open(os.environ["XDOTOOL_RECORD"], "w") as record:
+    json.dump(sys.argv[1:], record)
 """
 
 
@@ -37,10 +45,14 @@ class LaunchTests(unittest.TestCase):
         tools.mkdir()
         (tools / "python3").write_text(RECORDER)
         (tools / "python3").chmod(0o755)
+        (tools / "xdotool").write_text(XDOTOOL)
+        (tools / "xdotool").chmod(0o755)
         self.record = root / "record.json"
+        self.xdotool_record = root / "xdotool.json"
         self.env = {
             "PATH": f"{tools}:{os.environ['PATH']}",
             "RECORD": str(self.record),
+            "XDOTOOL_RECORD": str(self.xdotool_record),
             "HOME": str(self.home),
             "KORRI_PROTON_CACHYOS": str(self.proton),
             "DISPLAY": ":1",
@@ -67,6 +79,18 @@ class LaunchTests(unittest.TestCase):
         self.assertEqual(env["STORE"], "none")
         self.assertTrue((self.home / "compatdata").is_dir())
         self.assertTrue((self.home / "steam").is_dir())
+
+    def test_asks_for_fullscreen_when_the_game_window_shows(self):
+        result = self.run_launch(self.data)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for _ in range(100):
+            if self.xdotool_record.exists() and self.xdotool_record.read_text():
+                break
+            time.sleep(0.05)
+        self.assertEqual(json.loads(self.xdotool_record.read_text()), [
+            "search", "--sync", "--onlyvisible", "--name", "^Mega Man Arena$",
+            "windowstate", "--add", "FULLSCREEN",
+        ])
 
     def test_returns_protons_status(self):
         result = self.run_launch(self.data, env=self.env | {"RECORDER_STATUS": "7"})

@@ -40,5 +40,13 @@ export UMU_ID=umu-default
 export STORE=none
 mkdir -p "$STEAM_COMPAT_DATA_PATH" "$STEAM_COMPAT_CLIENT_INSTALL_PATH"
 
+# The game opens a 1280x896 window. The portal is a fullscreen window, and
+# sway gives no focus to a window that maps under it, so korrid never sees the
+# game take the screen and the portal stays on "Starting". Ask for fullscreen
+# through EWMH as soon as the window shows, as a fullscreen game would itself.
+# Wine's _NET_WM_PID is from Proton's PID namespace, so match the title.
+(timeout 180 xdotool search --sync --onlyvisible --name '^Mega Man Arena$' \
+  windowstate --add FULLSCREEN >/dev/null 2>&1 || true) &
+
 cd "$game"
 exec python3 "$proton/proton" waitforexitandrun "$exe"

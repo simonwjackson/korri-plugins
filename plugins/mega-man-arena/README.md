@@ -98,6 +98,14 @@ game directory with:
 | `STEAM_COMPAT_INSTALL_PATH` | the game directory | |
 | `UMU_ID`, `STORE` | `umu-default`, `none` | protonfixes needs a game ID and finds none without Steam; this selects umu's no-op default fix, as legacy did |
 
+In the background it waits up to 180 seconds for a visible window titled
+`Mega Man Arena` and asks for fullscreen through EWMH (`xdotool windowstate
+--add FULLSCREEN`). The game opens a 1280x896 window. The portal is a
+fullscreen window, and sway gives no focus to a window that maps under it, so
+without the request korrid never sees the game take the screen and the portal
+stays on "Starting". Wine's `_NET_WM_PID` comes from Proton's PID namespace,
+so the title, not the PID, identifies the window.
+
 GameMaker writes the game's settings and saves to
 `compatdata/pfx/drive_c/users/steamuser/AppData/Local/MegaManArena/` (for
 example `mmasavefile42.sav`). The game directory is korrid's read-only

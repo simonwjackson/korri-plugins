@@ -7,7 +7,10 @@
 let
   launch = pkgs.writeShellApplication {
     name = "mega-man-arena-proton-launch";
-    runtimeInputs = [ pkgs.coreutils ];
+    runtimeInputs = [
+      pkgs.coreutils
+      pkgs.xdotool
+    ];
     text = builtins.readFile ./proton-launch.sh;
   };
 in
