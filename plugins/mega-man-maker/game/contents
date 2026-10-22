@@ -1,0 +1,8 @@
+# Files the public Windows 1.10.4.2 ZIP must yield, read by unpack.py.
+# Columns: mode, path in the ready directory. The ZIP was made with MS-DOS
+# file attributes and carries no Unix modes. Wine does not need an
+# executable bit; MegaMaker.exe gets one so the tree reads like an install.
+# korrid verifies the whole ZIP against its pinned SHA-256 before
+# unpacking, so this list holds no hashes.
+0644 data.win
+0755 MegaMaker.exe

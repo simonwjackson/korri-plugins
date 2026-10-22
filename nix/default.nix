@@ -132,6 +132,15 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       };
       plugin = _: import ../plugins/mega-man-arena/plugin.nix { inherit pkgs; };
     };
+    # The ZIP and Proton are korrid-downloaded artifacts (Korri ADR 0012/0013).
+    megaManMakerPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = pkgs.lib.fileset.toSource {
+        root = ../plugins/mega-man-maker;
+        fileset = ../plugins/mega-man-maker/plugin.ts;
+      };
+      plugin = _: import ../plugins/mega-man-maker/plugin.nix { inherit pkgs; };
+    };
     # The engines use the Sustainable Use License. Keep permission scoped to
     # these two packages instead of enabling every unfree dependency.
     falloutPkgs = import nixpkgs {
@@ -426,6 +435,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       fable-ii-extract-xiso = fableExtractor;
       korri-plugin-fable-ii-recomp = fablePlugin;
       korri-plugin-mega-man-rock-n-roll = megaManRockNRollPlugin;
+      korri-plugin-mega-man-maker = megaManMakerPlugin;
     };
     checks = {
       korri-actraiser-plugin = import ./actraiser-check.nix {
@@ -500,6 +510,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         inherit pkgs;
         package = megaManRockNRollPlugin;
         contract = korri.lib.${system}.pluginContract;
+      };
+      korri-mega-man-maker-source = import ./mega-man-maker-source-check.nix { inherit pkgs; };
+      korri-mega-man-maker-plugin = import ./mega-man-maker-check.nix {
+        inherit pkgs;
+        package = megaManMakerPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+        korridPackage = korri.packages.${system}.korrid;
       };
       korri-skate3-plugin = import ./skate3-check.nix {
         inherit pkgs;

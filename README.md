@@ -49,6 +49,7 @@ node nix/discovery-check.ts
 | `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
 | `korri-plugin-mega-man-rock-n-roll` | `@simonwjackson:mega-man-rock-n-roll`, downloaded ZIP on native Godot 2.1.4 | x86_64 and aarch64 Linux |
 | `korri-plugin-mega-man-arena` | `@simonwjackson:mega-man-arena`, downloaded Windows ZIP on `@korri:proton` | aarch64 Linux |
+| `korri-plugin-mega-man-maker` | `@simonwjackson:mega-man-maker`, downloaded Windows ZIP on Proton-CachyOS arm64 | aarch64 Linux runs it; x86_64 builds |
 | `korri-plugin-fallout1-ce` | `@simonwjackson:fallout1-ce` | x86_64 and aarch64 Linux |
 | `korri-plugin-fallout2-ce` | `@simonwjackson:fallout2-ce` | x86_64 and aarch64 Linux |
 
