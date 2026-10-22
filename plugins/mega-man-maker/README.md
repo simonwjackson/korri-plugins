@@ -138,14 +138,31 @@ and wrote `Settings/Settings.ini` in the prefix. Nothing tested input,
 audio, a real GPU, korrid's download and unpack of the artifacts, or the
 Korri game unit.
 
+## Verified on the Mini V2
+
+On 2026-10-22 the Retroid Pocket Mini V2 ran a Core from before ADR 0012
+(no `artifacts` exports, no `app.acquisition.*`), so this plugin could not be
+admitted there. A device-test variant with the same native packages ran
+instead. It declared the release as an ADR 0003 prepared file under the
+account root and took the Proton directory that the Steam plugin had already
+prepared in korrid's cache. The game files were unpacked by `game-unpack`
+under the account root, and the library entry, device location and
+discovery record were written in the shapes the device holds for Fallout 2.
+
+korrid then routed the game to `@simonwjackson:mega-man-maker/proton` and
+started it in its normal game unit, nested in the device's Gamescope
+modifier. Proton launched `MegaMaker.exe` through `umu.exe` on the device
+GPU. Sway reported the Gamescope window `Mega Man Maker` focused and
+fullscreen at 1240x1080, and a Gamescope screenshot showed the game's
+first-run profile screen scaled to the whole display.
+
 ## Not verified
 
-- Install and launch through korrid on a device. The intended device is the
-  Retroid Pocket Mini V2, where Steam already runs this Proton build under
-  Korri's game sandbox.
-- Fullscreen. Under Xvfb with no window manager the game drew its title
-  screen in a 768x672 window.
-- Controller input. The first run asks for a typed username to create an
-  online profile, or to log in.
+- This plugin itself on a device: korrid's download and unpack of the game
+  ZIP and Proton, the library entry before download, and the release `file`
+  in the artifact. These need a device Core with ADR 0012 and ADR 0013.
+- Controller input, audio and frame rate. The first run asks for a typed
+  username to create an online profile, or to log in; that step was not
+  taken, because it creates an account on megamanmaker.com.
 - Saves are not declared as `saveLocations` (ADR 0014); the pinned Core
   predates that field.
