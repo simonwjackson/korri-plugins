@@ -139,39 +139,6 @@
         "type": "github"
       }
     },
-    "nixpkgs_4": {
-      "locked": {
-        "lastModified": 1790822859,
-        "narHash": "sha256-69xHQhAeMAD2wDXO7T2pcOZIF9Sga2W+JkmY2a11Ops=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "c59305bab2065cfecc4944690d9eedbb56f3a9fa",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-unstable",
-        "repo": "nixpkgs",
-        "type": "github"
-      }
-    },
-    "nocturne-encore": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1791094606,
-        "narHash": "sha256-McyMrajnFnVrG7Edn4cRUlRXDqC+6/8vsmNv6O88fpg=",
-        "owner": "simonwjackson",
-        "repo": "nocturne-encore",
-        "rev": "eb7045d04f3f2435ffd902a3cbb65b21e66a6b16",
-        "type": "github"
-      },
-      "original": {
-        "owner": "simonwjackson",
-        "repo": "nocturne-encore",
-        "rev": "eb7045d04f3f2435ffd902a3cbb65b21e66a6b16",
-        "type": "github"
-      }
-    },
     "proseql": {
       "flake": false,
       "locked": {
@@ -194,9 +161,7 @@
         "flake-utils": "flake-utils",
         "korri": "korri",
         "nixpkgs": "nixpkgs_2",
-        "nocturne-encore": "nocturne-encore",
-        "signs-of-rain": "signs-of-rain",
-        "skate3": "skate3"
+        "signs-of-rain": "signs-of-rain"
       }
     },
     "rust-overlay": {
@@ -236,25 +201,6 @@
         "owner": "simonwjackson",
         "repo": "signs-of-rain",
         "rev": "a5a320681fa0688a618b0894d04de1a00b1ad537",
-        "type": "github"
-      }
-    },
-    "skate3": {
-      "inputs": {
-        "nixpkgs": "nixpkgs_4"
-      },
-      "locked": {
-        "lastModified": 1790974745,
-        "narHash": "sha256-9quG2ycZzerCvJjOWMqFcedVHFPpXKbjdfbU0dy72K8=",
-        "owner": "simonwjackson",
-        "repo": "skate-3-flake",
-        "rev": "4e58e784407326d4da9dab5ab2b44fd32eb03c22",
-        "type": "github"
-      },
-      "original": {
-        "owner": "simonwjackson",
-        "repo": "skate-3-flake",
-        "rev": "4e58e784407326d4da9dab5ab2b44fd32eb03c22",
         "type": "github"
       }
     },

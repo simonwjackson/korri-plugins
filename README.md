@@ -8,10 +8,9 @@ PICO-8 producer. A namespace declaration does not grant device trust.
 
 System file rules now live in `systems.<id>.content`. Discovery scans only
 folders paired with a system or group. It does not scan plugin data.
-Measured original-content hashes also declare games for 2 Ship 2 Harkinian,
-ActRaiser, Fable II, Melee, Nocturne, Skate 3, Super Mario World and The Simpsons
-Game. These declarations have no fixed `file`: a matching discovered release
-joins the declared game. The runners keep their hash gates.
+Measured original-content hashes also declare games for 2 Ship 2 Harkinian
+and Super Mario World. These declarations have no fixed `file`: a matching
+discovered release joins the declared game. The runners keep their hash gates.
 
 OpenGOAL and Fallout CE declare exact prepared-file paths relative to each
 account root. Their READMEs list the paths and complete-tree move requirements.
@@ -30,19 +29,10 @@ node nix/discovery-check.ts
 
 | Output | Plugin or contents | Platforms |
 |---|---|---|
-| `korri-plugin-skate-3` | `@simonwjackson:skate-3` | x86_64 and aarch64 Linux |
-| `korri-plugin-nocturne` | `@simonwjackson:nocturne` | x86_64 and aarch64 Linux |
-| `korri-plugin-melee-pc` | `@simonwjackson:melee-pc`, beta | x86_64 and aarch64 Linux |
-| `melee-pc` | Native Melee PC runtime and owned-disc launcher | x86_64 and aarch64 Linux |
-| `nocturne` | NocturneRecomp native launcher for owned XBLA assets | x86_64 and aarch64 Linux |
 | `korri-plugin-opengoal` | `@simonwjackson:opengoal`, Jak trilogy including Renegade | x86_64 and aarch64 Linux |
 | `opengoal` | Native runtime without game assets or compiler | x86_64 and aarch64 Linux |
 | `opengoal-tools` | Off-device disc preparation and GOAL compiler | x86_64 Linux build machine only |
-| `korri-plugin-actraiser` | `@simonwjackson:actraiser`, private owned-ROM build | x86_64 and aarch64 Linux |
-| `actraiser` | Private native executable and owned-ROM launcher | x86_64 and aarch64 Linux |
-| `korri-plugin-the-simpsons-game` | `@simonwjackson:the-simpsons-game` | x86_64 with AVX2 and aarch64 Linux build targets |
 | `korri-plugin-2ship` | `@simonwjackson:2ship` | x86_64 and aarch64 Linux |
-| `korri-plugin-fable-ii-recomp` | `@simonwjackson:fable-ii-recomp`, private owned-XEX build | x86_64 and aarch64 Linux build targets |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-signs-of-rain` | `@simonwjackson:signs-of-rain`, exact packaged PCK | x86_64 and aarch64 Linux checked |
 | `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
@@ -67,107 +57,6 @@ also loaded a copied pack in private storage and rejected a missing pack.
 There is no RG353M graphics, controller or 60 FPS acceptance, device installation,
 trust change, or Core schema change.
 
-## Fable II
-
-[Fable II](plugins/fable-ii-recomp/README.md) matches the measured USA/Europe
-GOTY ISO and uses Oery's native recompilation. Builds need the owned XEX on a
-private build machine. Runtime extraction keeps the ISO unchanged and puts
-native data and saves under the selected Korri account.
-
-First installation needs about 15 GB of temporary free space; about 7 GB of
-extracted files remains per account. Both Nix package checks passed. The
-packaged x86_64 engine rendered the opening area, loaded a copied save and
-responded to movement input. ARM gameplay and handheld acceptance are unverified.
-
-Keep the XEX and compiled outputs out of public caches. The plugin instructions
-cover private builds, package checks, and the owned-ISO verification task.
-No publication, device trust change or target installation is included.
-
-## The Simpsons Game
-
-[The Simpsons Game](plugins/the-simpsons-game/README.md) matches the owner's
-measured USA Xbox 360 ISO and builds the native recompilation for both Linux
-architectures. Each Korri account gets separate installed assets, settings and
-saves. It needs about 4.39 GB of extracted data per account, plus shader cache.
-The original archive is not a discovery input; add its bare ISO to the library.
-
-The native output contains translated retail code and must stay private.
-No public binary publication or device trust change is approved. Package checks
-and the opt-in `verify-simpsons` task are documented in the plugin README;
-loader and extraction tests do not establish playable handheld performance.
-
-## Skate 3
-
-[Skate 3](plugins/skate-3/README.md) adds a launcher to an existing library
-game when its recorded whole-file hash matches an accepted disc. It uses
-the pinned prebuilt launcher on x86_64 and a native source build on aarch64.
-The ARM64 build needs two owned XEX files in the builder's Nix store; see
-the [build instructions](plugins/skate-3/README.md#build-and-verify).
-The repository contains integration source, tests, documentation and hashes,
-not an ISO, XEX, title update, compiled recompilation or NAR archive.
-
-The native release is unfree. Do not publish its binary closure without a
-separate rights review and approval. This repository has no binary-cache
-publication workflow. Device installation and gameplay remain outside the
-package-only scope. Signature and permission checks must stay enabled.
-
-Run on a build machine of the matching architecture, not a target device:
-
-```sh
-nix run .#help
-nix build --no-link .#korri-plugin-skate-3
-nix build --no-link .#checks.x86_64-linux.korri-skate3-plugin
-nix build --no-link .#checks.aarch64-linux.korri-skate3-plugin
-```
-
-The gate checks the actual packaged source, generated manifest, personal
-publisher identity, strict launch-contract types, host admission, and
-production sandboxed launch preparation with literal file paths.
-ARM64 package support does not fix the observed Mini V2 intro-movie freeze
-or establish gameplay acceptance.
-
-## Melee PC
-
-[Melee PC](plugins/melee-pc/README.md) adds a native beta runner for the measured
-USA 1.02 ISO on both Linux architectures. It attaches to a registered release;
-no general GameCube scanner is added. The launcher isolates native settings,
-cache and cards per account. Upstream's updater cannot replace the managed binary.
-Vulkan 1.1 is required. Game binaries remain private pending rights review.
-
-```sh
-nix build --no-link .#korri-plugin-melee-pc
-nix build --no-link .#checks.x86_64-linux.korri-melee-plugin
-nix build --no-link .#checks.aarch64-linux.korri-melee-plugin
-nix run .#verify-melee -- /path/to/owned/USA-1.02.iso
-```
-
-Run on build machines. The opt-in owned-disc test requires a hardware Vulkan GPU.
-Both architecture package checks passed. The x86_64 owned-disc test also passed
-menu navigation, native card reopening, preference persistence and clean exit.
-Full gameplay, ARM64 graphics, physical controls/audio and handheld performance
-remain unverified. Public binary publication and device
-installation are not approved.
-
-## NocturneRecomp
-
-[NocturneRecomp](plugins/nocturne/README.md) launches the XBLA version of
-Castlevania: Symphony of the Night from its supported `default.xex` and complete
-extracted assets. Both Linux architectures use pinned upstream v1.4.5 binaries.
-The launcher keeps a private asset copy and native state per Korri account.
-Builds contain no separate retail asset files and perform no game extraction.
-
-```sh
-nix build --no-link .#korri-plugin-nocturne
-nix build --no-link .#checks.x86_64-linux.korri-nocturne-plugin
-nix build --no-link .#checks.aarch64-linux.korri-nocturne-plugin
-nix run .#verify-nocturne -- /path/to/extracted/default.xex
-```
-
-Run these on build machines. The opt-in test uses owned assets and private
-software video/audio services. Startup checks do not establish full gameplay,
-save/load, or clean shutdown. The native binary contains translated retail code;
-public binary-cache publication needs separate rights review and approval.
-
 ## Jak and Daxter trilogy
 
 [OpenGOAL](plugins/opengoal/README.md) runs prepared Jak 1, Jak II, Jak II: Renegade,
@@ -190,22 +79,6 @@ nix build --no-link .#checks.aarch64-linux.korri-opengoal-plugin
 nix run .#prepare-opengoal -- --game jak2 --instruction-set arm64 --iso /path/to/owned.iso --output /path/to/new-data
 nix run .#verify-opengoal -- /path/to/prepared-data --game jak2
 ```
-
-## ActRaiser
-
-[ActRaiser Recomp](plugins/actraiser/README.md) builds native code from the
-supported owned USA cartridge on a private build machine. Devices receive
-prebuilt packages. The Arcade/Nintendo Super System dump is not supported.
-
-Unlike SMW, this build needs the ROM and produces copyrighted
-ROM-derived code. Keep its inputs, helper, and output closures out of public
-caches and release assets. Read the plugin instructions before building.
-No publication or installation workflow is added.
-
-Upstream's native Screen ratio setting includes `Auto`, which fits action
-stages, towns and world navigation to the window shape. The plugin builds
-upstream without a patch. The plugin README describes Auto's limits and the
-private GPU acceptance test.
 
 ## 2 Ship 2 Harkinian
 
@@ -336,8 +209,8 @@ This personal flake no longer provides the pack.
 ## Publication boundary
 
 The check-only GitHub workflows build plugin packages without retail game data.
-It does not build the unrelated Skate 3 closure or upload release assets.
-It does not sign packages, configure cache keys or install anything on a device.
+They do not upload release assets.
+They do not sign packages, configure cache keys or install anything on a device.
 Source commits and package construction are separate from signed-cache publication and device approval.
 Do not bypass Korri's signature, publisher binding or exact-package approval checks to install plugins.
 Signed publication and physical-device acceptance still need separate approval.

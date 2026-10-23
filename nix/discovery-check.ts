@@ -16,12 +16,7 @@ import { test } from "node:test"
 const plugins = new URL("../plugins/", import.meta.url)
 const expectedContent = {
   "2ship": { n64: ["n64", "z64", "v64"] },
-  actraiser: { snes: ["sfc", "smc"] },
-  "fable-ii-recomp": { "xbox-360": ["iso"] },
-  nocturne: { "xbox-360": ["xex"] },
-  "skate-3": { "xbox-360": ["iso"] },
   "super-mario-world": { snes: ["smc", "sfc"] },
-  "the-simpsons-game": { "xbox-360": ["iso"] },
   "zquest-classic": { "zelda-classic": ["qst"] },
 }
 
@@ -62,27 +57,11 @@ const originals = {
     "2ship",
     "n64",
   ],
-  actraiser: ["actraiser", "ActRaiser", "actraiser", "snes"],
-  "fable-ii-recomp": ["fable-ii", "Fable II", "fable_ii", "xbox-360"],
-  "melee-pc": ["melee", "Super Smash Bros. Melee", "melee-pc", undefined],
-  nocturne: [
-    "symphony-of-the-night",
-    "Castlevania: Symphony of the Night",
-    "nocturne",
-    "xbox-360",
-  ],
-  "skate-3": ["skate-3", "Skate 3", "skate3", "xbox-360"],
   "super-mario-world": [
     "super-mario-world",
     "Super Mario World",
     "smw",
     "snes",
-  ],
-  "the-simpsons-game": [
-    "the-simpsons-game",
-    "The Simpsons Game",
-    "simpsons",
-    "xbox-360",
   ],
 } as const
 
