@@ -1,0 +1,11 @@
+StorePath: /nix/store/g0xh0pkjkalz95y1ys61gp73jj7b75jk-korri-plugin
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/mega-man-rock-n-roll-b214ade27caa/0wk9lqacvd3b5kzwqlimwcjbn558lwfzd36fj7krrfrz6440s1ch.nar.xz
+Compression: xz
+FileHash: sha256:0wk9lqacvd3b5kzwqlimwcjbn558lwfzd36fj7krrfrz6440s1ch
+FileSize: 1780
+NarHash: sha256:1ls5ssf73cq0ifv6dj6sxmll4617y9mwbl8i7dvxj1k6pa2i10mb
+NarSize: 4432
+References: aq4vx18zmdyh2zpd8visaaw9v9i9ry28-godot2-runtime-2.1.4 prcgfwgsvidpvg7iacl5hpj3vrn755lh-mega-man-rock-n-roll-unpack whh7ggqks2d4qznz46hmvri3pvy1yqgh-mega-man-rock-n-roll-godot
+Deriver: 07ml9h3gv94n16qf99fxn21w2b42gb1m-korri-plugin.drv
+Sig: fuji-1:0b9dAF9dAnNhr+NGSB3yYTy3tHBhnlvwgLv4LaysZVHHAy/DsEWLEMY+0Oc+O6t7i8wjxedr/WapJa0DsDbzCg==
+Sig: simonwjackson-plugins-1:Jc1kZAqtUotkU/iax/kFsk/MdRUhZTQ4AYJrfgw48Gp+nSIXlHbiRpSUQ3DVWPfbaifzbRli5E7t8/xsh5faCg==

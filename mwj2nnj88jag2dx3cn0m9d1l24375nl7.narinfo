@@ -1,0 +1,11 @@
+StorePath: /nix/store/mwj2nnj88jag2dx3cn0m9d1l24375nl7-korri-plugin
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/zquest-public-31ebc60a054f/066vz5vzsr85xrfqz8b5z5sk35m9dcdpb2j7mp1y04prvkzwv2jq.nar.xz
+Compression: xz
+FileHash: sha256:066vz5vzsr85xrfqz8b5z5sk35m9dcdpb2j7mp1y04prvkzwv2jq
+FileSize: 1024
+NarHash: sha256:0s259h6bi2d44h26picsw2jv9fyvl26vxipym0dmp54iwjxw9y7i
+NarSize: 2392
+References: 4vbd9jkph14ar2nwrwsvy2bc11l1iz06-zquest-classic-launcher-unstable-2026-06-18-public1
+Deriver: g72s5n3y76qln1zxj6yh00lnxjfdqapr-korri-plugin.drv
+Sig: fuji-1:96YbWufcslRdazuCrLeMdZNFgnzsGm95DdcWF4HrJw603Q4mYKzw1dIqG0MFLJzkNe2UWsnw5uUfAhCm2BnCAg==
+Sig: simonwjackson-plugins-1:m6hg8W3M4iTsbJNjnVs0XxKJ4qNTa3T2tkCNjEtHMBxld/0YIPxkNOogRLSNsp8ouBlFVwvD6Ia3u4ww1jXuCQ==

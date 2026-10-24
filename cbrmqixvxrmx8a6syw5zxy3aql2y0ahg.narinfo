@@ -1,0 +1,10 @@
+StorePath: /nix/store/cbrmqixvxrmx8a6syw5zxy3aql2y0ahg-unpack.py
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/mega-man-rock-n-roll-a32d377d443b/1jq62a6f3vk2v0ikaybnshlrq0ca2afg702avdfn1z605srmrxjc.nar.xz
+Compression: xz
+FileHash: sha256:1jq62a6f3vk2v0ikaybnshlrq0ca2afg702avdfn1z605srmrxjc
+FileSize: 2124
+NarHash: sha256:1m3acpnyg40z1prys3dl9valcs30q8wrs8myqvp05isx7c9hcfwr
+NarSize: 5128
+References: 
+Sig: simonwjackson-plugins-1:+W9VmFc1WJ8ri1uMqRIsrG3mD3O3L6v/B2r+s+rkZAclE5zprSP29oeMOsCZx4vzE7kAq9mxRGE8r/qSRZOeBA==
+CA: fixed:r:sha256:1m3acpnyg40z1prys3dl9valcs30q8wrs8myqvp05isx7c9hcfwr

@@ -1,0 +1,11 @@
+StorePath: /nix/store/7hvdhyhjhqr44gpaql6y1igd42zlwqhp-korri-plugin
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/mega-man-rock-n-roll-1f648ad946ea-r2/0f6wj37cj1nf0y0lz6nm0g79a4sp87qhgr4gx0ky3cajp86j81cc.nar.xz
+Compression: xz
+FileHash: sha256:0f6wj37cj1nf0y0lz6nm0g79a4sp87qhgr4gx0ky3cajp86j81cc
+FileSize: 1916
+NarHash: sha256:0x0xcrrpfavznjj5gzw27gsfh1jdfj7wp2rkvrj86n31pjw3s2i1
+NarSize: 4904
+References: c97gn5kccig2dxgyyf0qhy471q3ppwn9-mega-man-rock-n-roll-fex prcgfwgsvidpvg7iacl5hpj3vrn755lh-mega-man-rock-n-roll-unpack rbp9mrw7kmzwdv15hnx8a0lc0l8sxb08-mega-man-rock-n-roll-fex-config
+Deriver: manc6464vgyw6qfgbmc53gqr9hzyk824-korri-plugin.drv
+Sig: fuji-1:JgldhdiKzyYn/gYK6Oj1vpC5XDJBZVmIIQff3nWgUZq6Y4S13aIDDAFwUa4SNUEPj9Vo9lM67W9W7KWFbd00BQ==
+Sig: simonwjackson-plugins-1:fr3Nypwx3OZHMlAx0ypz+TqaNrqAS7nV/FF1A3SXY8jpU79MUV7DX5qO19RC5Hhmz8+VWdI/UzVnVq1Cw08dCQ==

@@ -1,0 +1,12 @@
+StorePath: /nix/store/skm2vhspa1ghh10lp7pj14qhqsvizhp8-fex-2512
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/mega-man-rock-n-roll-1f648ad946ea-r2/1nrrj1pvsk3nvxh5612b8q372bmzw98v7hpflhrlkipymfnx3q3p.nar.xz
+Compression: xz
+FileHash: sha256:1nrrj1pvsk3nvxh5612b8q372bmzw98v7hpflhrlkipymfnx3q3p
+FileSize: 3144584
+NarHash: sha256:19w8k5290fx04vks1852p8g2laval9lfjc64sbz94za3jrhm1i71
+NarSize: 31033600
+References: 478vjdcpbqbvzy71y3f3zfbnxh22mdk2-libglvnd-1.7.0 53qay3b7awkjf3hii4l175v83k7vmprk-fmt-12.0.0 6nssc99j47gk3qbiz29gzjm243s8f2gj-qtwayland-6.10.1-only-plugins-qml 89n0gcl1yjp37ycca45rn50h7lms5p6f-glibc-2.40-66 90a65j0g0bm0ilmr3yb7x89r1hrcgl75-xxHash-0.8.3 9b72byhilvjx2n6nwfh2lnq6g32f5bqr-qtdeclarative-6.10.1 qipd93x9gjyiygqk673rd2ssnf8y7jj0-gcc-14.3.0-lib skm2vhspa1ghh10lp7pj14qhqsvizhp8-fex-2512 sy1p2xzc9kd74vbap07c6axkw95am19f-qtbase-6.10.1 vc9gqsrwin1idcgf15hs35aa7bhd2grj-qtbase-6.10.1-only-plugins-qml x02b7kwxxj08pybc0ax6vkqjgw30rl67-qtsvg-6.10.1
+Deriver: rllrafyirbjg4hh9hyilkn64cj7bcbyj-fex-2512.drv
+Sig: fuji-1:wT+KbT4hqK57iOJl7IkhpyUd1HxwwOdQQEmqN/o2t3hyaUUD6rPoKaqDJIL0Jnpen+eOs5OB9IJ6pxXybEkNCA==
+Sig: korri-cache-zao-1:sqQHnJMPDYBTnZTQ2UJ3Iq/7w/wQbr1G+3rhGUvNKpJeZjT0kOr39NRLD85NFr1ahesvR3x3Isw8GLJtX3LcDg==
+Sig: simonwjackson-plugins-1:Af1eipoTd2KEmiHTvrmADc5pBoWAXa1nDv6p3SoH7HqRp8LeIy6hlOhPTmHG1xUELXwsT+027Uq69dVLS1MBCw==

@@ -1,0 +1,11 @@
+StorePath: /nix/store/aq4vx18zmdyh2zpd8visaaw9v9i9ry28-godot2-runtime-2.1.4
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/mega-man-rock-n-roll-c3f1770c6e6e/0k7dw2xzc86cxrry8v9vfsa052srrl7fj85h4l3z5dcc9pgw1wqb.nar.xz
+Compression: xz
+FileHash: sha256:0k7dw2xzc86cxrry8v9vfsa052srrl7fj85h4l3z5dcc9pgw1wqb
+FileSize: 5529608
+NarHash: sha256:00r1xsj1bcd0h149wjndzkr8z1p42rzw28519vf0n25jn0g9b7ai
+NarSize: 27503400
+References: 0gz222x6bjjk82mj2pnk4828hg8vih6b-alsa-lib-1.2.14 0zdmkggg3bjhqmxiajflrng8ca5yk8is-libxcursor-1.2.3 1nj8112y0v4z9llb20d5plkyxq8laji4-freetype-2.13.3 1s5rcnx7qnvbxkzijzfqacay05b2fyp9-libxrandr-1.5.4 1v97r75m4ncijmg4l0w5v10hkiw5zdxf-libtheora-1.2.0 478vjdcpbqbvzy71y3f3zfbnxh22mdk2-libglvnd-1.7.0 4gm2ana0vmm1vsyvqnhzs4j3bq36iic2-libxinerama-1.1.5 4h8chp3g3ws4i7bqh23w3zwyv7d7fimm-libogg-1.3.6 4wdz42ns29ys6fm1xak68bnp51nxhd2s-zlib-1.3.1 6vc4qyxdxl5m807avqz9mbmb3s1iaqvm-opusfile-0.12 6yiqm6cqbibmwcl4jnpvj7h6qwsh3rmm-libpng-apng-1.6.50 89n0gcl1yjp37ycca45rn50h7lms5p6f-glibc-2.40-66 d8bxznm2fcpyrx471zskg4yaznrb7r14-libopus-1.5.2 dagqbkc58c3dglbwlvyhzy06imdn8xxf-libx11-1.8.12 hjgn7q59x9jsv21md2rv0d1jzg8h7z2y-libpulseaudio-17.0 qipd93x9gjyiygqk673rd2ssnf8y7jj0-gcc-14.3.0-lib yj01rplw2k8ldgqdgjajm17yvr28004r-libwebp-1.6.0 z4w56csfd42spnac093wcfflq5fddh0v-libvorbis-1.3.7
+Deriver: yg919wqjl5yafcw3y9af6d5xjgksibfv-godot2-runtime-2.1.4.drv
+Sig: fuji-1:af5B0Asy7Y37BgA6NhExLYAcf+yJFzxQIubyo67z70B75DKOP0v38nDpt7tQbWw+AEuoKHV3ZK8+HSlr764zAw==
+Sig: simonwjackson-plugins-1:gLC50wC/SMev5nw0SG7ftUwQfipH3lvrctd4drBFk5zwAhmYQkDqcEzw3RGHKDGSlljpurFrZ0dtFQRyYiZPDg==
