@@ -147,7 +147,9 @@ establish physical-device, controller, or audio acceptance. The package retains
 the legacy development snapshot and interpreter backend, not the latest stable
 release. `zquest-classic-source` supplies a corresponding-source archive for
 each architecture. The approved public cache is
-`https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
+`https://simonwjackson.github.io/korri-plugins/`.
+The old release URL remains readable for existing device receipts but receives
+no new metadata. See [PUBLICATION.md](PUBLICATION.md) for the Pages publisher.
 Publication does not change existing device trust or clear user quest rights.
 See the plugin README for limitations, licenses and the publication procedure.
 

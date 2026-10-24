@@ -244,7 +244,9 @@ records public corresponding source, both signed packages, native signature
 preservation and anonymous download verification. It does not establish public2
 device acceptance.
 
-Public destination: `https://github.com/simonwjackson/korri-plugins/releases/download/cache/`.
+Public destination: `https://simonwjackson.github.io/korri-plugins/`.
+The old `cache` release stays frozen for old receipts and rollback. The
+[publication guide](../../PUBLICATION.md) names the shared pinned publisher.
 Publish only the exact checked ZQuest plugin outputs, never all flake packages,
 a build/test closure, or a copy of the private cache. Each batch uses its own
 source tag and the existing standard Korri GitHub binary-cache publisher.
