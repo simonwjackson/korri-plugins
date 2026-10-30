@@ -107,6 +107,7 @@ def command(quest, account):
         "program": str(launcher),
         "contentPath": str(quest),
         "accountRoot": str(account),
+        "saveRoot": "/unused-save-root",
         "cacheRoot": str(root / "cache"),
         "files": manifest["files"],
         "artifacts": {},

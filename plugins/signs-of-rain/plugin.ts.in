@@ -12,7 +12,6 @@ export const description =
 // source.nix hashes the actual packaged PCK, not the source tree or a filename.
 export const runners = {
   "signs-of-rain": {
-    id: "@simonwjackson:signs-of-rain/signs-of-rain",
     program: "signs-of-rain",
     releases: ["sha256:@PACK_SHA256@"],
   },
@@ -24,7 +23,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   if (contentPath === undefined) {
     throw new Error("Signs of Rain requires a content file")
   }
-  if (input.runnerId !== runners["signs-of-rain"].id) {
+  if (input.runnerId !== "@simonwjackson:signs-of-rain/signs-of-rain") {
     throw new Error("Unknown Signs of Rain runner")
   }
   if (input.corePath !== undefined) {

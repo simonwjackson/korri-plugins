@@ -10,7 +10,6 @@ export const description =
 
 export const systems = {
   snes: {
-    id: "snes",
     title: "Super Nintendo",
     content: { extensions: ["smc", "sfc"] },
   },
@@ -18,7 +17,6 @@ export const systems = {
 
 export const runners = {
   smw: {
-    id: "@simonwjackson:super-mario-world/smw",
     program: "smw",
     releases: [
       // Measured from the owner's Super Mario World (U) [!].smc, 524800 bytes.

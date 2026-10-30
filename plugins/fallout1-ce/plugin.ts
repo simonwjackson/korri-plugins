@@ -10,7 +10,6 @@ export const description =
 
 export const runners = {
   "fallout-ce": {
-    id: "@simonwjackson:fallout1-ce/fallout-ce",
     program: "fallout-ce",
     releases: [
       // MASTER.DAT from the owner's Fallout (1997).zip, 333674504 bytes.
@@ -37,7 +36,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   if (contentPath === undefined) {
     throw new Error("Fallout Community Edition requires a content file")
   }
-  if (input.runnerId !== runners["fallout-ce"].id) {
+  if (input.runnerId !== "@simonwjackson:fallout1-ce/fallout-ce") {
     throw new Error("Unknown Fallout runner")
   }
   if (input.corePath !== undefined) {

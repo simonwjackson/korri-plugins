@@ -38,7 +38,7 @@ accessSync(manifest.files.smw, constants.X_OK)
 assert.deepEqual(manifest.services, {})
 assert.deepEqual(manifest.ports, {})
 assert.equal(name, "super-mario-world")
-assert.equal(runners.smw.id, "@simonwjackson:super-mario-world/smw")
+assert.equal("id" in runners.smw, false)
 assert.equal(runners.smw.program, "smw")
 assert(!("systems" in runners.smw))
 assert.deepEqual(runners.smw.releases, [
@@ -46,7 +46,6 @@ assert.deepEqual(runners.smw.releases, [
   "sha256:0838e531fe22c077528febe14cb3ff7c492f1f5fa8de354192bdff7137c27f5b",
 ])
 assert.deepEqual(systems.snes, {
-  id: "snes",
   title: "Super Nintendo",
   content: { extensions: ["smc", "sfc"] },
 })
@@ -77,10 +76,11 @@ assert.deepEqual(receipt.desired, { state: "Enabled" })
 const root = mkdtempSync(join(tmpdir(), "korri-smw-check-"))
 try {
   const input: PluginLaunchInput = {
-    runnerId: runners.smw.id,
+    runnerId: "@simonwjackson:super-mario-world/smw",
     program: probe,
     contentPath: "/library/Super Mario World (U) [!].smc",
     accountRoot: join(root, "account '; $(exit 19) #"),
+    saveRoot: "/unused-save-root",
     cacheRoot: join(root, "cache"),
     files: manifest.files,
     artifacts: {},

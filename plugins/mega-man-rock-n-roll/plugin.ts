@@ -51,7 +51,6 @@ export const games = {
 // No system: the runner accepts the release by its hash.
 export const runners = {
   godot: {
-    id: "@simonwjackson:mega-man-rock-n-roll/godot",
     program: "godot-launch",
     releases: [dataPck],
   },

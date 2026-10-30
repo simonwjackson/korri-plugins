@@ -76,17 +76,18 @@ assert.deepEqual(receipt.desired, { state: "Enabled" })
 
 for (const [index, game] of ["jak1", "jak2", "jak3"].entries()) {
   assert.deepEqual(plugin.runners[game], {
-    id: `@simonwjackson:opengoal/${game}`, program: "opengoal", releases: hashes[index],
+    program: "opengoal", releases: hashes[index],
   })
   for (const hash of otherHashes.flat()) {
     assert(!plugin.runners[game].releases.includes(hash), "Never offer incompatible machine code")
   }
   for (const data of ["/prepared data", "/game ' ; $(exit 19) 日本語", "/another location"]) {
     const input: PluginLaunchInput = {
-      runnerId: plugin.runners[game].id,
+      runnerId: `@simonwjackson:opengoal/${game}`,
       program: argvProgram,
       contentPath: `${data}/out/${game}/iso/GAME.CGO`,
       accountRoot: "/unused-account-root",
+      saveRoot: "/unused-save-root",
       cacheRoot: "/unused-cache-root",
       files: manifest.files,
       artifacts: {},

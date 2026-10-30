@@ -11,6 +11,7 @@ const launchInput = () => ({
   program: "/nix/store/mma/bin/mega-man-arena-proton",
   contentPath: `${gameDirectory}/data.win`,
   accountRoot: "/var/lib/korri/accounts/a",
+  saveRoot: "/unused-save-root",
   cacheRoot: "/var/lib/korri/cache",
   files: {
     "proton-launch": "/nix/store/mma/bin/mega-man-arena-proton",
@@ -31,7 +32,6 @@ describe("Mega Man Arena declaration", () => {
 
   test("the runner accepts that release and needs @korri:proton's build", () => {
     expect(runners.proton).toEqual({
-      id: "@simonwjackson:mega-man-arena/proton",
       program: "proton-launch",
       releases: [dataWin],
       artifacts: ["@korri:proton/cachyos"],

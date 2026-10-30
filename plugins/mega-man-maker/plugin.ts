@@ -52,7 +52,6 @@ export const games = {
 // `@korri:proton` plugin's artifact; korrid downloads it before the launch.
 export const runners = {
   proton: {
-    id: "@simonwjackson:mega-man-maker/proton",
     program: "proton-launch",
     releases: [dataWin],
     artifacts: ["@korri:proton/cachyos"],

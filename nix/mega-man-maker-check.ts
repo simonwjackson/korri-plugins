@@ -5,7 +5,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import process from "node:process"
 import type { PluginLaunchInput } from "../contracts/generated/korrid"
-import { handlers, runners } from "../plugins/mega-man-maker/plugin"
+import { handlers } from "../plugins/mega-man-maker/plugin"
 
 const [packagePath, hostCli, korridCli, probe] = process.argv.slice(2)
 assert(packagePath && hostCli && korridCli && probe)
@@ -48,10 +48,11 @@ try {
   const game = join(root, "cache/mega-man-maker/game/1.10.4.2 '; $(exit 19) #")
   const proton = join(root, "cache/proton/cachyos/11.0-20260601-slr-arm64")
   const input: PluginLaunchInput = {
-    runnerId: runners.proton.id,
+    runnerId: "@simonwjackson:mega-man-maker/proton",
     program: probe,
     contentPath: join(game, "data.win"),
     accountRoot: join(root, "account '; $(exit 19) #"),
+    saveRoot: "/unused-save-root",
     cacheRoot: join(root, "cache"),
     files: manifest.files,
     artifacts: { "@korri:proton/cachyos": proton },

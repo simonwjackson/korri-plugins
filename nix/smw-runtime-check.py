@@ -76,6 +76,7 @@ def main() -> None:
             "runnerId": "@simonwjackson:super-mario-world/smw",
             "program": manifest["files"]["smw"],
             "accountRoot": str(account),
+            "saveRoot": "/unused-save-root",
             "cacheRoot": str(root / "cache"),
             "files": manifest["files"],
             "artifacts": {},

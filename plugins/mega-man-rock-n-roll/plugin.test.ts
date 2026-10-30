@@ -10,6 +10,7 @@ const launchInput = () => ({
   program: "/nix/store/mmrnr/bin/mega-man-rock-n-roll-godot",
   contentPath: `${gameDirectory}/data.pck`,
   accountRoot: "/var/lib/korri/accounts/a",
+  saveRoot: "/unused-save-root",
   cacheRoot: "/var/lib/korri/cache",
   files: {
     "godot-launch": "/nix/store/mmrnr/bin/mega-man-rock-n-roll-godot",
@@ -30,7 +31,6 @@ describe("Mega Man Rock N Roll declaration", () => {
 
   test("the runner accepts that release and needs no other artifact", () => {
     expect(runners.godot).toEqual({
-      id: "@simonwjackson:mega-man-rock-n-roll/godot",
       program: "godot-launch",
       releases: [dataPck],
     })

@@ -256,6 +256,7 @@ def main():
             runnerId="@simonwjackson:2ship/2ship",
             program=manifest["files"]["2ship"],
             accountRoot=str(root / "account"),
+            saveRoot="/unused-save-root",
             cacheRoot=str(root / "cache"),
             files=manifest["files"],
             artifacts={},

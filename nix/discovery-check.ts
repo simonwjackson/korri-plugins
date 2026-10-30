@@ -35,6 +35,12 @@ for (const directory of readdirSync(plugins)) {
       const plugin = await import(source.href)
       assert.equal("discovery" in plugin, false)
       assert.equal("sessionControls" in plugin, false)
+      for (const record of Object.values(plugin.runners ?? {})) {
+        assert.equal("id" in (record as object), false, "Runner IDs are derived")
+      }
+      for (const record of Object.values(plugin.systems ?? {})) {
+        assert.equal("id" in (record as object), false, "System IDs are derived")
+      }
     }
   })
 }
@@ -44,7 +50,7 @@ for (const [directory, systems] of Object.entries(expectedContent)) {
     const plugin = await import(new URL(`${directory}/plugin.ts`, plugins).href)
     assert.deepEqual(Object.keys(plugin.systems), Object.keys(systems))
     for (const [system, extensions] of Object.entries(systems)) {
-      assert.equal(plugin.systems[system].id, system)
+      assert.equal("id" in plugin.systems[system], false)
       assert.deepEqual(plugin.systems[system].content, { extensions })
     }
   })
@@ -104,10 +110,11 @@ for (const [directory, key, title, runner, installation] of [
     })
     assert.deepEqual(
       plugin.handlers["launch.prepare"]({
-        runnerId: plugin.runners[runner].id,
+        runnerId: `@simonwjackson:${directory}/${runner}`,
         program: "/engine",
         contentPath: `/accounts/default/${plugin.games[key].releases.prepared.file}`,
         accountRoot: "/accounts/default",
+        saveRoot: "/unused-save-root",
         cacheRoot: "/cache",
         files: {},
         artifacts: {},
@@ -189,10 +196,11 @@ for (const [system, expectedHashes] of Object.entries(opengoalHashes)) {
           const data = contentPath.slice(0, -`/out/${game}/iso/GAME.CGO`.length)
           assert.deepEqual(
             plugin.handlers["launch.prepare"]({
-              runnerId: runner.id,
+              runnerId: `@simonwjackson:opengoal/${game}`,
               program: "/gk",
               contentPath,
               accountRoot: "/accounts/default",
+              saveRoot: "/unused-save-root",
               cacheRoot: "/cache",
               files: {},
               artifacts: {},

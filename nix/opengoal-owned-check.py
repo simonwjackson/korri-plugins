@@ -107,6 +107,7 @@ def main():
             "program": manifest["files"]["opengoal"],
             "contentPath": str(anchor),
             "accountRoot": str(work / "account"),
+            "saveRoot": "/unused-save-root",
             "cacheRoot": str(work / "cache"),
             "files": manifest["files"],
             "artifacts": {},

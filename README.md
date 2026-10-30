@@ -17,9 +17,10 @@ account root. Their READMEs list the paths and complete-tree move requirements.
 Prepared releases have no invented system. None of these plugins declares
 session controls. The contract names that optional export `controls`.
 
-The pinned Korri input predates discovery v2. Admission and sandbox package
-checks must run against the integrated Core before deployment. The focused
-source check needs Node 24, no game data and no display:
+All plugin packages use Korri `62432aa04b199caf47399bee23e25ae949efdb92`,
+including discovery v2 and ADR 0045. Runner IDs are derived as `<pluginId>/<key>`;
+system IDs are their keys. Plugins declare neither ID. The focused source check
+needs Node 24, no game data and no display:
 
 ```sh
 node nix/discovery-check.ts

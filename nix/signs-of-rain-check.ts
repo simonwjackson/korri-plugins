@@ -26,7 +26,6 @@ assert.equal(plugin.name, "signs-of-rain")
 assert.deepEqual(Object.keys(plugin).sort(), ["description", "handlers", "name", "runners", "title"])
 assert.deepEqual(plugin.runners, {
   "signs-of-rain": {
-    id: "@simonwjackson:signs-of-rain/signs-of-rain",
     program: "signs-of-rain",
     releases: [`sha256:${hash}`],
   },
@@ -60,10 +59,11 @@ try {
     assert.equal(existsSync(accountRoot), false)
     for (const contentPath of [pack, "/library/Rain %s '; $(exit 19) #.pck"]) {
       const input: PluginLaunchInput = {
-        runnerId: plugin.runners["signs-of-rain"].id,
+        runnerId: "@simonwjackson:signs-of-rain/signs-of-rain",
         program: recordArguments,
         contentPath,
         accountRoot,
+        saveRoot: "/unused-save-root",
         cacheRoot: join(work, "cache"),
         files: manifest.files,
         artifacts: {},

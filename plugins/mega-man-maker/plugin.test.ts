@@ -11,6 +11,7 @@ const launchInput = () => ({
   program: "/nix/store/mmm/bin/mega-man-maker-proton",
   contentPath: `${gameDirectory}/data.win`,
   accountRoot: "/var/lib/korri/accounts/a",
+  saveRoot: "/unused-save-root",
   cacheRoot: "/var/lib/korri/cache",
   files: {
     "proton-launch": "/nix/store/mmm/bin/mega-man-maker-proton",
@@ -45,7 +46,6 @@ describe("Mega Man Maker declaration", () => {
 
   test("the runner accepts that release and needs only Proton", () => {
     expect(runners.proton).toEqual({
-      id: "@simonwjackson:mega-man-maker/proton",
       program: "proton-launch",
       releases: [dataWin],
       artifacts: ["@korri:proton/cachyos"],

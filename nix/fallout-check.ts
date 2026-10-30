@@ -44,7 +44,6 @@ assert.match(readFileSync(join(doc, "NOTICE"), "utf8"), /modified by the pinned 
 assert.equal(plugin.name, name)
 assert.deepEqual(plugin.runners, {
   [program]: {
-    id: `@simonwjackson:${name}/${program}`,
     program,
     releases: [expectedHash],
   },
@@ -81,10 +80,11 @@ try {
     writeFileSync(join(cwd, "user-config"), "retain user settings")
     for (const filename of ["MASTER.DAT", "master.dat"]) {
       const input: PluginLaunchInput = {
-        runnerId: plugin.runners[program].id,
+        runnerId: `@simonwjackson:${name}/${program}`,
         program: pwd,
         contentPath: join(cwd, filename),
         accountRoot: join(root, "must-not-be-created"),
+        saveRoot: "/unused-save-root",
         cacheRoot: join(root, "cache-must-not-be-created"),
         files: manifest.files,
         artifacts: {},

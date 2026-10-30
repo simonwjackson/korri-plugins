@@ -10,7 +10,6 @@ export const description =
 
 export const runners = {
   "fallout2-ce": {
-    id: "@simonwjackson:fallout2-ce/fallout2-ce",
     program: "fallout2-ce",
     releases: [
       // MASTER.DAT from the owner's Interplay-Fallout2-Win95.iso, 333176843 bytes.
@@ -37,7 +36,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
   if (contentPath === undefined) {
     throw new Error("Fallout 2 Community Edition requires a content file")
   }
-  if (input.runnerId !== runners["fallout2-ce"].id) {
+  if (input.runnerId !== "@simonwjackson:fallout2-ce/fallout2-ce") {
     throw new Error("Unknown Fallout 2 runner")
   }
   if (input.corePath !== undefined) {

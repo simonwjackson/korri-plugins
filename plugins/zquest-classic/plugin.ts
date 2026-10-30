@@ -11,14 +11,12 @@ export const description =
 // Retain the system and runner names from Korri legacy's producer.
 export const systems = {
   "zelda-classic": {
-    id: "zelda-classic",
     title: "Zelda Classic Quest",
     content: { extensions: ["qst"] },
   },
 }
 export const runners = {
   zplayer: {
-    id: "@simonwjackson:zquest-classic/zplayer",
     program: "zplayer",
     systems: ["zelda-classic"],
   },

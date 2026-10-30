@@ -10,7 +10,6 @@ export const description =
 
 export const systems = {
   n64: {
-    id: "n64",
     title: "Nintendo 64",
     content: { extensions: ["n64", "z64", "v64"] },
   },
@@ -18,7 +17,6 @@ export const systems = {
 
 export const runners = {
   "2ship": {
-    id: "@simonwjackson:2ship/2ship",
     program: "2ship",
     releases: [
       // Owner's NTSC-U 1.0 dump, 32 MiB. Original bytes and big-endian form.

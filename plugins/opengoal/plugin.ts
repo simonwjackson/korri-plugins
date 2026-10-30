@@ -36,17 +36,14 @@ const releases = {
 
 export const runners = {
   jak1: {
-    id: "@simonwjackson:opengoal/jak1",
     program: "opengoal",
     releases: releases.jak1,
   },
   jak2: {
-    id: "@simonwjackson:opengoal/jak2",
     program: "opengoal",
     releases: releases.jak2,
   },
   jak3: {
-    id: "@simonwjackson:opengoal/jak3",
     program: "opengoal",
     releases: releases.jak3,
   },
@@ -104,7 +101,7 @@ function prepareLaunch(input: PluginLaunchInput): PluginLaunchOutput {
     throw new Error("Configure OpenGOAL through its native game settings")
   }
   const game = (Object.keys(runners) as Array<keyof typeof runners>).find(
-    (candidate) => runners[candidate].id === input.runnerId,
+    (candidate) => `@simonwjackson:opengoal/${candidate}` === input.runnerId,
   )
   if (game === undefined) {
     throw new Error("Unknown OpenGOAL runner")

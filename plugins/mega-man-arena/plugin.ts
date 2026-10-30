@@ -58,7 +58,6 @@ const proton = "@korri:proton/cachyos"
 // No system: the runner accepts the release by its hash.
 export const runners = {
   proton: {
-    id: "@simonwjackson:mega-man-arena/proton",
     program: "proton-launch",
     releases: [dataWin],
     artifacts: [proton],

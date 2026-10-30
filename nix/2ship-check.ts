@@ -41,7 +41,7 @@ assert.equal(
 accessSync(manifest.files["2ship"], constants.X_OK)
 assert.equal(name, "2ship")
 assert.deepEqual(Object.keys(runners), ["2ship"])
-assert.equal(runners["2ship"].id, "@simonwjackson:2ship/2ship")
+assert.equal("id" in runners["2ship"], false)
 assert.equal(runners["2ship"].program, "2ship")
 assert(!("systems" in runners["2ship"]))
 assert.deepEqual(runners["2ship"].releases, [
@@ -50,7 +50,6 @@ assert.deepEqual(runners["2ship"].releases, [
 ])
 assert.deepEqual(systems, {
   n64: {
-    id: "n64",
     title: "Nintendo 64",
     content: { extensions: ["n64", "z64", "v64"] },
   },
@@ -90,10 +89,11 @@ try {
     const account = join(root, `Account ${filename}`)
     const directory = join(account, "2ship")
     const input: PluginLaunchInput = {
-      runnerId: runners["2ship"].id,
+      runnerId: "@simonwjackson:2ship/2ship",
       program: probe,
       contentPath: join(root, filename),
       accountRoot: account,
+      saveRoot: "/unused-save-root",
       cacheRoot: join(root, "cache"),
       files: manifest.files,
       artifacts: {},
