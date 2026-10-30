@@ -108,10 +108,10 @@ try {
     const launch = spawnSync(
       korridCli,
       [
-        "plugin-launch",
+        "plugin-run",
         join(packagePath, "plugin.ts"),
         JSON.stringify(input),
-        JSON.stringify({ modifiers: [] }),
+        JSON.stringify({ modifiers: [] }), "fixture",
       ],
       { encoding: "utf8" },
     )
@@ -136,10 +136,10 @@ try {
       const failure = spawnSync(
         korridCli,
         [
-          "plugin-launch",
+          "plugin-run",
           join(packagePath, "plugin.ts"),
           JSON.stringify(input),
-          JSON.stringify({ modifiers: [] }),
+          JSON.stringify({ modifiers: [] }), "fixture",
         ],
         { encoding: "utf8", timeout: 10000 },
       )

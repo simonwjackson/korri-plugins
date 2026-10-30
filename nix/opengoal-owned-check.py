@@ -112,8 +112,8 @@ def main():
             "files": manifest["files"],
             "artifacts": {},
         }
-        game = start([str(args.korrid), "plugin-launch", str(args.package / "plugin.ts"),
-                      json.dumps(inputs), json.dumps({"modifiers": []})], "game.log")
+        game = start([str(args.korrid), "plugin-run", str(args.package / "plugin.ts"),
+                      json.dumps(inputs), json.dumps({"modifiers": []}), "fixture"], "game.log")
         color_samples = []
         elapsed = 0
         for second in sorted({10, args.seconds // 2, args.seconds}):

@@ -267,10 +267,10 @@ def main():
         plan["contentPath"] = str(rom)
         command = [
             korrid,
-            "plugin-launch",
+            "plugin-run",
             str(package / "plugin.ts"),
             json.dumps(plan),
-            json.dumps({"modifiers": []}),
+            json.dumps({"modifiers": []}), "fixture",
         ]
         run_game(command, env, root, True)
         archive = directory / "mm.o2r"

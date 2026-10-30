@@ -63,10 +63,10 @@ try {
   const launch = spawnSync(
     korridCli,
     [
-      "plugin-launch",
+      "plugin-run",
       join(packagePath, "plugin.ts"),
       JSON.stringify({ ...input, contentPath: join(root, "data.win") }),
-      JSON.stringify({ modifiers: [] }),
+      JSON.stringify({ modifiers: [] }), "fixture",
     ],
     { encoding: "utf8" },
   )
@@ -86,10 +86,10 @@ try {
     const result = spawnSync(
       korridCli,
       [
-        "plugin-launch",
+        "plugin-run",
         join(packagePath, "plugin.ts"),
         JSON.stringify(refused),
-        JSON.stringify({ modifiers: [] }),
+        JSON.stringify({ modifiers: [] }), "fixture",
       ],
       { encoding: "utf8" },
     )

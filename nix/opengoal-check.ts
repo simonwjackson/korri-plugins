@@ -94,7 +94,7 @@ for (const [index, game] of ["jak1", "jak2", "jak3"].entries()) {
     }
     const args = ["--game", game, "--proj-path", data]
     assert.deepEqual(plugin.handlers["launch.prepare"](input), { command: argvProgram, args })
-    const launched = spawnSync(korridCli, ["plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input), JSON.stringify({ modifiers: [] })], { encoding: "utf8" })
+    const launched = spawnSync(korridCli, ["plugin-run", join(packagePath, "plugin.ts"), JSON.stringify(input), JSON.stringify({ modifiers: [] }), "fixture"], { encoding: "utf8" })
     assert.equal(launched.status, 0, launched.stderr)
     assert.deepEqual(launched.stdout.split("\0").slice(0, -1), args)
     for (const change of [
@@ -109,7 +109,7 @@ for (const [index, game] of ["jak1", "jak2", "jak3"].entries()) {
       { contentPath: `${data}/../out/${game}/iso/GAME.CGO` },
       { contentPath: `${data}/out/${game === "jak1" ? "jak2" : "jak1"}/iso/GAME.CGO` },
     ]) {
-      const rejected = spawnSync(korridCli, ["plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify({ ...input, ...change }), JSON.stringify({ modifiers: [] })], { encoding: "utf8" })
+      const rejected = spawnSync(korridCli, ["plugin-run", join(packagePath, "plugin.ts"), JSON.stringify({ ...input, ...change }), JSON.stringify({ modifiers: [] }), "fixture"], { encoding: "utf8" })
       assert.notEqual(rejected.status, 0, "The actual sandbox must reject unsupported inputs")
     }
   }

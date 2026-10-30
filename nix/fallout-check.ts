@@ -95,8 +95,8 @@ try {
         cwd,
       })
       const launch = spawnSync(korridCli, [
-        "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input),
-        JSON.stringify({ modifiers: [] }),
+        "plugin-run", join(packagePath, "plugin.ts"), JSON.stringify(input),
+        JSON.stringify({ modifiers: [] }), "fixture",
       ], { encoding: "utf8" })
       assert.equal(launch.status, 0, launch.stderr)
       assert.equal(launch.stdout.trimEnd(), cwd)
@@ -115,8 +115,8 @@ try {
       ]) {
         assert.throws(() => plugin.handlers["launch.prepare"]({ ...input, ...change }))
         const rejected = spawnSync(korridCli, [
-          "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify({ ...input, ...change }),
-          JSON.stringify({ modifiers: [] }),
+          "plugin-run", join(packagePath, "plugin.ts"), JSON.stringify({ ...input, ...change }),
+          JSON.stringify({ modifiers: [] }), "fixture",
         ], { encoding: "utf8" })
         assert.notEqual(rejected.status, 0, "sandbox must reject unsupported input")
       }

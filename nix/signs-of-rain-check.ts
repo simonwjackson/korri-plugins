@@ -84,8 +84,8 @@ try {
       }), expected)
       // Real korrid sandbox evaluation and exec into a literal argv/env observer.
       const launch = spawnSync(korridCli, [
-        "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(input),
-        JSON.stringify({ modifiers: [] }),
+        "plugin-run", join(packagePath, "plugin.ts"), JSON.stringify(input),
+        JSON.stringify({ modifiers: [] }), "fixture",
       ], {
         encoding: "utf8", timeout: 30_000,
         env: {
@@ -118,8 +118,8 @@ try {
         const invalid = { ...input, ...unsupported }
         assert.throws(() => plugin.handlers["launch.prepare"](invalid))
         const rejected = spawnSync(korridCli, [
-          "plugin-launch", join(packagePath, "plugin.ts"), JSON.stringify(invalid),
-          JSON.stringify({ modifiers: [] }),
+          "plugin-run", join(packagePath, "plugin.ts"), JSON.stringify(invalid),
+          JSON.stringify({ modifiers: [] }), "fixture",
         ], { encoding: "utf8", timeout: 30_000 })
         assert.notEqual(rejected.status, 0)
         assert.equal(rejected.stdout, "")

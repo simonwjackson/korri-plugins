@@ -17,10 +17,10 @@ def run_game(
 ) -> str:
     command = [
         korrid,
-        "plugin-launch",
+        "plugin-run",
         str(source),
         json.dumps(launch),
-        json.dumps({"modifiers": []}),
+        json.dumps({"modifiers": []}), "fixture",
     ]
     game = subprocess.Popen(
         command, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
@@ -88,10 +88,10 @@ def main() -> None:
         bootstrap = subprocess.run(
             [
                 korrid,
-                "plugin-launch",
+                "plugin-run",
                 str(Path(package) / "plugin.ts"),
                 json.dumps(launch),
-                json.dumps({"modifiers": []}),
+                json.dumps({"modifiers": []}), "fixture",
             ],
             env=dict(env, SDL_VIDEODRIVER="korri-nonexistent-driver"),
             capture_output=True,

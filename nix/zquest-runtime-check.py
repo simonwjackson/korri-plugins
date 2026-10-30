@@ -114,10 +114,10 @@ def command(quest, account):
     }
     return [
         korrid,
-        "plugin-launch",
+        "plugin-run",
         str(package / "plugin.ts"),
         json.dumps(request),
-        json.dumps({"modifiers": []}),
+        json.dumps({"modifiers": []}), "fixture",
     ]
 
 
