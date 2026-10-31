@@ -1,0 +1,10 @@
+StorePath: /nix/store/cvd8ggmrrn1ralj6iz6cf2d6srzj5d8r-korri-plugin
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/build-f35b67458cd8/0grxdc2isy07faa38ibgl94j2qyj2pjkvy1yax18ywj8vsi65p5d.nar.xz
+Compression: xz
+FileHash: sha256:0grxdc2isy07faa38ibgl94j2qyj2pjkvy1yax18ywj8vsi65p5d
+FileSize: 1772
+NarHash: sha256:0cr5lz590d82v83g52ckb7ikz33q2kwhi6y9dradx91h016jpn03
+NarSize: 4384
+References: aq4vx18zmdyh2zpd8visaaw9v9i9ry28-godot2-runtime-2.1.4 prcgfwgsvidpvg7iacl5hpj3vrn755lh-mega-man-rock-n-roll-unpack whh7ggqks2d4qznz46hmvri3pvy1yqgh-mega-man-rock-n-roll-godot
+Deriver: gpnkybj8lh0zvxf9z1mffdkd06947nhk-korri-plugin.drv
+Sig: simonwjackson-plugins-1:qifL4jRCD3vEZh+s4+Bhz99SYZEji7GlUDRyHWZNrfY1BQP8Dx8z6WvrYJBuXj732wkQbzqDa/SxGH7bFhpIAQ==

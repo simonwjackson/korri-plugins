@@ -1,0 +1,11 @@
+StorePath: /nix/store/2j4gng604n0s91wlgbja6awx0dp8kcdp-zquest-classic-launcher-unstable-2026-06-18-public3
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/build-f35b67458cd8/0isnx19hydggqxmv2r5rq1ac8pkszvymb8wzzr4l0fckwd4rbyjq.nar.xz
+Compression: xz
+FileHash: sha256:0isnx19hydggqxmv2r5rq1ac8pkszvymb8wzzr4l0fckwd4rbyjq
+FileSize: 3344
+NarHash: sha256:0x49gmdwymmvajgq7jyhyafyq4d51dk92l18ag3m8lwcia6qx7xq
+NarSize: 8640
+References: 4w4n7izrxpmj0sb4z0jf9qpkjksjh7ly-zquest-classic-software-midi ldh50hy1zs4kdgs3jf3mmz2pgmxza5ji-zquest-classic-unstable-2026-06-18-public3 zc0vzc0vp0amc9iqm3cd542bmim6vh09-python3-3.13.9
+Deriver: i3bay1b2r7i4shk5jxp1q69p5jgny92l-zquest-classic-launcher-unstable-2026-06-18-public3.drv
+Sig: fuji-1:Zbch4zGpNQ1mHmKUfziFDLK9iXbduHjnjYWrJt1/ak835Chu5mdVnfyqU+kLhyfe37T0V97UUHqaAzMnwRSqDA==
+Sig: simonwjackson-plugins-1:864sxlAVgNOl9ptR7NgNroov7sA50XoAgCjxdXwEX2VEdIkW6Vs2/hvWqebg7o1ldqQrJejEzeE2f+UkvFYYAg==

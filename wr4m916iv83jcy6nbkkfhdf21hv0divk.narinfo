@@ -1,0 +1,11 @@
+StorePath: /nix/store/wr4m916iv83jcy6nbkkfhdf21hv0divk-korri-plugin
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/build-f35b67458cd8/0rk4m2v4hv7sqpk667q0ax36gd0gnipi1dilgcfp3i0094p5y9qy.nar.xz
+Compression: xz
+FileHash: sha256:0rk4m2v4hv7sqpk667q0ax36gd0gnipi1dilgcfp3i0094p5y9qy
+FileSize: 1020
+NarHash: sha256:0j57kg9ibqja0ky8k179aq177ljlrd50aq4wjkmgb3yl92awyll8
+NarSize: 2288
+References: 2j4gng604n0s91wlgbja6awx0dp8kcdp-zquest-classic-launcher-unstable-2026-06-18-public3
+Deriver: djp3a58imvknlsvr5grdb9ab05inqhy7-korri-plugin.drv
+Sig: fuji-1:vaIefxP4GRr14GTHyZTMDi7ClHS7bQ3hXT25aserkgCH+eXl8JyFpAUP8S6yoI+ZuoHsFBsGAjtSnQtt6Y2LDg==
+Sig: simonwjackson-plugins-1:wQvaAhaChpbNMzTbMMtsowXd+DQFCC7cBKSyT1D/sTpt1Js1GveD0cBS3oVaj+8iMzgVOC8DKwJSVv/PI6GoBg==
