@@ -73,19 +73,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       };
       plugin = _: import ../plugins/signs-of-rain/plugin.nix { inherit signsOfRainPackage; };
     };
-    zquestEngine = import ../plugins/zquest-classic/package.nix { inherit pkgs; };
-    zquestLauncher = import ../plugins/zquest-classic/launcher.nix {
-      inherit pkgs;
-      engine = zquestEngine;
-    };
-    zquestPlugin = mkPlugin {
-      publisher.namespace = "@simonwjackson";
-      source = pkgs.lib.fileset.toSource {
-        root = ../plugins/zquest-classic;
-        fileset = ../plugins/zquest-classic/plugin.ts;
-      };
-      plugin = _: import ../plugins/zquest-classic/plugin.nix { launcher = zquestLauncher; };
-    };
     # The ZIP is a korrid-downloaded artifact (Korri ADR 0013), not in the closure.
     megaManRockNRollPlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
@@ -199,13 +186,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
           '  nix build --no-link --option builders "" --option post-build-hook "" .#checks.${system}.korri-signs-of-rain-plugin' \
           'Signs of Rain ARM plugin builds need an approved ARM builder; see plugins/signs-of-rain/README.md.' \
           'Register its exact packaged PCK in the existing library; no general PCK discovery is added.' \
-          'ZQuest Classic supports x86_64 and aarch64 Linux:' \
-          '  nix build --no-link .#korri-plugin-zquest-classic' \
-          '  nix build --no-link .#zquest-classic-source' \
-          '  nix build --no-link .#checks.x86_64-linux.korri-zquest-classic-plugin' \
-          '  nix build --no-link .#checks.aarch64-linux.korri-zquest-classic-plugin' \
-          '  nix build --no-link .#checks.x86_64-linux.zquest-gamepad-vm' \
-          '  nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state' \
+          'ZQuest Classic moved to korri-os/plugins as @korri:zquest-classic.' \
           'Private quest editing proof, not a complete sanitizer or rights clearance:' \
           '  nix run .#zquest-midi-proof -- --help' \
           '  nix run .#zquest-midi-proof-test -- --help' \
@@ -237,12 +218,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     packages = packages // {
       korri-plugin-super-mario-world = smwPlugin;
       korri-plugin-signs-of-rain = signsOfRainPlugin;
-      zquest-classic = zquestLauncher;
-      zquest-classic-source = import ./zquest-source-release.nix {
-        inherit pkgs;
-        engine = zquestEngine;
-      };
-      korri-plugin-zquest-classic = zquestPlugin;
       korri-plugin-fallout1-ce = fallout1Plugin;
       korri-plugin-fallout2-ce = fallout2Plugin;
       verify-opengoal = verifyOpengoal;
@@ -271,14 +246,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-super-mario-world-plugin = import ./smw-check.nix {
         inherit pkgs;
         package = smwPlugin;
-        contract = korri.lib.${system}.pluginContract;
-        hostPackage = korri.packages.${system}.korri-plugin-host;
-        korridPackage = korri.packages.${system}.korrid;
-      };
-      korri-zquest-classic-plugin = import ./zquest-check.nix {
-        inherit pkgs;
-        package = zquestPlugin;
-        engine = zquestEngine;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
@@ -314,13 +281,6 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         inherit pkgs;
         package = megaManArenaPlugin;
         contract = korri.lib.${system}.pluginContract;
-      };
-    }
-    # The VM needs KVM; it runs on the x86_64 build machine only.
-    // pkgs.lib.optionalAttrs (system == "x86_64-linux") {
-      zquest-gamepad-vm = import ./zquest-gamepad-vm.nix {
-        inherit pkgs;
-        launcher = zquestLauncher;
       };
     };
     formatter = pkgs.nixfmt;

@@ -17,7 +17,6 @@ const plugins = new URL("../plugins/", import.meta.url)
 const expectedContent = {
   "2ship": { n64: ["n64", "z64", "v64"] },
   "super-mario-world": { snes: ["smc", "sfc"] },
-  "zquest-classic": { "zelda-classic": ["qst"] },
 }
 
 for (const directory of readdirSync(plugins)) {

@@ -36,8 +36,6 @@ node nix/discovery-check.ts
 | `korri-plugin-2ship` | `@simonwjackson:2ship` | x86_64 and aarch64 Linux |
 | `korri-plugin-super-mario-world` | `@simonwjackson:super-mario-world` | x86_64 and aarch64 Linux |
 | `korri-plugin-signs-of-rain` | `@simonwjackson:signs-of-rain`, exact packaged PCK | x86_64 and aarch64 Linux checked |
-| `korri-plugin-zquest-classic` | `@simonwjackson:zquest-classic` | x86_64 and aarch64 Linux |
-| `zquest-classic` | Standalone quest launcher with account-owned native state | x86_64 and aarch64 Linux |
 | `korri-plugin-mega-man-rock-n-roll` | `@simonwjackson:mega-man-rock-n-roll`, downloaded ZIP on native Godot 2.1.4 | x86_64 and aarch64 Linux |
 | `korri-plugin-mega-man-arena` | `@simonwjackson:mega-man-arena`, downloaded Windows ZIP on `@korri:proton` | aarch64 Linux |
 | `korri-plugin-mega-man-maker` | `@simonwjackson:mega-man-maker`, downloaded Windows ZIP on Proton-CachyOS arm64 | aarch64 Linux runs it; x86_64 builds |
@@ -125,34 +123,10 @@ provides Solarus.
 
 ## ZQuest Classic
 
-[ZQuest Classic](plugins/zquest-classic/README.md) runs unpacked `.qst` files
-through the native player. It preserves legacy's `zelda-classic` system and
-standalone launch mode. Each account has separate native configuration and
-saves. Saves use the quest's content hash, so renaming retains a save while
-changed quest contents get a separate save. The editor and quest downloads
-are outside this plugin's scope. The `public1` build removes bundled quests
-and uncleared media. It supplies original sound cues, silent default music,
-licensed replacement fonts, and neutral menu/ending graphics. Quests needing
-legacy default tiles are explicitly unsupported; user quest music is unchanged.
-
-```sh
-nix build --no-link .#korri-plugin-zquest-classic
-nix build --no-link .#checks.x86_64-linux.korri-zquest-classic-plugin
-nix build --no-link .#checks.aarch64-linux.korri-zquest-classic-plugin
-nix run .#zquest-classic -- /path/to/quest.qst /path/to/test-state
-```
-
-Build only on build machines. Checks use the real player, Core launch executor,
-and Xvfb to exercise input, screenshots, save writes, and reload. They do not
-establish physical-device, controller, or audio acceptance. The package retains
-the legacy development snapshot and interpreter backend, not the latest stable
-release. `zquest-classic-source` supplies a corresponding-source archive for
-each architecture. The approved public cache is
-`https://simonwjackson.github.io/korri-plugins/`.
-The old release URL remains readable for existing device receipts but receives
-no new metadata. See [PUBLICATION.md](PUBLICATION.md) for the Pages publisher.
-Publication does not change existing device trust or clear user quest rights.
-See the plugin README for limitations, licenses and the publication procedure.
+ZQuest Classic has moved to the official [korri-os/plugins](https://github.com/korri-os/plugins/tree/main/plugins/zquest-classic)
+repository as `@korri:zquest-classic`. See that source for build instructions.
+This personal flake no longer provides ZQuest Classic. The quest editing proof
+apps (`zquest-midi-proof*`) remain here.
 
 ## Mega Man Rock N Roll
 
