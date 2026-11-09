@@ -16,7 +16,13 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         ];
     };
     mkPlugin = korri.lib.${system}.mkPlugin { inherit pkgs; };
-    opengoalPackages = import ../plugins/opengoal/package.nix { inherit pkgs; };
+    # These engines dlopen /run/opengl-driver. Use the device's Korri libc:
+    # aka's Mesa needs GLIBC_ABI_GNU2_TLS, absent from our older nixpkgs.
+    devicePkgs = import korri.inputs.nixpkgs {
+      inherit system;
+      config.allowUnfreePredicate = pkgs.config.allowUnfreePredicate;
+    };
+    opengoalPackages = import ../plugins/opengoal/package.nix { pkgs = devicePkgs; };
     verifyOpengoal = pkgs.writeShellApplication {
       name = "verify-opengoal";
       runtimeInputs = [
@@ -80,7 +86,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
         root = ../plugins/mega-man-rock-n-roll;
         fileset = ../plugins/mega-man-rock-n-roll/plugin.ts;
       };
-      plugin = _: import ../plugins/mega-man-rock-n-roll/plugin.nix { inherit pkgs; };
+      plugin = _: import ../plugins/mega-man-rock-n-roll/plugin.nix { pkgs = devicePkgs; };
     };
     # The ZIP is a korrid-downloaded artifact (Korri ADR 0013), not in the
     # closure. Its runner needs @korri:proton's Proton-CachyOS, an arm64-only
@@ -139,7 +145,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
     twoShipPlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
       source = ../plugins/2ship;
-      plugin = _: import ../plugins/2ship/plugin.nix { inherit pkgs; };
+      plugin = _: import ../plugins/2ship/plugin.nix { pkgs = devicePkgs; };
     };
     verifySmw = pkgs.writeShellApplication {
       name = "verify-smw";
@@ -230,6 +236,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-2ship-plugin = import ./2ship-check.nix {
         inherit pkgs;
         package = twoShipPlugin;
+        deviceGlibc = devicePkgs.glibc;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;
         korridPackage = korri.packages.${system}.korrid;
@@ -257,6 +264,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-mega-man-rock-n-roll-plugin = import ./mega-man-rock-n-roll-check.nix {
         inherit pkgs;
         package = megaManRockNRollPlugin;
+        deviceGlibc = devicePkgs.glibc;
         contract = korri.lib.${system}.pluginContract;
       };
       korri-mega-man-maker-source = import ./mega-man-maker-source-check.nix { inherit pkgs; };
@@ -270,6 +278,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-opengoal-plugin = import ./opengoal-check.nix {
         inherit pkgs;
         package = packages.korri-plugin-opengoal;
+        deviceGlibc = devicePkgs.glibc;
         tools = if system == "x86_64-linux" then opengoalPackages.tools else null;
         contract = korri.lib.${system}.pluginContract;
         hostPackage = korri.packages.${system}.korri-plugin-host;

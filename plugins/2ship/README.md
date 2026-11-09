@@ -63,6 +63,13 @@ Runtime checksums add work to each launch. An invalid ROM or failed extraction l
 existing archives, configuration and saves unchanged. A failed game startup can
 leave a successfully extracted archive for the next attempt.
 
+The native package uses Korri's pinned nixpkgs on both architectures so its
+glibc can load the device's Mesa drivers from `/run/opengl-driver`. On aka,
+the repository's older glibc 2.40 cannot load `libgallium` because
+`GLIBC_ABI_GNU2_TLS` is missing. The package check follows the launcher and
+native wrapper and verifies the actual ELF interpreter uses Korri's glibc.
+This does not establish gameplay acceptance.
+
 This package uses upstream's Linux OpenGL renderer and default controls. It does
 not force graphics settings, fullscreen, or controller mappings. Performance and
 physical controls still need testing on each handheld. Do not reuse an arbitrary

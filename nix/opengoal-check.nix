@@ -1,6 +1,7 @@
 {
   pkgs,
   package,
+  deviceGlibc,
   tools ? null,
   contract,
   hostPackage,
@@ -33,9 +34,9 @@ pkgs.runCommand "korri-opengoal-plugin-check"
     nativeBuildInputs = [
       pkgs.bun
       pkgs.typescript
+      pkgs.python3
     ]
     ++ pkgs.lib.optionals (tools != null) [
-      pkgs.python3
       pkgs.strace
     ];
   }
@@ -53,5 +54,7 @@ pkgs.runCommand "korri-opengoal-plugin-check"
       python3 ${./opengoal-prepare-check.py} ${../plugins/opengoal/prepare.py} ${tools}
       python3 ${./opengoal-frame-check.py} ${./opengoal-owned-check.py}
     ''}
+    python3 ${./device-glibc-check.py} \
+      ${package} opengoal ${deviceGlibc} ${pkgs.patchelf}/bin/patchelf
     touch "$out"
   ''

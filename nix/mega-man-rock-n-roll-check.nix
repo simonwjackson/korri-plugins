@@ -5,6 +5,7 @@
 {
   pkgs,
   package,
+  deviceGlibc,
   contract,
 }:
 let
@@ -98,5 +99,7 @@ pkgs.runCommand "korri-mega-man-rock-n-roll-plugin-check"
     assert result.returncode == 255, result
     assert b"Couldn't load game path" in result.stdout + result.stderr, result
     PY
+    python3 ${./device-glibc-check.py} \
+      ${package} godot2-runtime ${deviceGlibc} ${pkgs.patchelf}/bin/patchelf
     touch "$out"
   ''

@@ -125,6 +125,12 @@ engine's.
 The game is X11 only. It uses the game unit's Xwayland `DISPLAY`; nothing
 sets `WAYLAND_DISPLAY`. Godot uses GLES2 over OpenGL and PulseAudio, then ALSA.
 
+The native runtime uses Korri's pinned nixpkgs on both architectures so its
+glibc can load the device's Mesa drivers from `/run/opengl-driver`. On aka,
+the repository's older glibc 2.40 cannot load `libgallium` because
+`GLIBC_ABI_GNU2_TLS` is missing. The package check verifies the actual Godot
+ELF interpreter uses Korri's glibc. This is not a gameplay test.
+
 The game's `engine.cfg` asks for a 1024x896 window with `stretch_mode`
 `viewport` and `stretch_aspect` `keep`, and the game's own script then
 requests fullscreen through EWMH. On the RG353M (sway, Xwayland) that

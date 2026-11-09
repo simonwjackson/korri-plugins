@@ -17,6 +17,13 @@ Devices receive the runtime prebuilt, with native resources and the ISC license.
 
 The x86 Linux release archive is pinned by SHA-256 in `package.nix`. Its ELF loader and library paths are patched for Nix. Only optional Steam storage and PowerVR GLES libraries are excluded. `arm-package.nix` builds commit `6445b4a50a7540df512e3c82c62216521421410c`, with the source hash and Linux patch pinned. Both runtimes include the libraries their SDL/cubeb backends load dynamically. A compatible device graphics driver remains required.
 
+The runtime uses Korri's pinned nixpkgs on both architectures, not this
+repository's older toolchain. Its glibc must load the device's Mesa drivers
+from `/run/opengl-driver`. On aka, the older glibc 2.40 cannot load Mesa's
+`libgallium` (`GLIBC_ABI_GNU2_TLS` is missing). The package check verifies the
+actual native ELF interpreter uses Korri's glibc. This is a driver-loading
+check, not gameplay acceptance.
+
 The ARM patch adds Linux CPU checks, assembler syntax fixes, memory-map guards, and an ARM cache-maintenance test. It also uses signed plain `char`, matching the kernel formatter's negative sentinel. The unsigned Linux ARM default caused corrupted filenames and a startup crash; the real-header regression and native Jak 1 title-screen retry verify this correction. ARM register inspection/modification through the GOAL debugger explicitly returns unsupported; the existing x86 register representation is not reused for ARM. This does not implement a full ARM debugger.
 
 ## Prepare your owned discs off-device

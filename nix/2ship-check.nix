@@ -1,6 +1,7 @@
 {
   pkgs,
   package,
+  deviceGlibc,
   contract,
   hostPackage,
   korridPackage,
@@ -46,5 +47,7 @@ pkgs.runCommand "korri-2ship-plugin-check"
       ${hostPackage}/bin/korri-plugin \
       ${korridPackage}/bin/korrid ${probe}
     ${pkgs.python3}/bin/python3 ${./2ship-launch-check.py} ${package}
+    ${pkgs.python3}/bin/python3 ${./device-glibc-check.py} \
+      ${package} 2ship ${deviceGlibc} ${pkgs.patchelf}/bin/patchelf
     touch "$out"
   ''
