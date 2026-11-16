@@ -66,6 +66,14 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       // pkgs.lib.optionalAttrs (system == "aarch64-linux") {
         korri-plugin-mega-man-arena = megaManArenaPlugin;
       };
+    hashlinkFillPlugin = mkPlugin {
+      publisher.namespace = "@simonwjackson";
+      source = pkgs.lib.fileset.toSource {
+        root = ../plugins/hashlink-fill;
+        fileset = ../plugins/hashlink-fill/plugin.ts;
+      };
+      plugin = _: import ../plugins/hashlink-fill/plugin.nix { inherit pkgs; };
+    };
     smwPlugin = mkPlugin {
       publisher.namespace = "@simonwjackson";
       source = ../plugins/super-mario-world;
@@ -222,6 +230,7 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
   in
   {
     packages = packages // {
+      korri-plugin-hashlink-fill = hashlinkFillPlugin;
       korri-plugin-super-mario-world = smwPlugin;
       korri-plugin-signs-of-rain = signsOfRainPlugin;
       korri-plugin-fallout1-ce = fallout1Plugin;
@@ -233,6 +242,12 @@ flake-utils.lib.eachSystem [ "x86_64-linux" "aarch64-linux" ] (
       korri-plugin-mega-man-maker = megaManMakerPlugin;
     };
     checks = {
+      korri-hashlink-fill-plugin = import ./hashlink-fill-check.nix {
+        inherit pkgs;
+        package = hashlinkFillPlugin;
+        contract = korri.lib.${system}.pluginContract;
+        hostPackage = korri.packages.${system}.korri-plugin-host;
+      };
       korri-2ship-plugin = import ./2ship-check.nix {
         inherit pkgs;
         package = twoShipPlugin;

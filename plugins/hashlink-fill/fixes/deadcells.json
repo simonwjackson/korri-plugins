@@ -1,0 +1,21 @@
+{
+  "app": "588650",
+  "file": "steamapps/common/Dead Cells/hlboot.dat",
+  "type": "Main",
+  "method": "onResize",
+  "pattern": [
+    { "opcode": "ToInt", "operands": ["$r", "_"] },
+    { "opcode": "JSGte", "operands": ["$r", "$w", 2] },
+    { "opcode": "Mov", "operands": ["$d", "$r"] },
+    { "opcode": "JAlways", "operands": [1] },
+    { "opcode": "Mov", "operands": ["$d", "$w"] }
+  ],
+  "expected_matches": 2,
+  "edit": { "instruction": 1, "operand": 0, "from_operand": 1 },
+  "known": [
+    {
+      "original": "59350cad475a2375b9e39d7cd13fdb6e4ed9a027fd827ae5140f913c1c07ce7e",
+      "patched": "c977689376ffce6d3400e50bb396de57ab8013846beb963e581b983acd6ac5ed"
+    }
+  ]
+}

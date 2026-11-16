@@ -30,6 +30,7 @@ node nix/discovery-check.ts
 
 | Output | Plugin or contents | Platforms |
 |---|---|---|
+| `korri-plugin-hashlink-fill` | [`@simonwjackson:hashlink-fill`](plugins/hashlink-fill/README.md), opt-in Dead Cells stage fill modifier | x86_64 and aarch64 Linux |
 | `korri-plugin-opengoal` | `@simonwjackson:opengoal`, Jak trilogy including Renegade | x86_64 and aarch64 Linux |
 | `opengoal` | Native runtime without game assets or compiler | x86_64 and aarch64 Linux |
 | `opengoal-tools` | Off-device disc preparation and GOAL compiler | x86_64 Linux build machine only |
