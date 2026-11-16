@@ -1,0 +1,10 @@
+StorePath: /nix/store/nk9ymx1r8xr9bzk7zh6ymrfdn925jczb-korri-plugin
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/build-bcd95fb30c91-hashlink-fill/1dsgjpvv5q2fql99wv1120xag9ajx8a2irz7q3vlrp403lsq2p4b.nar.xz
+Compression: xz
+FileHash: sha256:1dsgjpvv5q2fql99wv1120xag9ajx8a2irz7q3vlrp403lsq2p4b
+FileSize: 1224
+NarHash: sha256:1nw6qdyzqk1z6jzzlclamzpmjafhd80i129510zypc5sghmiqzqv
+NarSize: 2616
+References: s38s9sm58294j3h48cdn8r591lyjnk9v-deadcells.json xx06q8s3dixgr9a9dpxyn4w6qxcm9szk-hl-fill-0.1.0
+Deriver: ymp7jq8s5x0avwr3zb07c3cgwcwcv5rx-korri-plugin.drv
+Sig: simonwjackson-plugins-1:JyT0dqnPOYUez97sm6Ur2QX3XUnFx9aWbyr7wpU5eXvCz7hNfXqgoxNWp+1VZYcKRHcWejIS3sdOfHcRJTzKBQ==

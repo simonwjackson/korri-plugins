@@ -1,0 +1,11 @@
+StorePath: /nix/store/74bishh6r9ah2mairz5vhdhpc49rwb7c-deadcells.json
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/build-bcd95fb30c91-hashlink-fill/0z1lrq24k4mijbbv5w5qr37qf05ahwmm74mvgm79f5rzcbv2gjkr.nar.xz
+Compression: xz
+FileHash: sha256:0z1lrq24k4mijbbv5w5qr37qf05ahwmm74mvgm79f5rzcbv2gjkr
+FileSize: 532
+NarHash: sha256:0571rgccx76387ck17fn89103lni4k2l77byz16xd43nsilknrly
+NarSize: 976
+References: 
+Deriver: d3ax9lznvx568k9l0d59d61l3666m5mf-deadcells.json.drv
+Sig: fuji-1:hJ83lhiBaAOjsIwmp/yDhxYQ9wSSc2E2UvCeWMBQz5aboCn21elC9z9nTIIhfVXryxBBa922zoGrOpa8N/HSDQ==
+Sig: simonwjackson-plugins-1:R9sKsALlFeYBe71zpBftFZBZQYUPkhNVO47t0TEdiJsl8hxcDcCJfnfYQAue7oMUsxU7luvuzE3QSFCUtLTuAQ==

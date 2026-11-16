@@ -1,0 +1,11 @@
+StorePath: /nix/store/6k73a12fa3mcgwrfdkqa8f0zpd159jwb-hl-fill-0.1.0
+URL: https://github.com/simonwjackson/korri-plugins/releases/download/build-bcd95fb30c91-hashlink-fill/1y2f7rz73mdzxm2iv41xx8x8sb731p16fa37gb2jxm0s5zl6yvi2.nar.xz
+Compression: xz
+FileHash: sha256:1y2f7rz73mdzxm2iv41xx8x8sb731p16fa37gb2jxm0s5zl6yvi2
+FileSize: 237548
+NarHash: sha256:0pbmbg6fkhj8slh795a1hffa8wxbipd6icznf2sl7bvzv92rv4zl
+NarSize: 1035632
+References: 89n0gcl1yjp37ycca45rn50h7lms5p6f-glibc-2.40-66 qipd93x9gjyiygqk673rd2ssnf8y7jj0-gcc-14.3.0-lib
+Deriver: 7bn0v4kx2c161mhc38wjlch56g5vvrg5-hl-fill-0.1.0.drv
+Sig: fuji-1:22+KN8ibDak1jEUaO/9Qqma5gCQhHmgvl2cUBk6UN4FJSqX2A3SyprdiOhvBUIbb/O0fB+cFupqrx8mh670SBQ==
+Sig: simonwjackson-plugins-1:S6dWouZvuMvx9fBmzPbx0HAqg3Gf6pFM2o+o6Z1gTMrIWd2JnyoBgC8eys408dYT0t06ypupIOJmLjo35tr2Dw==
